@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const items = [
+const items: { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }[] = [
   { to: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/app/documente", label: "Documente", icon: FileText },
   { to: "/app/e-facturi", label: "e-Facturi", icon: FileCode2 },
@@ -19,7 +19,7 @@ const items = [
   { to: "/app/clienti", label: "Clienți", icon: Users },
   { to: "/app/rapoarte", label: "Rapoarte", icon: BarChart3 },
   { to: "/app/setari", label: "Setări firmă", icon: Settings },
-] as const;
+];
 
 export function AppSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
