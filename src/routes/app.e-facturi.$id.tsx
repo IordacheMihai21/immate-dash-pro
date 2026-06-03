@@ -99,7 +99,7 @@ function InvoiceDetail() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {invoice.lines.map((l, i) => (
+                {invoice.lines.map((l: { product: string; qty: number; price: number; vat: number; total: number }, i: number) => (
                   <TableRow key={i}>
                     <TableCell className="font-medium">{l.product}</TableCell>
                     <TableCell className="text-right tabular-nums">{l.qty}</TableCell>
