@@ -9,38 +9,216 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppSetariRouteImport } from './routes/app.setari'
+import { Route as AppRapoarteRouteImport } from './routes/app.rapoarte'
+import { Route as AppFurnizoriRouteImport } from './routes/app.furnizori'
+import { Route as AppDocumenteRouteImport } from './routes/app.documente'
+import { Route as AppClientiRouteImport } from './routes/app.clienti'
+import { Route as AppEFacturiIndexRouteImport } from './routes/app.e-facturi.index'
+import { Route as AppEFacturiIdRouteImport } from './routes/app.e-facturi.$id'
 
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSetariRoute = AppSetariRouteImport.update({
+  id: '/setari',
+  path: '/setari',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRapoarteRoute = AppRapoarteRouteImport.update({
+  id: '/rapoarte',
+  path: '/rapoarte',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFurnizoriRoute = AppFurnizoriRouteImport.update({
+  id: '/furnizori',
+  path: '/furnizori',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDocumenteRoute = AppDocumenteRouteImport.update({
+  id: '/documente',
+  path: '/documente',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppClientiRoute = AppClientiRouteImport.update({
+  id: '/clienti',
+  path: '/clienti',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEFacturiIndexRoute = AppEFacturiIndexRouteImport.update({
+  id: '/e-facturi/',
+  path: '/e-facturi/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEFacturiIdRoute = AppEFacturiIdRouteImport.update({
+  id: '/e-facturi/$id',
+  path: '/e-facturi/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/app': typeof AppRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/app/clienti': typeof AppClientiRoute
+  '/app/documente': typeof AppDocumenteRoute
+  '/app/furnizori': typeof AppFurnizoriRoute
+  '/app/rapoarte': typeof AppRapoarteRoute
+  '/app/setari': typeof AppSetariRoute
+  '/app/': typeof AppIndexRoute
+  '/app/e-facturi/$id': typeof AppEFacturiIdRoute
+  '/app/e-facturi/': typeof AppEFacturiIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/app/clienti': typeof AppClientiRoute
+  '/app/documente': typeof AppDocumenteRoute
+  '/app/furnizori': typeof AppFurnizoriRoute
+  '/app/rapoarte': typeof AppRapoarteRoute
+  '/app/setari': typeof AppSetariRoute
+  '/app': typeof AppIndexRoute
+  '/app/e-facturi/$id': typeof AppEFacturiIdRoute
+  '/app/e-facturi': typeof AppEFacturiIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/app': typeof AppRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/app/clienti': typeof AppClientiRoute
+  '/app/documente': typeof AppDocumenteRoute
+  '/app/furnizori': typeof AppFurnizoriRoute
+  '/app/rapoarte': typeof AppRapoarteRoute
+  '/app/setari': typeof AppSetariRoute
+  '/app/': typeof AppIndexRoute
+  '/app/e-facturi/$id': typeof AppEFacturiIdRoute
+  '/app/e-facturi/': typeof AppEFacturiIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/app'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/app/clienti'
+    | '/app/documente'
+    | '/app/furnizori'
+    | '/app/rapoarte'
+    | '/app/setari'
+    | '/app/'
+    | '/app/e-facturi/$id'
+    | '/app/e-facturi/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/app/clienti'
+    | '/app/documente'
+    | '/app/furnizori'
+    | '/app/rapoarte'
+    | '/app/setari'
+    | '/app'
+    | '/app/e-facturi/$id'
+    | '/app/e-facturi'
+  id:
+    | '__root__'
+    | '/'
+    | '/app'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/app/clienti'
+    | '/app/documente'
+    | '/app/furnizori'
+    | '/app/rapoarte'
+    | '/app/setari'
+    | '/app/'
+    | '/app/e-facturi/$id'
+    | '/app/e-facturi/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
+  LoginRoute: typeof LoginRoute
+  RegisterRoute: typeof RegisterRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +226,96 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/': {
+      id: '/app/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/setari': {
+      id: '/app/setari'
+      path: '/setari'
+      fullPath: '/app/setari'
+      preLoaderRoute: typeof AppSetariRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/rapoarte': {
+      id: '/app/rapoarte'
+      path: '/rapoarte'
+      fullPath: '/app/rapoarte'
+      preLoaderRoute: typeof AppRapoarteRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/furnizori': {
+      id: '/app/furnizori'
+      path: '/furnizori'
+      fullPath: '/app/furnizori'
+      preLoaderRoute: typeof AppFurnizoriRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/documente': {
+      id: '/app/documente'
+      path: '/documente'
+      fullPath: '/app/documente'
+      preLoaderRoute: typeof AppDocumenteRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/clienti': {
+      id: '/app/clienti'
+      path: '/clienti'
+      fullPath: '/app/clienti'
+      preLoaderRoute: typeof AppClientiRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/e-facturi/': {
+      id: '/app/e-facturi/'
+      path: '/e-facturi'
+      fullPath: '/app/e-facturi/'
+      preLoaderRoute: typeof AppEFacturiIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/e-facturi/$id': {
+      id: '/app/e-facturi/$id'
+      path: '/e-facturi/$id'
+      fullPath: '/app/e-facturi/$id'
+      preLoaderRoute: typeof AppEFacturiIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
+interface AppRouteChildren {
+  AppClientiRoute: typeof AppClientiRoute
+  AppDocumenteRoute: typeof AppDocumenteRoute
+  AppFurnizoriRoute: typeof AppFurnizoriRoute
+  AppRapoarteRoute: typeof AppRapoarteRoute
+  AppSetariRoute: typeof AppSetariRoute
+  AppIndexRoute: typeof AppIndexRoute
+  AppEFacturiIdRoute: typeof AppEFacturiIdRoute
+  AppEFacturiIndexRoute: typeof AppEFacturiIndexRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppClientiRoute: AppClientiRoute,
+  AppDocumenteRoute: AppDocumenteRoute,
+  AppFurnizoriRoute: AppFurnizoriRoute,
+  AppRapoarteRoute: AppRapoarteRoute,
+  AppSetariRoute: AppSetariRoute,
+  AppIndexRoute: AppIndexRoute,
+  AppEFacturiIdRoute: AppEFacturiIdRoute,
+  AppEFacturiIndexRoute: AppEFacturiIndexRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
+  ForgotPasswordRoute: ForgotPasswordRoute,
+  LoginRoute: LoginRoute,
+  RegisterRoute: RegisterRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
