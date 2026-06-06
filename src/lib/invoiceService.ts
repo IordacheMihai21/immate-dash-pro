@@ -89,37 +89,52 @@ async function saveDocument(fileName: string, xmlText: string) {
 }
 
 async function saveInvoice(
-  invoice: ParsedInvoice,
-  documentId: string,
-  supplierId: string,
-  customerId: string,
-) {
-  const { data, error } = await supabase
-    .from('invoices')
-    .insert({
-      company_id: DEMO_COMPANY_ID,
-      document_id: documentId,
-      supplier_id: supplierId,
-      customer_id: customerId,
-      invoice_number: invoice.invoiceNumber,
-      issue_date: invoice.issueDate,
-      due_date: invoice.dueDate,
-      currency: invoice.currency,
-      tax_exclusive_amount: invoice.taxExclusiveAmount,
-      tax_amount: invoice.taxAmount,
-      tax_inclusive_amount: invoice.taxInclusiveAmount,
-      payable_amount: invoice.payableAmount,
-      status: 'procesata',
-    })
-    .select('id')
-    .single();
-
-  if (error) {
-    throw new Error(`Eroare la salvarea facturii: ${error.message}`);
+    invoice: ParsedInvoice,
+    documentId: string,
+    supplierId: string,
+    customerId: string,
+  ) {
+    const { data: existingInvoice, error: existingError } = await supabase
+      .from("invoices")
+      .select("id")
+      .eq("company_id", DEMO_COMPANY_ID)
+      .eq("invoice_number", invoice.invoiceNumber)
+      .maybeSingle();
+  
+    if (existingError) {
+      throw new Error(`Eroare la verificarea facturii existente: ${existingError.message}`);
+    }
+  
+    if (existingInvoice) {
+      throw new Error(`Factura ${invoice.invoiceNumber} exista deja in baza de date.`);
+    }
+  
+    const { data, error } = await supabase
+      .from("invoices")
+      .insert({
+        company_id: DEMO_COMPANY_ID,
+        document_id: documentId,
+        supplier_id: supplierId,
+        customer_id: customerId,
+        invoice_number: invoice.invoiceNumber,
+        issue_date: invoice.issueDate,
+        due_date: invoice.dueDate,
+        currency: invoice.currency,
+        tax_exclusive_amount: invoice.taxExclusiveAmount,
+        tax_amount: invoice.taxAmount,
+        tax_inclusive_amount: invoice.taxInclusiveAmount,
+        payable_amount: invoice.payableAmount,
+        status: "procesata",
+      })
+      .select("id")
+      .single();
+  
+    if (error) {
+      throw new Error(`Eroare la salvarea facturii: ${error.message}`);
+    }
+  
+    return data.id as string;
   }
-
-  return data.id as string;
-}
 
 async function saveInvoiceLines(invoice: ParsedInvoice, invoiceId: string) {
   if (invoice.lines.length === 0) {
@@ -215,23 +230,38 @@ async function saveEntityRelations(invoice: ParsedInvoice, documentId: string) {
 }
 
 export async function importEFacturaXml(file: File): Promise<SavedInvoiceResult> {
-  const xmlText = await file.text();
-  const parsedInvoice = parseEFacturaXml(xmlText);
-
-  const documentId = await saveDocument(file.name, xmlText);
-  const supplierId = await upsertSupplier(parsedInvoice);
-  const customerId = await upsertCustomer(parsedInvoice);
-  const invoiceId = await saveInvoice(parsedInvoice, documentId, supplierId, customerId);
-
-  await saveInvoiceLines(parsedInvoice, invoiceId);
-  await saveExtractedEntities(parsedInvoice, documentId, invoiceId);
-  await saveEntityRelations(parsedInvoice, documentId);
-
-  return {
-    invoiceId,
-    documentId,
-  };
-}
+    const xmlText = await file.text();
+    const parsedInvoice = parseEFacturaXml(xmlText);
+  
+    const { data: existingInvoice, error: existingError } = await supabase
+      .from("invoices")
+      .select("id")
+      .eq("company_id", DEMO_COMPANY_ID)
+      .eq("invoice_number", parsedInvoice.invoiceNumber)
+      .maybeSingle();
+  
+    if (existingError) {
+      throw new Error(`Eroare la verificarea facturii existente: ${existingError.message}`);
+    }
+  
+    if (existingInvoice) {
+      throw new Error(`Factura ${parsedInvoice.invoiceNumber} exista deja in baza de date.`);
+    }
+  
+    const documentId = await saveDocument(file.name, xmlText);
+    const supplierId = await upsertSupplier(parsedInvoice);
+    const customerId = await upsertCustomer(parsedInvoice);
+    const invoiceId = await saveInvoice(parsedInvoice, documentId, supplierId, customerId);
+  
+    await saveInvoiceLines(parsedInvoice, invoiceId);
+    await saveExtractedEntities(parsedInvoice, documentId, invoiceId);
+    await saveEntityRelations(parsedInvoice, documentId);
+  
+    return {
+      invoiceId,
+      documentId,
+    };
+  }
 
 export async function getInvoices() {
   const { data, error } = await supabase
@@ -267,70 +297,111 @@ export async function getInvoices() {
 }
 
 export async function getInvoiceDetails(invoiceId: string) {
-  const { data: invoice, error: invoiceError } = await supabase
-    .from('invoices')
-    .select(`
-      id,
-      invoice_number,
-      issue_date,
-      due_date,
-      currency,
-      tax_exclusive_amount,
-      tax_amount,
-      tax_inclusive_amount,
-      payable_amount,
-      status,
-      created_at,
-      documents (
+    const { data: invoice, error: invoiceError } = await supabase
+      .from("invoices")
+      .select(`
+        id,
+        invoice_number,
+        issue_date,
+        due_date,
+        currency,
+        tax_exclusive_amount,
+        tax_amount,
+        tax_inclusive_amount,
+        payable_amount,
+        status,
+        created_at,
+        document_id,
+        documents (
+          id,
+          file_name,
+          document_type,
+          original_content,
+          uploaded_at
+        ),
+        suppliers (
+          name,
+          cui,
+          address,
+          city,
+          country
+        ),
+        customers (
+          name,
+          cui,
+          address,
+          city,
+          country
+        )
+      `)
+      .eq("id", invoiceId)
+      .single();
+  
+    if (invoiceError) {
+      throw new Error(`Eroare la citirea facturii: ${invoiceError.message}`);
+    }
+  
+    const { data: lines, error: linesError } = await supabase
+      .from("invoice_lines")
+      .select("*")
+      .eq("invoice_id", invoiceId)
+      .order("line_number", { ascending: true });
+  
+    if (linesError) {
+      throw new Error(`Eroare la citirea liniilor facturii: ${linesError.message}`);
+    }
+  
+    const { data: entities, error: entitiesError } = await supabase
+      .from("extracted_entities")
+      .select("*")
+      .eq("invoice_id", invoiceId)
+      .order("entity_type", { ascending: true });
+  
+    if (entitiesError) {
+      throw new Error(`Eroare la citirea entitatilor extrase: ${entitiesError.message}`);
+    }
+  
+    const { data: relations, error: relationsError } = await supabase
+      .from("entity_relations")
+      .select("*")
+      .eq("document_id", invoice.document_id)
+      .order("created_at", { ascending: true });
+  
+    if (relationsError) {
+      throw new Error(`Eroare la citirea relatiilor dintre entitati: ${relationsError.message}`);
+    }
+  
+    return {
+      invoice,
+      lines: lines ?? [],
+      entities: entities ?? [],
+      relations: relations ?? [],
+    };
+  }
+
+  export async function getDocuments() {
+    const { data, error } = await supabase
+      .from("documents")
+      .select(`
+        id,
         file_name,
+        file_type,
         document_type,
-        original_content,
-        uploaded_at
-      ),
-      suppliers (
-        name,
-        cui,
-        address,
-        city,
-        country
-      ),
-      customers (
-        name,
-        cui,
-        address,
-        city,
-        country
-      )
-    `)
-    .eq('id', invoiceId)
-    .single();
-
-  if (invoiceError) {
-    throw new Error(`Eroare la citirea facturii: ${invoiceError.message}`);
+        status,
+        uploaded_at,
+        processed_at,
+        invoices (
+          id,
+          invoice_number,
+          payable_amount
+        )
+      `)
+      .eq("company_id", DEMO_COMPANY_ID)
+      .order("uploaded_at", { ascending: false });
+  
+    if (error) {
+      throw new Error(`Eroare la citirea documentelor: ${error.message}`);
+    }
+  
+    return data ?? [];
   }
-
-  const { data: lines, error: linesError } = await supabase
-    .from('invoice_lines')
-    .select('*')
-    .eq('invoice_id', invoiceId)
-    .order('line_number', { ascending: true });
-
-  if (linesError) {
-    throw new Error(`Eroare la citirea liniilor facturii: ${linesError.message}`);
-  }
-
-  const { data: entities, error: entitiesError } = await supabase
-    .from('extracted_entities')
-    .select('*')
-    .eq('invoice_id', invoiceId);
-
-  if (entitiesError) {
-    throw new Error(`Eroare la citirea entitatilor extrase: ${entitiesError.message}`);
-  }
-
-  return {
-    invoice,
-    lines: lines ?? [],
-    entities: entities ?? [],
-  };
-}
