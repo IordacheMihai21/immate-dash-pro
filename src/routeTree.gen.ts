@@ -20,6 +20,7 @@ import { Route as AppRapoarteRouteImport } from './routes/app.rapoarte'
 import { Route as AppFurnizoriRouteImport } from './routes/app.furnizori'
 import { Route as AppDocumenteRouteImport } from './routes/app.documente'
 import { Route as AppClientiRouteImport } from './routes/app.clienti'
+import { Route as AppAiForecastRouteImport } from './routes/app.ai-forecast'
 import { Route as AppEFacturiIndexRouteImport } from './routes/app.e-facturi.index'
 import { Route as AppEFacturiIdRouteImport } from './routes/app.e-facturi.$id'
 
@@ -78,6 +79,11 @@ const AppClientiRoute = AppClientiRouteImport.update({
   path: '/clienti',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAiForecastRoute = AppAiForecastRouteImport.update({
+  id: '/ai-forecast',
+  path: '/ai-forecast',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppEFacturiIndexRoute = AppEFacturiIndexRouteImport.update({
   id: '/e-facturi/',
   path: '/e-facturi/',
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/app/ai-forecast': typeof AppAiForecastRoute
   '/app/clienti': typeof AppClientiRoute
   '/app/documente': typeof AppDocumenteRoute
   '/app/furnizori': typeof AppFurnizoriRoute
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/app/ai-forecast': typeof AppAiForecastRoute
   '/app/clienti': typeof AppClientiRoute
   '/app/documente': typeof AppDocumenteRoute
   '/app/furnizori': typeof AppFurnizoriRoute
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/app/ai-forecast': typeof AppAiForecastRoute
   '/app/clienti': typeof AppClientiRoute
   '/app/documente': typeof AppDocumenteRoute
   '/app/furnizori': typeof AppFurnizoriRoute
@@ -142,6 +151,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/app/ai-forecast'
     | '/app/clienti'
     | '/app/documente'
     | '/app/furnizori'
@@ -156,6 +166,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/app/ai-forecast'
     | '/app/clienti'
     | '/app/documente'
     | '/app/furnizori'
@@ -171,6 +182,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/app/ai-forecast'
     | '/app/clienti'
     | '/app/documente'
     | '/app/furnizori'
@@ -268,6 +280,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppClientiRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/ai-forecast': {
+      id: '/app/ai-forecast'
+      path: '/ai-forecast'
+      fullPath: '/app/ai-forecast'
+      preLoaderRoute: typeof AppAiForecastRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/e-facturi/': {
       id: '/app/e-facturi/'
       path: '/e-facturi'
@@ -286,6 +305,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppAiForecastRoute: typeof AppAiForecastRoute
   AppClientiRoute: typeof AppClientiRoute
   AppDocumenteRoute: typeof AppDocumenteRoute
   AppFurnizoriRoute: typeof AppFurnizoriRoute
@@ -297,6 +317,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAiForecastRoute: AppAiForecastRoute,
   AppClientiRoute: AppClientiRoute,
   AppDocumenteRoute: AppDocumenteRoute,
   AppFurnizoriRoute: AppFurnizoriRoute,

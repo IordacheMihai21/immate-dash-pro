@@ -1,4 +1,8 @@
 import { DEMO_COMPANY_ID, supabase } from "./supabaseClient";
+import {
+  buildAiFinancialForecast,
+  type MonthlyFinancialPoint,
+} from "./predictionService";
 
 type RelationParty =
   | {
@@ -12,6 +16,22 @@ type RelationParty =
   | null
   | undefined;
 
+type DocumentRelation =
+  | {
+      file_name: string | null;
+      document_type: string | null;
+      uploaded_at: string | null;
+    }
+  | {
+      file_name: string | null;
+      document_type: string | null;
+      uploaded_at: string | null;
+    }[]
+  | null
+  | undefined;
+
+const DEMO_COMPANY_CUI = "RO12345678";
+
 function getRelationParty(party: RelationParty) {
   if (!party) {
     return null;
@@ -24,9 +44,26 @@ function getRelationParty(party: RelationParty) {
   return party;
 }
 
+function getDocument(document: DocumentRelation) {
+  if (!document) {
+    return null;
+  }
+
+  if (Array.isArray(document)) {
+    return document[0] ?? null;
+  }
+
+  return document;
+}
+
 function toNumber(value: unknown): number {
   const parsed = Number(value ?? 0);
+
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function normalizeCui(cui: string | null | undefined): string {
+  return (cui ?? "").trim().replace(/\s+/g, "").toUpperCase();
 }
 
 function getMonthKey(dateValue: string | null | undefined): string {
@@ -54,18 +91,6 @@ function getMonthLabel(monthKey: string): string {
   return date.toLocaleDateString("ro-RO", {
     month: "short",
   });
-}
-
-function getNextMonthKey(monthKey: string): string {
-  if (monthKey === "Necunoscut") {
-    return "Necunoscut";
-  }
-
-  const [year, month] = monthKey.split("-");
-  const date = new Date(Number(year), Number(month) - 1, 1);
-  date.setMonth(date.getMonth() + 1);
-
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 }
 
 export async function getDashboardData() {
@@ -99,7 +124,9 @@ export async function getDashboardData() {
     .order("created_at", { ascending: false });
 
   if (invoicesError) {
-    throw new Error(`Eroare la citirea datelor pentru dashboard: ${invoicesError.message}`);
+    throw new Error(
+      `Eroare la citirea datelor pentru dashboard: ${invoicesError.message}`,
+    );
   }
 
   const { data: documentsData, error: documentsError } = await supabase
@@ -116,19 +143,23 @@ export async function getDashboardData() {
   const documents = documentsData ?? [];
 
   const invoiceCount = invoices.length;
-  const totalValue = invoices.reduce((sum, invoice) => sum + toNumber(invoice.payable_amount), 0);
-  const totalVat = invoices.reduce((sum, invoice) => sum + toNumber(invoice.tax_amount), 0);
+
+  const totalValue = invoices.reduce(
+    (sum, invoice) => sum + toNumber(invoice.payable_amount),
+    0,
+  );
+
+  const totalVat = invoices.reduce(
+    (sum, invoice) => sum + toNumber(invoice.tax_amount),
+    0,
+  );
 
   const supplierIds = new Set(
-    invoices
-      .map((invoice) => invoice.supplier_id)
-      .filter(Boolean),
+    invoices.map((invoice) => invoice.supplier_id).filter(Boolean),
   );
 
   const customerIds = new Set(
-    invoices
-      .map((invoice) => invoice.customer_id)
-      .filter(Boolean),
+    invoices.map((invoice) => invoice.customer_id).filter(Boolean),
   );
 
   const monthlyTotals = new Map<string, number>();
@@ -136,6 +167,7 @@ export async function getDashboardData() {
   invoices.forEach((invoice) => {
     const monthKey = getMonthKey(invoice.issue_date ?? invoice.created_at);
     const previous = monthlyTotals.get(monthKey) ?? 0;
+
     monthlyTotals.set(monthKey, previous + toNumber(invoice.payable_amount));
   });
 
@@ -153,6 +185,7 @@ export async function getDashboardData() {
     const supplier = getRelationParty(invoice.suppliers as RelationParty);
     const supplierName = supplier?.name ?? "Furnizor necunoscut";
     const previous = supplierTotals.get(supplierName) ?? 0;
+
     supplierTotals.set(supplierName, previous + toNumber(invoice.payable_amount));
   });
 
@@ -161,11 +194,54 @@ export async function getDashboardData() {
     .sort((a, b) => b.value - a.value)
     .slice(0, 5);
 
+  const monthlyFinancialMap = new Map<string, MonthlyFinancialPoint>();
+
+  invoices.forEach((invoice) => {
+    const monthKey = getMonthKey(invoice.issue_date ?? invoice.created_at);
+
+    const current = monthlyFinancialMap.get(monthKey) ?? {
+      monthKey,
+      revenue: 0,
+      expenses: 0,
+      vat: 0,
+      invoiceCount: 0,
+    };
+
+    const supplier = getRelationParty(invoice.suppliers as RelationParty);
+    const customer = getRelationParty(invoice.customers as RelationParty);
+
+    const supplierCui = normalizeCui(supplier?.cui);
+    const customerCui = normalizeCui(customer?.cui);
+
+    const value = toNumber(invoice.payable_amount);
+    const vat = toNumber(invoice.tax_amount);
+
+    if (supplierCui === DEMO_COMPANY_CUI) {
+      current.revenue += value;
+    } else if (customerCui === DEMO_COMPANY_CUI) {
+      current.expenses += value;
+    } else {
+      current.expenses += value;
+    }
+
+    current.vat += vat;
+    current.invoiceCount += 1;
+
+    monthlyFinancialMap.set(monthKey, current);
+  });
+
+  const monthlyFinancialPoints = Array.from(monthlyFinancialMap.values()).sort(
+    (a, b) => a.monthKey.localeCompare(b.monthKey),
+  );
+
+  const aiForecast = buildAiFinancialForecast(monthlyFinancialPoints);
+
   const docsPerMonthMap = new Map<string, number>();
 
   documents.forEach((document) => {
     const monthKey = getMonthKey(document.uploaded_at);
     const previous = docsPerMonthMap.get(monthKey) ?? 0;
+
     docsPerMonthMap.set(monthKey, previous + 1);
   });
 
@@ -177,23 +253,7 @@ export async function getDashboardData() {
     }));
 
   const latestDocuments = invoices.slice(0, 7).map((invoice) => {
-    const documentsRelation = invoice.documents as
-      | {
-          file_name: string | null;
-          document_type: string | null;
-          uploaded_at: string | null;
-        }
-      | {
-          file_name: string | null;
-          document_type: string | null;
-          uploaded_at: string | null;
-        }[]
-      | null
-      | undefined;
-
-    const documentData = Array.isArray(documentsRelation)
-      ? documentsRelation[0]
-      : documentsRelation;
+    const documentData = getDocument(invoice.documents as DocumentRelation);
 
     return {
       id: invoice.id,
@@ -218,34 +278,6 @@ export async function getDashboardData() {
     },
   ];
 
-  let predictedValue = totalValue;
-  let predictedPeriod = "N/A";
-  let predictionExplanation = "Nu exista suficiente date istorice pentru o estimare relevanta.";
-
-  if (monthlyInvoiceValue.length > 0) {
-    const values = monthlyInvoiceValue.map((item) => item.value);
-    const lastValue = values[values.length - 1];
-
-    if (values.length >= 2) {
-      const changes = values.slice(1).map((value, index) => value - values[index]);
-      const averageChange =
-        changes.reduce((sum, change) => sum + change, 0) / changes.length;
-
-      predictedValue = Math.max(lastValue + averageChange, 0);
-      predictionExplanation =
-        averageChange >= 0
-          ? "Estimarea indica o posibila crestere a valorii facturilor pe baza trendului istoric."
-          : "Estimarea indica o posibila scadere a valorii facturilor pe baza trendului istoric.";
-    } else {
-      predictedValue = lastValue;
-      predictionExplanation =
-        "Estimarea foloseste valoarea ultimei luni deoarece exista o singura perioada disponibila.";
-    }
-
-    const lastMonthKey = monthlyInvoiceValue[monthlyInvoiceValue.length - 1].monthKey;
-    predictedPeriod = getMonthLabel(getNextMonthKey(lastMonthKey));
-  }
-
   return {
     invoiceCount,
     totalValue,
@@ -258,10 +290,6 @@ export async function getDashboardData() {
     topSuppliers,
     docsPerMonth,
     latestDocuments,
-    prediction: {
-      predictedValue,
-      predictedPeriod,
-      explanation: predictionExplanation,
-    },
+    prediction: aiForecast,
   };
 }

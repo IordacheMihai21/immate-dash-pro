@@ -8,12 +8,19 @@ import {
   BarChart3,
   Settings,
   Building2,
+  BrainCircuit,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const items: { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }[] = [
+const items: {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact?: boolean;
+}[] = [
   { to: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/app/documente", label: "Documente", icon: FileText },
+  { to: "/app/ai-forecast", label: "AI Forecast", icon: BrainCircuit },
   { to: "/app/e-facturi", label: "e-Facturi", icon: FileCode2 },
   { to: "/app/furnizori", label: "Furnizori", icon: Truck },
   { to: "/app/clienti", label: "Clienți", icon: Users },
@@ -30,6 +37,7 @@ export function AppSidebar() {
         <div className="flex h-8 w-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
           <Building2 className="h-4 w-4" />
         </div>
+
         <div className="flex flex-col leading-tight">
           <span className="text-sm font-semibold">IMMapp</span>
           <span className="text-[10px] uppercase tracking-wider text-sidebar-foreground/60">
@@ -37,12 +45,16 @@ export function AppSidebar() {
           </span>
         </div>
       </div>
+
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <ul className="space-y-1">
           {items.map((item) => {
             const active = item.exact
               ? pathname === item.to
               : pathname.startsWith(item.to);
+
+            const Icon = item.icon;
+
             return (
               <li key={item.to}>
                 <Link
@@ -54,7 +66,7 @@ export function AppSidebar() {
                       : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
                   )}
                 >
-                  <item.icon className="h-4 w-4" />
+                  <Icon className="h-4 w-4" />
                   {item.label}
                 </Link>
               </li>
@@ -62,6 +74,7 @@ export function AppSidebar() {
           })}
         </ul>
       </nav>
+
       <div className="border-t border-sidebar-border p-4 text-[11px] text-sidebar-foreground/60">
         v0.1.0 — Prototip BI
       </div>
