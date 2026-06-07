@@ -1,10 +1,30 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Download,
+  Eye,
+  FileCode2,
+  Filter,
+  Loader2,
+  MoreHorizontal,
+  Percent,
+  ReceiptText,
+  Timer,
+  UploadCloud,
+  Wallet,
+} from "lucide-react";
+import { AdminPanel, EmptyState, InfoBanner, StatCard } from "@/components/admin-ui";
 import { PageHeader } from "@/components/page-header";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
 import { UploadModal } from "@/components/upload-modal";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -13,14 +33,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { FileCode2, Info, Loader2 } from "lucide-react";
-import { formatRON } from "@/lib/mock-data";
 import { getInvoices } from "@/lib/invoiceService";
+import { formatRON } from "@/lib/mock-data";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/app/e-facturi/")({
-  head: () => ({ meta: [{ title: "e-Facturi — IMMapp" }] }),
+  head: () => ({ meta: [{ title: "e-Facturi - IMMapp" }] }),
   component: EInvoicesPage,
 });
+
+type InvoiceTab = "all" | "processed" | "recent";
 
 type RelationParty =
   | {
@@ -48,6 +70,279 @@ type InvoiceRow = {
   suppliers?: RelationParty;
   customers?: RelationParty;
 };
+
+function EInvoicesPage() {
+  const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
+  const [activeTab, setActiveTab] = useState<InvoiceTab>("all");
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const stats = useMemo(() => {
+    const total = invoices.reduce(
+      (sum, invoice) => sum + Number(invoice.payable_amount ?? 0),
+      0,
+    );
+    const vat = invoices.reduce(
+      (sum, invoice) => sum + Number(invoice.tax_amount ?? 0),
+      0,
+    );
+    const processed = invoices.filter(
+      (invoice) => normalizeStatus(invoice.status) === "Activ",
+    ).length;
+
+    return {
+      total,
+      vat,
+      processed,
+      processingRate:
+        invoices.length > 0 ? Math.round((processed / invoices.length) * 100) : 0,
+    };
+  }, [invoices]);
+
+  const filteredInvoices = useMemo(() => {
+    if (activeTab === "processed") {
+      return invoices.filter((invoice) => normalizeStatus(invoice.status) === "Activ");
+    }
+
+    if (activeTab === "recent") {
+      return invoices.filter((invoice) =>
+        isRecentDate(invoice.issue_date ?? invoice.created_at),
+      );
+    }
+
+    return invoices;
+  }, [activeTab, invoices]);
+
+  async function loadInvoices() {
+    try {
+      setIsLoading(true);
+      setErrorMessage("");
+
+      const data = await getInvoices();
+      setInvoices(data as unknown as InvoiceRow[]);
+    } catch {
+      setErrorMessage("Nu s-au putut incarca facturile.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadInvoices();
+
+    const handleInvoiceImported = () => {
+      loadInvoices();
+    };
+
+    window.addEventListener("immapp:invoice-imported", handleInvoiceImported);
+    window.addEventListener("immapp:invoice-deleted", handleInvoiceImported);
+
+    return () => {
+      window.removeEventListener("immapp:invoice-imported", handleInvoiceImported);
+      window.removeEventListener("immapp:invoice-deleted", handleInvoiceImported);
+    };
+  }, []);
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="e-Facturi"
+        description="Urmareste facturile extrase din fisiere XML e-Factura si impactul lor financiar."
+        actions={
+          <UploadModal
+            trigger={
+              <Button className="gap-2">
+                <UploadCloud className="h-4 w-4" />
+                Incarca e-Factura XML
+              </Button>
+            }
+          />
+        }
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          title="Total facturi"
+          value={String(invoices.length)}
+          description="Facturi extrase din XML e-Factura"
+          icon={<ReceiptText className="h-5 w-5" />}
+          tone="blue"
+        />
+        <StatCard
+          title="Valoare totala"
+          value={formatRON(stats.total)}
+          description="Total de plata cumulat"
+          icon={<Wallet className="h-5 w-5" />}
+          tone="emerald"
+        />
+        <StatCard
+          title="TVA colectata"
+          value={formatRON(stats.vat)}
+          description="TVA identificata in facturi"
+          icon={<Percent className="h-5 w-5" />}
+          tone="amber"
+        />
+        <StatCard
+          title="Status procesare"
+          value={`${stats.processingRate}%`}
+          description={`${stats.processed} facturi procesate`}
+          icon={<Timer className="h-5 w-5" />}
+          tone="slate"
+        />
+      </div>
+
+      <InfoBanner icon={<FileCode2 className="h-4 w-4" />}>
+        Facturile listate aici provin din XML e-Factura si alimenteaza dashboard-ul,
+        documentele financiare si predictiile pe date reale.
+      </InfoBanner>
+
+      {errorMessage && (
+        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+          {errorMessage}
+        </div>
+      )}
+
+      <AdminPanel
+        title="Lista facturi"
+        description="Filtreaza si deschide rapid detaliile fiecarei facturi."
+        action={
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-white"
+              onClick={() => toast.info("Filtre avansate disponibile in curand.")}
+            >
+              <Filter className="h-4 w-4" />
+              Filtru
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-white"
+              onClick={() => toast.info("Exportul va fi disponibil in curand.")}
+            >
+              <Download className="h-4 w-4" />
+              Export
+            </Button>
+          </div>
+        }
+        contentClassName="p-0"
+      >
+        <div className="border-b border-slate-100 p-5">
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as InvoiceTab)}>
+            <TabsList>
+              <TabsTrigger value="all">Toate</TabsTrigger>
+              <TabsTrigger value="processed">Procesate</TabsTrigger>
+              <TabsTrigger value="recent">Recente</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
+        {isLoading ? (
+          <div className="flex min-h-[280px] items-center justify-center gap-2 text-slate-500">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Se incarca facturile...
+          </div>
+        ) : invoices.length === 0 ? (
+          <EmptyState
+            title="Nu exista facturi extrase"
+            description="Incarca un XML e-Factura pentru a vedea facturile in acest tabel."
+            icon={<FileCode2 className="h-6 w-6" />}
+          />
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Numar factura</TableHead>
+                  <TableHead>Furnizor</TableHead>
+                  <TableHead>Client</TableHead>
+                  <TableHead>Data emitere</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="text-right">TVA</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actiuni</TableHead>
+                </TableRow>
+              </TableHeader>
+
+              <TableBody>
+                {filteredInvoices.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="py-8 text-center text-slate-500">
+                      Nu exista facturi pentru filtrul selectat.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredInvoices.map((invoice) => {
+                    const supplier = getRelationParty(invoice.suppliers);
+                    const customer = getRelationParty(invoice.customers);
+
+                    return (
+                      <TableRow key={invoice.id}>
+                        <TableCell className="font-medium text-slate-900">
+                          {invoice.invoice_number}
+                        </TableCell>
+                        <TableCell>{supplier?.name ?? "Furnizor necunoscut"}</TableCell>
+                        <TableCell>{customer?.name ?? "Client necunoscut"}</TableCell>
+                        <TableCell>{formatDate(invoice.issue_date ?? invoice.created_at)}</TableCell>
+                        <TableCell className="text-right font-semibold tabular-nums">
+                          {formatRON(Number(invoice.payable_amount ?? 0))}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {formatRON(Number(invoice.tax_amount ?? 0))}
+                        </TableCell>
+                        <TableCell>
+                          <StatusBadge status={normalizeStatus(invoice.status)} />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              title="Vezi factura"
+                              aria-label={`Vezi factura ${invoice.invoice_number}`}
+                              asChild
+                            >
+                              <Link to="/app/e-facturi/$id" params={{ id: invoice.id }}>
+                                <Eye className="h-4 w-4" />
+                              </Link>
+                            </Button>
+
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  title="Actiuni"
+                                  aria-label={`Actiuni pentru factura ${invoice.invoice_number}`}
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem asChild>
+                                  <Link to="/app/e-facturi/$id" params={{ id: invoice.id }}>
+                                    Detalii factura
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem disabled>Export in curand</DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </AdminPanel>
+    </div>
+  );
+}
 
 function getRelationParty(party: RelationParty) {
   if (!party) {
@@ -77,173 +372,34 @@ function normalizeStatus(status: string | null | undefined) {
   return "Activ" as any;
 }
 
-function EInvoicesPage() {
-  const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  async function loadInvoices() {
-    try {
-      setIsLoading(true);
-      setErrorMessage("");
-
-      const data = await getInvoices();
-
-      setInvoices(data as unknown as InvoiceRow[]);
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "A aparut o eroare la citirea facturilor.";
-
-      setErrorMessage(message);
-    } finally {
-      setIsLoading(false);
-    }
+function formatDate(value: string | null | undefined) {
+  if (!value) {
+    return "-";
   }
 
-  useEffect(() => {
-    loadInvoices();
+  const date = new Date(value);
 
-    const handleInvoiceImported = () => {
-      loadInvoices();
-    };
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
 
-    window.addEventListener("immapp:invoice-imported", handleInvoiceImported);
+  return date.toLocaleDateString("ro-RO", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
 
-    return () => {
-      window.removeEventListener("immapp:invoice-imported", handleInvoiceImported);
-    };
-  }, []);
+function isRecentDate(value: string | null | undefined) {
+  if (!value) {
+    return false;
+  }
 
-  return (
-    <div>
-      <PageHeader
-        title="e-Facturi"
-        description="Facturi importate din fisiere XML conforme structurii e-Factura."
-        actions={
-          <UploadModal
-            trigger={
-              <Button size="lg" className="gap-2">
-                <FileCode2 className="h-4 w-4" />
-                Importa e-Factura XML
-              </Button>
-            }
-          />
-        }
-      />
+  const date = new Date(value);
 
-      <div className="mb-4 flex items-start gap-2 rounded-md border border-info/30 bg-info/10 p-3 text-sm">
-        <Info className="mt-0.5 h-4 w-4 shrink-0 text-info" />
-        <p className="text-foreground">
-          Datele sunt extrase automat din fisierul XML, salvate in baza de date si utilizate
-          ulterior pentru indicatorii financiari si dashboard-ul BI.
-        </p>
-      </div>
+  if (Number.isNaN(date.getTime())) {
+    return false;
+  }
 
-      {errorMessage && (
-        <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-          {errorMessage}
-        </div>
-      )}
-
-      <Card>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="flex items-center justify-center gap-2 p-8 text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Se incarca facturile din baza de date...
-            </div>
-          ) : invoices.length === 0 ? (
-            <div className="p-8 text-center">
-              <p className="text-sm text-muted-foreground">
-                Nu exista inca facturi salvate in baza de date.
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Apasa pe „Importa e-Factura XML” pentru a incarca primul document.
-              </p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nr. factura</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Furnizor</TableHead>
-                  <TableHead>CUI furnizor</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead>CUI client</TableHead>
-                  <TableHead className="text-right">Valoare fara TVA</TableHead>
-                  <TableHead className="text-right">TVA</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-20"></TableHead>
-                </TableRow>
-              </TableHeader>
-
-              <TableBody>
-                {invoices.map((invoice) => {
-                  const supplier = getRelationParty(invoice.suppliers);
-                  const customer = getRelationParty(invoice.customers);
-
-                  return (
-                    <TableRow key={invoice.id}>
-                      <TableCell className="font-medium">
-                        {invoice.invoice_number}
-                      </TableCell>
-
-                      <TableCell>{invoice.issue_date ?? "-"}</TableCell>
-
-                      <TableCell>
-                        {supplier?.name ?? "Furnizor necunoscut"}
-                      </TableCell>
-
-                      <TableCell className="font-mono text-xs">
-                        {supplier?.cui ?? "-"}
-                      </TableCell>
-
-                      <TableCell>
-                        {customer?.name ?? "Client necunoscut"}
-                      </TableCell>
-
-                      <TableCell className="font-mono text-xs">
-                        {customer?.cui ?? "-"}
-                      </TableCell>
-
-                      <TableCell className="text-right tabular-nums">
-                        {formatRON(Number(invoice.tax_exclusive_amount ?? 0))}
-                      </TableCell>
-
-                      <TableCell className="text-right tabular-nums">
-                        {formatRON(Number(invoice.tax_amount ?? 0))}
-                      </TableCell>
-
-                      <TableCell className="text-right font-semibold tabular-nums">
-                        {formatRON(Number(invoice.payable_amount ?? 0))}
-                      </TableCell>
-
-                      <TableCell>
-                        <StatusBadge status={normalizeStatus(invoice.status)} />
-                      </TableCell>
-
-                      <TableCell>
-                        <Button variant="outline" size="sm" asChild>
-                          <Link
-                            to="/app/e-facturi/$id"
-                            params={{ id: invoice.id }}
-                          >
-                            Vezi
-                          </Link>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
+  return date.getTime() >= Date.now() - 30 * 24 * 60 * 60 * 1000;
 }

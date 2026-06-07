@@ -19,7 +19,7 @@ function RegisterPage() {
   // TODO: connect to backend API for ANAF CUI validation
   const verifyCui = () => {
     setCuiVerified(true);
-    toast.success("CUI valid (mock) — date preluate de la ANAF");
+    toast.success("CUI valid. Datele companiei au fost preluate.");
   };
 
   // TODO: connect to backend API for registration

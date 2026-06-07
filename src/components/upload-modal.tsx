@@ -23,6 +23,20 @@ import { UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import { importEFacturaXml } from "@/lib/invoiceService";
 
+const XML_ONLY_MESSAGE =
+  "Acest modul accepta doar fisiere XML e-Factura. Pentru Excel sau CSV, foloseste AI Forecast → Simulare.";
+
+function isLikelyEFacturaXml(xmlText: string) {
+  const normalized = xmlText.toLowerCase();
+
+  return (
+    normalized.includes("<invoice") ||
+    normalized.includes(":invoice") ||
+    normalized.includes("ubl:invoice") ||
+    normalized.includes("urn:oasis:names:specification:ubl:schema:xsd:invoice")
+  );
+}
+
 export function UploadModal({ trigger }: { trigger: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -38,12 +52,21 @@ export function UploadModal({ trigger }: { trigger: ReactNode }) {
     }
 
     if (documentType !== "xml") {
-      toast.error("Momentan este implementat importul pentru e-Factura XML.");
+      toast.error(XML_ONLY_MESSAGE);
       return;
     }
 
     if (!selectedFile.name.toLowerCase().endsWith(".xml")) {
-      toast.error("Fisierul trebuie sa fie in format XML.");
+      toast.error(XML_ONLY_MESSAGE);
+      return;
+    }
+
+    const xmlText = await selectedFile.text();
+
+    if (!isLikelyEFacturaXml(xmlText)) {
+      toast.error(
+        "Fisierul incarcat este XML, dar nu pare sa fie o e-Factura valida. Incarca un XML descarcat din sistemul e-Factura.",
+      );
       return;
     }
 
@@ -52,21 +75,24 @@ export function UploadModal({ trigger }: { trigger: ReactNode }) {
 
       const result = await importEFacturaXml(selectedFile);
 
-      toast.success("e-Factura XML a fost procesata si salvata in baza de date.");
+      localStorage.setItem("immapp:ai-forecast-status", "outdated");
+
+      toast.success("e-Factura XML a fost procesata. Indicatorii financiari au fost actualizati.");
 
       window.dispatchEvent(
         new CustomEvent("immapp:invoice-imported", {
           detail: result,
         }),
       );
+      window.dispatchEvent(new Event("immapp:ai-forecast-outdated"));
 
       setSelectedFile(null);
       setOpen(false);
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "A aparut o eroare la procesarea documentului.";
+      const rawMessage = error instanceof Error ? error.message : "";
+      const message = rawMessage.includes("exista deja")
+        ? rawMessage
+        : "Documentul nu a putut fi procesat. Verifica fisierul XML e-Factura si incearca din nou.";
 
       toast.error(message);
     } finally {
@@ -80,9 +106,9 @@ export function UploadModal({ trigger }: { trigger: ReactNode }) {
 
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Incarca document</DialogTitle>
+          <DialogTitle>Incarca e-Factura XML</DialogTitle>
           <DialogDescription>
-            Acceptate: XML e-Factura, PDF, XLSX, CSV. In aceasta versiune este functional importul XML.
+            Incarca aici doar fisiere XML e-Factura. Pentru Excel sau CSV, foloseste zona Simulare din AI Forecast.
           </DialogDescription>
         </DialogHeader>
 
@@ -96,10 +122,18 @@ export function UploadModal({ trigger }: { trigger: ReactNode }) {
               <Input
                 id="file"
                 type="file"
-                accept=".xml,.pdf,.xlsx,.csv"
+                accept=".xml"
                 className="border-0 p-0 shadow-none"
                 onChange={(event) => {
                   const file = event.target.files?.[0] ?? null;
+
+                  if (file && !file.name.toLowerCase().endsWith(".xml")) {
+                    toast.error(XML_ONLY_MESSAGE);
+                    event.currentTarget.value = "";
+                    setSelectedFile(null);
+                    return;
+                  }
+
                   setSelectedFile(file);
                 }}
               />
@@ -122,9 +156,6 @@ export function UploadModal({ trigger }: { trigger: ReactNode }) {
 
               <SelectContent>
                 <SelectItem value="xml">e-Factura XML</SelectItem>
-                <SelectItem value="pdf">Factura PDF</SelectItem>
-                <SelectItem value="bank">Extras bancar</SelectItem>
-                <SelectItem value="other">Alt document</SelectItem>
               </SelectContent>
             </Select>
           </div>

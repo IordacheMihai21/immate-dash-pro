@@ -110,7 +110,7 @@ async function saveInvoice(
   }
 
   if (existingInvoice) {
-    throw new Error(`Factura ${invoice.invoiceNumber} exista deja in baza de date.`);
+    throw new Error(`Factura ${invoice.invoiceNumber} exista deja in aplicatie.`);
   }
 
   const { data, error } = await supabase
@@ -253,7 +253,7 @@ export async function importEFacturaXml(file: File): Promise<SavedInvoiceResult>
   }
 
   if (existingInvoice) {
-    throw new Error(`Factura ${parsedInvoice.invoiceNumber} exista deja in baza de date.`);
+    throw new Error(`Factura ${parsedInvoice.invoiceNumber} exista deja in aplicatie.`);
   }
 
   const documentId = await saveDocument(file.name, xmlText);

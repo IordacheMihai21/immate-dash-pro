@@ -1,15 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { PageHeader } from "@/components/page-header";
-import { ChartCard } from "@/components/chart-card";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
   Cell,
-  Legend,
   Line,
   LineChart,
   Pie,
@@ -20,54 +17,76 @@ import {
   YAxis,
 } from "recharts";
 import {
+  AlertTriangle,
   ArrowUpRight,
   BrainCircuit,
+  Eye,
   FileText,
   Loader2,
+  MoreHorizontal,
   Percent,
-  Sparkles,
+  ReceiptText,
   TrendingUp,
-  Truck,
-  Users,
   Wallet,
-  AlertTriangle,
   X,
 } from "lucide-react";
-import { formatRON } from "@/lib/mock-data";
+import { AdminPanel, StatCard } from "@/components/admin-ui";
+import { ChartCard } from "@/components/chart-card";
+import { PageHeader } from "@/components/page-header";
+import { StatusBadge } from "@/components/status-badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { getDashboardData } from "@/lib/dashboardService";
+import { formatRON } from "@/lib/mock-data";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/")({
-  head: () => ({ meta: [{ title: "Dashboard — IMMapp" }] }),
+  head: () => ({ meta: [{ title: "Dashboard - IMMapp" }] }),
   component: Dashboard,
 });
 
 type DashboardData = Awaited<ReturnType<typeof getDashboardData>>;
+type InvoiceFilter = "all" | "processed" | "recent";
 
 type FocusedKpi = {
   title: string;
   value: string;
-  trend: string;
-  positive: boolean;
   explanation: string;
   formula: string;
   businessMeaning: string;
   icon: ReactNode;
 } | null;
 
-const chartColors = [
-  "var(--color-chart-1)",
-  "var(--color-chart-2)",
-  "var(--color-chart-3)",
-  "var(--color-chart-4)",
-  "var(--color-chart-5)",
-];
+const chartColors = ["#2563eb", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
 
 function Dashboard() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [focusedKpi, setFocusedKpi] = useState<FocusedKpi>(null);
-  const [isKpiModalClosing, setIsKpiModalClosing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [focusedKpi, setFocusedKpi] = useState<FocusedKpi>(null);
+  const [invoiceFilter, setInvoiceFilter] = useState<InvoiceFilter>("all");
 
   async function loadDashboard() {
     try {
@@ -76,30 +95,11 @@ function Dashboard() {
 
       const data = await getDashboardData();
       setDashboardData(data);
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "A aparut o eroare la incarcarea dashboard-ului.";
-
-      setErrorMessage(message);
+    } catch {
+      setErrorMessage("Nu s-au putut incarca datele financiare.");
     } finally {
       setIsLoading(false);
     }
-  }
-
-  function openKpiModal(data: NonNullable<FocusedKpi>) {
-    setIsKpiModalClosing(false);
-    setFocusedKpi(data);
-  }
-
-  function closeKpiModal() {
-    setIsKpiModalClosing(true);
-
-    window.setTimeout(() => {
-      setFocusedKpi(null);
-      setIsKpiModalClosing(false);
-    }, 180);
   }
 
   useEffect(() => {
@@ -125,14 +125,14 @@ function Dashboard() {
 
     return dashboardData.monthlyInvoiceValue.map((item, index) => ({
       month: item.month,
-      revenue: item.value,
-      docs: dashboardData.docsPerMonth[index]?.docs ?? 0,
+      venituri: item.value,
+      documente: dashboardData.docsPerMonth[index]?.docs ?? 0,
     }));
   }, [dashboardData]);
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center gap-2 text-muted-foreground">
+      <div className="flex min-h-[420px] items-center justify-center gap-2 text-slate-500">
         <Loader2 className="h-4 w-4 animate-spin" />
         Se incarca dashboard-ul...
       </div>
@@ -147,7 +147,7 @@ function Dashboard() {
           description="O imagine clara asupra activitatii companiei."
         />
 
-        <div className="rounded-md border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
           {errorMessage || "Nu s-au putut incarca datele pentru dashboard."}
         </div>
       </div>
@@ -155,716 +155,624 @@ function Dashboard() {
   }
 
   const prediction = dashboardData.prediction;
-
   const currentRevenue =
-    monthlyData.length > 0 ? monthlyData[monthlyData.length - 1].revenue : 0;
+    monthlyData.length > 0 ? monthlyData[monthlyData.length - 1].venituri : 0;
   const previousRevenue =
-    monthlyData.length > 1 ? monthlyData[monthlyData.length - 2].revenue : 0;
-
+    monthlyData.length > 1 ? monthlyData[monthlyData.length - 2].venituri : 0;
   const revenueTrendPercent = getPercentChange(currentRevenue, previousRevenue);
-
-  const estimatedMargin =
-    prediction.revenueForecast > 0
-      ? (prediction.profitForecast / prediction.revenueForecast) * 100
-      : 0;
-
-  const vatRatio =
-    dashboardData.totalValue > 0
-      ? (dashboardData.totalVat / dashboardData.totalValue) * 100
-      : 0;
-
   const avgInvoiceValue =
     dashboardData.invoiceCount > 0
       ? dashboardData.totalValue / dashboardData.invoiceCount
       : 0;
-
-  const cashFlowChartData = [
-    { period: "30 zile", value: prediction.cashFlow30Days },
-    { period: "60 zile", value: prediction.cashFlow60Days },
-    { period: "90 zile", value: prediction.cashFlow90Days },
-  ];
+  const filteredInvoices = filterInvoices(
+    dashboardData.latestInvoices,
+    invoiceFilter,
+  );
+  const healthScore = getFinancialHealthScore(
+    prediction.confidenceLevel,
+    prediction.riskLevel,
+    prediction.cashFlow30Days,
+  );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <PageHeader
         title="Dashboard"
-        description="Monitorizeaza performanta financiara, activitatea documentelor si estimarile AI intr-un singur loc."
+        description="Monitorizeaza veniturile, facturile, TVA-ul si predictiile financiare pentru compania ta."
       />
 
-      <Card className="border-border/60 bg-gradient-to-br from-background via-background to-primary/5">
-        <CardContent className="p-6">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                <Sparkles className="h-3.5 w-3.5" />
-                Centru de performanta
-              </div>
-
-              <h2 className="text-2xl font-semibold tracking-tight">
-                Imagine completa asupra companiei tale
-              </h2>
-
-              <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-                Urmareste veniturile, TVA-ul, activitatea documentelor, partenerii
-                principali si estimarile financiare generate automat.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <BadgeInfo label="Facturi" value={String(dashboardData.invoiceCount)} />
-              <BadgeInfo label="Furnizori" value={String(dashboardData.supplierCount)} />
-              <BadgeInfo label="Clienti" value={String(dashboardData.customerCount)} />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <section>
-        <SectionTitle title="Overview" />
-
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <OverviewCard
+      <section className="grid gap-4 xl:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 xl:col-span-2">
+          <StatCard
             title="Venit total"
             value={formatRON(dashboardData.totalValue)}
+            description="Suma facturilor procesate din fluxul e-Factura XML."
+            trend={`${formatPercent(revenueTrendPercent)} lunar`}
             icon={<Wallet className="h-5 w-5" />}
-            trend={`${formatPercent(revenueTrendPercent)} fata de luna anterioara`}
-            positive={revenueTrendPercent >= 0}
+            tone="blue"
             onClick={() =>
-              openKpiModal({
+              setFocusedKpi({
                 title: "Venit total",
                 value: formatRON(dashboardData.totalValue),
-                trend: `${formatPercent(revenueTrendPercent)} fata de luna anterioara`,
-                positive: revenueTrendPercent >= 0,
                 icon: <Wallet className="h-6 w-6" />,
                 explanation:
-                  "Venitul total reprezinta valoarea totala a facturilor procesate in aplicatie.",
+                  "Venitul total reprezinta valoarea cumulata a facturilor procesate in IMMapp.",
                 formula:
-                  "Venit total = suma valorilor totale ale facturilor importate.",
+                  "Venit total = suma valorilor totale ale facturilor e-Factura importate.",
                 businessMeaning:
-                  "Acest indicator arata volumul financiar total al activitatii procesate si ajuta la intelegerea dimensiunii companiei.",
+                  "Indicatorul arata volumul financiar procesat si ajuta la evaluarea dimensiunii activitatii curente.",
               })
             }
           />
 
-          <OverviewCard
-            title="Clienti activi"
-            value={String(dashboardData.customerCount)}
-            icon={<Users className="h-5 w-5" />}
-            trend="parteneri activi in platforma"
-            positive
+          <StatCard
+            title="Facturi procesate"
+            value={String(dashboardData.invoiceCount)}
+            description={`Valoare medie: ${formatRON(avgInvoiceValue)}`}
+            trend={`${dashboardData.documentsProcessed} documente`}
+            icon={<ReceiptText className="h-5 w-5" />}
+            tone="emerald"
             onClick={() =>
-              openKpiModal({
-                title: "Clienti activi",
-                value: String(dashboardData.customerCount),
-                trend: "parteneri activi in platforma",
-                positive: true,
-                icon: <Users className="h-6 w-6" />,
+              setFocusedKpi({
+                title: "Facturi procesate",
+                value: String(dashboardData.invoiceCount),
+                icon: <ReceiptText className="h-6 w-6" />,
                 explanation:
-                  "Clientii activi sunt companiile identificate automat din documentele procesate.",
+                  "Facturile procesate sunt documentele e-Factura XML citite si incluse in indicatorii financiari.",
                 formula:
-                  "Clienti activi = numarul clientilor unici identificati in facturile incarcate.",
+                  "Facturi procesate = numarul facturilor valide extrase din XML-urile incarcate.",
                 businessMeaning:
-                  "Acest indicator ajuta la intelegerea bazei de clienti si a gradului de diversificare a veniturilor.",
-              })
-            }
-          />
-
-          <OverviewCard
-            title="Marja estimata"
-            value={`${estimatedMargin.toFixed(1)}%`}
-            icon={<TrendingUp className="h-5 w-5" />}
-            trend="bazata pe predictia curenta"
-            positive={estimatedMargin >= 0}
-            onClick={() =>
-              openKpiModal({
-                title: "Marja estimata",
-                value: `${estimatedMargin.toFixed(1)}%`,
-                trend: "bazata pe predictia curenta",
-                positive: estimatedMargin >= 0,
-                icon: <TrendingUp className="h-6 w-6" />,
-                explanation:
-                  "Marja estimata arata raportul dintre profitul estimat si veniturile estimate.",
-                formula:
-                  "Marja estimata = profit estimat / venit estimat × 100.",
-                businessMeaning:
-                  "O marja pozitiva indica o activitate profitabila, iar o marja negativa poate semnala presiune pe costuri sau cash-flow.",
-              })
-            }
-          />
-
-          <OverviewCard
-            title="TVA colectata"
-            value={formatRON(dashboardData.totalVat)}
-            icon={<Percent className="h-5 w-5" />}
-            trend={`${vatRatio.toFixed(1)}% din valoarea totala`}
-            positive
-            onClick={() =>
-              openKpiModal({
-                title: "TVA colectata",
-                value: formatRON(dashboardData.totalVat),
-                trend: `${vatRatio.toFixed(1)}% din valoarea totala`,
-                positive: true,
-                icon: <Percent className="h-6 w-6" />,
-                explanation:
-                  "TVA colectata reprezinta suma TVA-ului extras din facturile procesate.",
-                formula:
-                  "TVA colectata = suma valorilor TVA din facturile importate.",
-                businessMeaning:
-                  "Acest indicator ajuta compania sa urmareasca impactul fiscal si obligatiile legate de TVA.",
+                  "Un volum mai mare de facturi imbunatateste vizibilitatea asupra activitatii si ajuta predictiile AI sa fie mai stabile.",
               })
             }
           />
         </div>
+
+        <FinancialHealthCard
+          score={healthScore}
+          confidence={prediction.confidenceLevel}
+          risk={prediction.riskLevel}
+          cashFlow={prediction.cashFlow30Days}
+          vat={dashboardData.totalVat}
+          paymentRisk={prediction.paymentDelayRisk}
+        />
       </section>
 
-      <section>
-        <div className="grid gap-4 xl:grid-cols-3">
-          <ChartCard
-            title="Evolutie venituri"
-            description="Valoarea lunara a activitatii financiare"
-            className="xl:col-span-2"
-          >
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                <XAxis dataKey="month" stroke="var(--color-muted-foreground)" fontSize={12} />
-                <YAxis stroke="var(--color-muted-foreground)" fontSize={12} />
-                <Tooltip
-                  formatter={(v: number) => formatRON(v)}
-                  contentStyle={{
-                    backgroundColor: "var(--color-card)",
-                    border: "1px solid var(--color-border)",
-                    borderRadius: 10,
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="revenue"
-                  name="Venit"
-                  stroke="var(--color-chart-1)"
-                  strokeWidth={3}
-                  dot={{ r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </ChartCard>
-
-          <Card className="transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
-            <CardContent className="p-5">
-              <div className="mb-5 flex items-center gap-2">
-                <BrainCircuit className="h-5 w-5 text-primary" />
-                <h2 className="text-base font-semibold">AI Forecast</h2>
-              </div>
-
-              <p className="text-4xl font-semibold">{prediction.confidenceLevel}</p>
-
-              <p className="mt-2 text-sm text-muted-foreground">
-                Nivelul de incredere al predictiei, calculat pe baza activitatii
-                financiare curente.
-              </p>
-
-              <div className="mt-5 grid gap-3">
-                <MiniInfo label="Nivel risc" value={prediction.riskLevel} />
-                <MiniInfo
-                  label="Risc intarziere plata"
-                  value={prediction.paymentDelayRisk}
-                />
-              </div>
-
-              <Button
-                className="mt-5 w-full"
-                onClick={() => (window.location.href = "/app/ai-forecast")}
-              >
-                Vezi predictiile
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      <section>
-        <div className="grid gap-4 xl:grid-cols-3">
-          <Card className="transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
-            <CardContent className="p-5">
-              <div className="mb-5 flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-primary" />
-                <h2 className="text-base font-semibold">Risc de plata</h2>
-              </div>
-
-              <p className="text-3xl font-semibold">{prediction.paymentDelayRisk}</p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Semnal timpuriu privind probabilitatea de intarziere la plata.
-              </p>
-
-              <div className="mt-5">
-                <ResponsiveContainer width="100%" height={90}>
-                  <LineChart data={monthlyData}>
-                    <Line
-                      type="monotone"
-                      dataKey="revenue"
-                      stroke="var(--color-chart-3)"
-                      strokeWidth={2.5}
-                      dot={false}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
-            <CardContent className="p-5">
-              <div className="mb-5 flex items-center gap-2">
-                <FileText className="h-5 w-5 text-primary" />
-                <h2 className="text-base font-semibold">Activitate documente</h2>
-              </div>
-
-              <p className="text-3xl font-semibold">{dashboardData.documentsProcessed}</p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Documente procesate in platforma pana in acest moment.
-              </p>
-
-              <div className="mt-4 rounded-xl bg-secondary/30 p-3">
-                <p className="text-xs text-muted-foreground">Valoare medie / factura</p>
-                <p className="mt-1 text-sm font-semibold">{formatRON(avgInvoiceValue)}</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
-            <CardContent className="p-5">
-              <div className="mb-5 flex items-center gap-2">
-                <Truck className="h-5 w-5 text-primary" />
-                <h2 className="text-base font-semibold">Portofoliu furnizori</h2>
-              </div>
-
-              <div className="space-y-4">
-                {dashboardData.topSuppliers.slice(0, 3).map((supplier, index) => (
-                  <div
-                    key={supplier.name}
-                    className="flex items-center justify-between rounded-xl bg-secondary/30 p-3"
-                  >
-                    <div>
-                      <p className="text-sm font-medium line-clamp-1">
-                        {supplier.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Top #{index + 1}</p>
-                    </div>
-                    <p className="text-sm font-semibold">{formatRON(supplier.value)}</p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      <section>
-        <div className="grid gap-4 xl:grid-cols-3">
-          <ChartCard
-            title="Estimare cash-flow"
-            description="Proiectie pentru urmatoarele 30, 60 si 90 de zile"
-            className="xl:col-span-2"
-          >
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={cashFlowChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                <XAxis dataKey="period" stroke="var(--color-muted-foreground)" fontSize={12} />
-                <YAxis stroke="var(--color-muted-foreground)" fontSize={12} />
-                <Tooltip
-                  formatter={(v: number) => formatRON(v)}
-                  contentStyle={{
-                    backgroundColor: "var(--color-card)",
-                    border: "1px solid var(--color-border)",
-                    borderRadius: 10,
-                  }}
-                />
-                <Bar dataKey="value" radius={[10, 10, 0, 0]}>
-                  {cashFlowChartData.map((_, index) => (
-                    <Cell key={index} fill={chartColors[index % chartColors.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartCard>
-
-          <ChartCard
-            title="Structura TVA"
-            description="Pondere TVA si baza fara TVA"
-          >
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie
-                  data={dashboardData.vatDistribution}
-                  dataKey="value"
-                  nameKey="name"
-                  innerRadius={55}
-                  outerRadius={90}
-                  paddingAngle={4}
-                >
-                  {dashboardData.vatDistribution.map((_, index) => (
-                    <Cell key={index} fill={chartColors[index % chartColors.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(v: number) => formatRON(v)}
-                  contentStyle={{
-                    backgroundColor: "var(--color-card)",
-                    border: "1px solid var(--color-border)",
-                    borderRadius: 10,
-                  }}
-                />
-                <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </ChartCard>
-        </div>
-      </section>
-
-      <section>
-        <SectionTitle title="Indicatori cheie" />
-
-        <div className="grid gap-4 lg:grid-cols-3">
-          <MetricCard
-            label="Profit estimat"
-            value={formatRON(prediction.profitForecast)}
-            subtitle="Estimare bazata pe datele disponibile"
-            icon={<TrendingUp className="h-5 w-5" />}
-          />
-
-          <MetricCard
-            label="TVA estimata"
-            value={formatRON(prediction.vatForecast)}
-            subtitle="Impact fiscal estimat pentru perioada urmatoare"
-            icon={<Percent className="h-5 w-5" />}
-          />
-
-          <MetricCard
-            label="Cash-flow 30 zile"
-            value={formatRON(prediction.cashFlow30Days)}
-            subtitle="Semnal rapid pentru lichiditate"
-            icon={<Wallet className="h-5 w-5" />}
-          />
-        </div>
-      </section>
-
-      <section>
+      <section className="grid gap-4 xl:grid-cols-3">
         <ChartCard
-          title="Volum documente"
-          description="Numarul documentelor procesate pe fiecare luna"
+          title="Evolutie venituri"
+          description="Valoare lunara pe baza facturilor procesate"
+          className="border-slate-200 bg-white shadow-sm xl:col-span-2"
         >
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={monthlyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-              <XAxis dataKey="month" stroke="var(--color-muted-foreground)" fontSize={12} />
-              <YAxis stroke="var(--color-muted-foreground)" fontSize={12} />
+          <ResponsiveContainer width="100%" height={320}>
+            <LineChart data={monthlyData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
+              <YAxis stroke="#64748b" fontSize={12} />
               <Tooltip
-                contentStyle={{
-                  backgroundColor: "var(--color-card)",
-                  border: "1px solid var(--color-border)",
-                  borderRadius: 10,
-                }}
+                formatter={(value: number) => formatRON(Number(value))}
+                contentStyle={tooltipStyle}
               />
-              <Bar dataKey="docs" name="Documente" radius={[10, 10, 0, 0]}>
-                {monthlyData.map((_, index) => (
-                  <Cell key={index} fill={chartColors[index % chartColors.length]} />
-                ))}
-              </Bar>
-            </BarChart>
+              <Line
+                type="monotone"
+                dataKey="venituri"
+                name="Venituri"
+                stroke="#2563eb"
+                strokeWidth={3}
+                dot={{ r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+            </LineChart>
           </ResponsiveContainer>
         </ChartCard>
+
+        <Card className="border-slate-200 bg-white shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="rounded-xl bg-blue-50 p-3 text-blue-600">
+                <BrainCircuit className="h-5 w-5" />
+              </div>
+              <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                {prediction.confidenceLevel}
+              </span>
+            </div>
+
+            <h2 className="mt-5 text-lg font-semibold text-slate-900">Predictie AI</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              Estimare pentru perioada {prediction.predictedPeriod}, calculata din datele
+              financiare curente.
+            </p>
+
+            <div className="mt-5 space-y-3">
+              <MiniInfo label="Venit estimat" value={formatRON(prediction.revenueForecast)} />
+              <MiniInfo label="Nivel risc" value={prediction.riskLevel} />
+              <MiniInfo label="Risc plata" value={prediction.paymentDelayRisk} />
+            </div>
+
+            <Button className="mt-5 w-full" asChild>
+              <Link to="/app/ai-forecast">Vezi predictiile</Link>
+            </Button>
+          </CardContent>
+        </Card>
       </section>
 
-      {focusedKpi && (
-        <KpiFocusModal
-          data={focusedKpi}
-          isClosing={isKpiModalClosing}
-          onClose={closeKpiModal}
-        />
-      )}
-    </div>
-  );
-}
+      <section className="grid gap-4 xl:grid-cols-3">
+        <AdminPanel
+          title="Statistici"
+          description="Compara venituri si documente procesate pe perioada recenta"
+          className="xl:col-span-2"
+          contentClassName="p-0"
+        >
+          <Tabs defaultValue="overview" className="p-5">
+            <TabsList className="mb-4">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="venituri">Venituri</TabsTrigger>
+              <TabsTrigger value="documente">Documente</TabsTrigger>
+            </TabsList>
 
-function SectionTitle({ title }: { title: string }) {
-  return (
-    <div className="mb-4">
-      <h2 className="text-lg font-semibold">{title}</h2>
-    </div>
-  );
-}
+            <TabsContent value="overview">
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={monthlyData}>
+                  <defs>
+                    <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
+                  <YAxis stroke="#64748b" fontSize={12} />
+                  <Tooltip
+                    formatter={(value: number) => formatRON(Number(value))}
+                    contentStyle={tooltipStyle}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="venituri"
+                    name="Venituri"
+                    stroke="#2563eb"
+                    fill="url(#revenueGradient)"
+                    strokeWidth={2.5}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </TabsContent>
 
-function BadgeInfo({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-full bg-primary/10 px-4 py-2 text-sm">
-      <span className="text-muted-foreground">{label}: </span>
-      <span className="font-semibold text-primary">{value}</span>
-    </div>
-  );
-}
+            <TabsContent value="venituri">
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
+                  <YAxis stroke="#64748b" fontSize={12} />
+                  <Tooltip
+                    formatter={(value: number) => formatRON(Number(value))}
+                    contentStyle={tooltipStyle}
+                  />
+                  <Bar dataKey="venituri" name="Venituri" fill="#2563eb" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </TabsContent>
 
-function OverviewCard({
-  title,
-  value,
-  icon,
-  trend,
-  positive,
-  onClick,
-}: {
-  title: string;
-  value: string;
-  icon: ReactNode;
-  trend: string;
-  positive: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <button type="button" onClick={onClick} className="h-full text-left">
-      <Card className="h-full cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg">
-        <CardContent className="p-5">
-          <div className="mb-4 flex items-center gap-3">
-            <div className="rounded-full bg-primary/10 p-3 text-primary">{icon}</div>
-            <p className="text-sm font-medium">{title}</p>
+            <TabsContent value="documente">
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
+                  <YAxis stroke="#64748b" fontSize={12} />
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Bar dataKey="documente" name="Documente" fill="#10b981" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </TabsContent>
+          </Tabs>
+        </AdminPanel>
+
+        <AdminPanel
+          title="Structura TVA"
+          description="TVA si baza facturilor procesate"
+        >
+          <ResponsiveContainer width="100%" height={210}>
+            <PieChart>
+              <Pie
+                data={dashboardData.vatDistribution}
+                dataKey="value"
+                nameKey="name"
+                innerRadius={58}
+                outerRadius={86}
+                paddingAngle={4}
+              >
+                {dashboardData.vatDistribution.map((_, index) => (
+                  <Cell key={index} fill={chartColors[index % chartColors.length]} />
+                ))}
+              </Pie>
+              <Tooltip
+                formatter={(value: number) => formatRON(Number(value))}
+                contentStyle={tooltipStyle}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+
+          <div className="mt-4 space-y-3">
+            {dashboardData.topSuppliers.slice(0, 3).map((supplier, index) => (
+              <div
+                key={supplier.name}
+                className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 p-3"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-slate-900">
+                    {supplier.name}
+                  </p>
+                  <p className="text-xs text-slate-500">Furnizor #{index + 1}</p>
+                </div>
+                <p className="text-sm font-semibold text-slate-900">
+                  {formatRON(supplier.value)}
+                </p>
+              </div>
+            ))}
           </div>
+        </AdminPanel>
+      </section>
 
-          <p className="text-2xl font-semibold">{value}</p>
+      <AdminPanel
+        title="Facturi recente"
+        description="Ultimele facturi extrase din fisiere XML e-Factura"
+        action={
+          <div className="flex flex-wrap gap-2">
+            <FilterButton
+              active={invoiceFilter === "all"}
+              onClick={() => setInvoiceFilter("all")}
+            >
+              Toate
+            </FilterButton>
+            <FilterButton
+              active={invoiceFilter === "processed"}
+              onClick={() => setInvoiceFilter("processed")}
+            >
+              Procesate
+            </FilterButton>
+            <FilterButton
+              active={invoiceFilter === "recent"}
+              onClick={() => setInvoiceFilter("recent")}
+            >
+              Recente
+            </FilterButton>
+          </div>
+        }
+        contentClassName="p-0"
+      >
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Numar factura</TableHead>
+                <TableHead>Furnizor</TableHead>
+                <TableHead>Client</TableHead>
+                <TableHead>Data</TableHead>
+                <TableHead className="text-right">Total</TableHead>
+                <TableHead className="text-right">TVA</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actiuni</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredInvoices.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="py-8 text-center text-slate-500">
+                    Nu exista facturi pentru filtrul selectat.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredInvoices.map((invoice) => (
+                  <TableRow key={invoice.id}>
+                    <TableCell className="font-medium text-slate-900">
+                      {invoice.invoiceNumber}
+                    </TableCell>
+                    <TableCell>{invoice.supplierName}</TableCell>
+                    <TableCell>{invoice.customerName}</TableCell>
+                    <TableCell>{formatDate(invoice.issueDate)}</TableCell>
+                    <TableCell className="text-right font-medium tabular-nums">
+                      {formatRON(invoice.total)}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {formatRON(invoice.vat)}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={normalizeStatus(invoice.status)} />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          title="Vezi factura"
+                          aria-label={`Vezi factura ${invoice.invoiceNumber}`}
+                          asChild
+                        >
+                          <Link to="/app/e-facturi/$id" params={{ id: invoice.id }}>
+                            <Eye className="h-4 w-4" />
+                          </Link>
+                        </Button>
+
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Actiuni"
+                              aria-label={`Actiuni pentru factura ${invoice.invoiceNumber}`}
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem asChild>
+                              <Link to="/app/e-facturi/$id" params={{ id: invoice.id }}>
+                                Deschide detalii
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem disabled>Export in curand</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </AdminPanel>
+
+      <KpiDialog data={focusedKpi} onClose={() => setFocusedKpi(null)} />
+    </div>
+  );
+}
+
+function FinancialHealthCard({
+  score,
+  confidence,
+  risk,
+  cashFlow,
+  vat,
+  paymentRisk,
+}: {
+  score: number;
+  confidence: string;
+  risk: string;
+  cashFlow: number;
+  vat: number;
+  paymentRisk: string;
+}) {
+  return (
+    <Card className="overflow-hidden border-0 bg-[#111827] text-white shadow-lg">
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-slate-300">Sanatate financiara</p>
+            <h2 className="mt-2 text-2xl font-semibold">{score}%</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-400">
+              Scor orientativ bazat pe incredere, risc si cash-flow.
+            </p>
+          </div>
 
           <div
-            className={`mt-3 flex items-center gap-1 text-xs ${
-              positive ? "text-emerald-600" : "text-red-500"
-            }`}
+            className="relative grid h-32 w-32 shrink-0 place-items-center rounded-full"
+            style={{
+              background: `conic-gradient(#3b82f6 ${score * 3.6}deg, #1f2937 0deg)`,
+            }}
           >
-            <ArrowUpRight className="h-3.5 w-3.5" />
-            <span>{trend}</span>
-          </div>
-        </CardContent>
-      </Card>
-    </button>
-  );
-}
-
-function KpiFocusModal({
-  data,
-  isClosing,
-  onClose,
-}: {
-  data: NonNullable<FocusedKpi>;
-  isClosing: boolean;
-  onClose: () => void;
-}) {
-  return (
-    <div
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-background/70 p-4 backdrop-blur-sm ${
-        isClosing ? "kpi-overlay-out" : "kpi-overlay-in"
-      }`}
-      onClick={onClose}
-    >
-      <style>
-        {`
-          @keyframes kpiOverlayIn {
-            from {
-              opacity: 0;
-            }
-            to {
-              opacity: 1;
-            }
-          }
-
-          @keyframes kpiOverlayOut {
-            from {
-              opacity: 1;
-            }
-            to {
-              opacity: 0;
-            }
-          }
-
-          @keyframes kpiModalIn {
-            from {
-              opacity: 0;
-              transform: scale(0.84) translateY(22px);
-            }
-            to {
-              opacity: 1;
-              transform: scale(1) translateY(0);
-            }
-          }
-
-          @keyframes kpiModalOut {
-            from {
-              opacity: 1;
-              transform: scale(1) translateY(0);
-            }
-            to {
-              opacity: 0;
-              transform: scale(0.84) translateY(22px);
-            }
-          }
-
-          .kpi-overlay-in {
-            animation: kpiOverlayIn 180ms ease-out forwards;
-          }
-
-          .kpi-overlay-out {
-            animation: kpiOverlayOut 180ms ease-in forwards;
-          }
-
-          .kpi-modal-in {
-            animation: kpiModalIn 240ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            transform-origin: center center;
-          }
-
-          .kpi-modal-out {
-            animation: kpiModalOut 180ms ease-in forwards;
-            transform-origin: center center;
-          }
-        `}
-      </style>
-
-      <Card
-        className={`w-full max-w-3xl border-primary/20 shadow-2xl ${
-          isClosing ? "kpi-modal-out" : "kpi-modal-in"
-        }`}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <CardContent className="p-6">
-          <div className="mb-6 flex items-start justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="rounded-full bg-primary/10 p-4 text-primary">
-                {data.icon}
-              </div>
-
-              <div>
-                <p className="text-sm text-muted-foreground">Indicator financiar</p>
-                <h2 className="mt-1 text-2xl font-semibold">{data.title}</h2>
+            <div className="grid h-24 w-24 place-items-center rounded-full bg-[#111827]">
+              <div className="text-center">
+                <p className="text-2xl font-semibold">{score}</p>
+                <p className="text-xs text-slate-400">scor</p>
               </div>
             </div>
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-full p-2 text-muted-foreground transition hover:bg-secondary hover:text-foreground"
-              aria-label="Inchide"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          <div className="rounded-2xl border bg-secondary/30 p-5">
-            <p className="text-sm text-muted-foreground">Valoare curenta</p>
-            <p className="mt-2 text-4xl font-semibold">{data.value}</p>
-
-            <div
-              className={`mt-3 flex items-center gap-1 text-sm ${
-                data.positive ? "text-emerald-600" : "text-red-500"
-              }`}
-            >
-              <ArrowUpRight className="h-4 w-4" />
-              <span>{data.trend}</span>
-            </div>
-          </div>
-
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
-            <InfoBlock
-              title="Ce reprezinta"
-              description={data.explanation}
-            />
-
-            <InfoBlock
-              title="Cum se calculeaza"
-              description={data.formula}
-            />
-
-            <InfoBlock
-              title="De ce conteaza"
-              description={data.businessMeaning}
-            />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-function InfoBlock({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="rounded-xl border bg-background p-4">
-      <p className="text-sm font-semibold">{title}</p>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-        {description}
-      </p>
-    </div>
-  );
-}
-
-function MiniInfo({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-xl border bg-secondary/30 p-4">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-sm font-semibold">{value}</p>
-    </div>
-  );
-}
-
-function MetricCard({
-  label,
-  value,
-  subtitle,
-  icon,
-}: {
-  label: string;
-  value: string;
-  subtitle: string;
-  icon: ReactNode;
-}) {
-  return (
-    <Card className="transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
-      <CardContent className="p-5">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm text-muted-foreground">{label}</p>
-            <p className="mt-2 text-2xl font-semibold">{value}</p>
-          </div>
-
-          <div className="rounded-full bg-primary/10 p-4 text-primary">
-            {icon}
           </div>
         </div>
 
-        <p className="mt-4 text-sm text-muted-foreground">{subtitle}</p>
+        <div className="mt-6 grid gap-3 sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
+          <DarkMetric label="TVA" value={formatRON(vat)} />
+          <DarkMetric label="Cash-flow 30 zile" value={formatRON(cashFlow)} />
+          <DarkMetric label="Risc plata" value={paymentRisk} />
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2 text-xs">
+          <span className="rounded-full bg-white/10 px-2.5 py-1 text-slate-200">
+            Incredere: {confidence}
+          </span>
+          <span className="rounded-full bg-white/10 px-2.5 py-1 text-slate-200">
+            Risc: {risk}
+          </span>
+        </div>
       </CardContent>
     </Card>
   );
 }
 
+function KpiDialog({
+  data,
+  onClose,
+}: {
+  data: FocusedKpi;
+  onClose: () => void;
+}) {
+  return (
+    <Dialog open={Boolean(data)} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-2xl border-slate-200 bg-white">
+        {data && (
+          <>
+            <DialogHeader>
+              <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                {data.icon}
+              </div>
+              <DialogTitle>{data.title}</DialogTitle>
+              <DialogDescription>{data.value}</DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <KpiDetail title="Ce inseamna" value={data.explanation} />
+              <KpiDetail title="Formula" value={data.formula} />
+              <KpiDetail title="Semnificatie business" value={data.businessMeaning} />
+            </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function KpiDetail({ title, value }: { title: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <p className="text-sm font-semibold text-slate-900">{title}</p>
+      <p className="mt-1 text-sm leading-6 text-slate-600">{value}</p>
+    </div>
+  );
+}
+
+function MiniInfo({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 p-3">
+      <span className="text-sm text-slate-500">{label}</span>
+      <span className="text-sm font-semibold text-slate-900">{value}</span>
+    </div>
+  );
+}
+
+function DarkMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0 rounded-xl bg-white/10 p-3">
+      <p className="text-xs leading-5 text-slate-400">{label}</p>
+      <p className="mt-1 break-words text-sm font-semibold leading-5 text-white">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function FilterButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <Button
+      type="button"
+      size="sm"
+      variant={active ? "default" : "outline"}
+      onClick={onClick}
+      className={cn(!active && "bg-white")}
+    >
+      {children}
+    </Button>
+  );
+}
+
+function filterInvoices(
+  invoices: DashboardData["latestInvoices"],
+  filter: InvoiceFilter,
+) {
+  if (filter === "processed") {
+    return invoices.filter((invoice) => normalizeStatus(invoice.status) === "Activ");
+  }
+
+  if (filter === "recent") {
+    return invoices.filter((invoice) => isRecentDate(invoice.issueDate));
+  }
+
+  return invoices;
+}
+
+function isRecentDate(value: string | null | undefined) {
+  if (!value) {
+    return false;
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return false;
+  }
+
+  const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  return date.getTime() >= thirtyDaysAgo;
+}
+
+function normalizeStatus(status: string | null | undefined) {
+  if (!status) {
+    return "Activ" as any;
+  }
+
+  if (status === "procesata" || status === "procesat" || status === "Procesat") {
+    return "Activ" as any;
+  }
+
+  if (status === "eroare" || status === "Eroare") {
+    return "Inactiv" as any;
+  }
+
+  return "Activ" as any;
+}
+
+function formatDate(value: string | null | undefined) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return date.toLocaleDateString("ro-RO", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 function getPercentChange(current: number, previous: number) {
-  if (!previous || previous === 0) {
+  if (previous === 0) {
     return current > 0 ? 100 : 0;
   }
 
-  return ((current - previous) / Math.abs(previous)) * 100;
+  return ((current - previous) / previous) * 100;
 }
 
 function formatPercent(value: number) {
-  const sign = value >= 0 ? "+" : "";
+  const sign = value > 0 ? "+" : "";
   return `${sign}${value.toFixed(1)}%`;
 }
+
+function getFinancialHealthScore(
+  confidence: "Scazut" | "Mediu" | "Ridicat",
+  risk: "Scazut" | "Mediu" | "Ridicat",
+  cashFlow30Days: number,
+) {
+  const confidenceBase = {
+    Scazut: 58,
+    Mediu: 72,
+    Ridicat: 86,
+  }[confidence];
+
+  const riskPenalty = {
+    Scazut: 4,
+    Mediu: 14,
+    Ridicat: 28,
+  }[risk];
+
+  const cashFlowAdjustment = cashFlow30Days >= 0 ? 8 : -8;
+  return Math.max(35, Math.min(94, confidenceBase - riskPenalty + cashFlowAdjustment));
+}
+
+const tooltipStyle = {
+  backgroundColor: "#ffffff",
+  border: "1px solid #e2e8f0",
+  borderRadius: 12,
+  boxShadow: "0 12px 30px rgba(15, 23, 42, 0.08)",
+};

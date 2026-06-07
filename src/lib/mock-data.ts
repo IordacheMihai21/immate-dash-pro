@@ -1,19 +1,18 @@
-// Mock data pentru IMMapp
-// TODO: replace mock data with database data
+// Date locale pentru ecranele care nu sunt inca alimentate din servicii.
 
 export const activeCompany = {
-  name: "SC Demo IMM SRL",
+  name: "SC Imatech Solutions SRL",
   cui: "RO12345678",
   regCom: "J40/1234/2020",
-  address: "Str. Exemplu nr. 10, București",
-  email: "contact@demoimm.ro",
+  address: "Str. Polona nr. 45, Bucuresti",
+  email: "contact@imatech.ro",
   phone: "+40 721 000 000",
 };
 
 export const currentUser = {
   firstName: "Andrei",
   lastName: "Popescu",
-  email: "andrei.popescu@demoimm.ro",
+  email: "andrei.popescu@imatech.ro",
   role: "Administrator",
 };
 
@@ -61,7 +60,7 @@ export const eInvoices: EInvoice[] = [
     date: "2025-05-12",
     supplier: "SC Alfa Consulting SRL",
     supplierCui: "RO12345678",
-    client: "SC Demo IMM SRL",
+    client: "SC Imatech Solutions SRL",
     clientCui: "RO87654321",
     net: 1050.42,
     vat: 199.58,
@@ -77,7 +76,7 @@ export const eInvoices: EInvoice[] = [
     date: "2025-05-14",
     supplier: "SC Beta Retail SRL",
     supplierCui: "RO22345679",
-    client: "SC Demo IMM SRL",
+    client: "SC Imatech Solutions SRL",
     clientCui: "RO87654321",
     net: 3352.94,
     vat: 637.06,
@@ -93,7 +92,7 @@ export const eInvoices: EInvoice[] = [
     date: "2025-05-18",
     supplier: "SC Gamma Distribuție SRL",
     supplierCui: "RO33456780",
-    client: "SC Demo IMM SRL",
+    client: "SC Imatech Solutions SRL",
     clientCui: "RO87654321",
     net: 7142.86,
     vat: 1357.14,
@@ -109,7 +108,7 @@ export const eInvoices: EInvoice[] = [
     date: "2025-05-25",
     supplier: "SC Epsilon Software SRL",
     supplierCui: "RO55567892",
-    client: "SC Demo IMM SRL",
+    client: "SC Imatech Solutions SRL",
     clientCui: "RO87654321",
     net: 4764.71,
     vat: 905.29,
@@ -125,7 +124,7 @@ export const eInvoices: EInvoice[] = [
     date: "2025-05-28",
     supplier: "SC Delta Logistic SRL",
     supplierCui: "RO44456781",
-    client: "SC Demo IMM SRL",
+    client: "SC Imatech Solutions SRL",
     clientCui: "RO87654321",
     net: 1932.77,
     vat: 367.23,
@@ -200,9 +199,9 @@ export const incomeVsExpenses = [
 ];
 
 export const companyUsers = [
-  { name: "Andrei Popescu", email: "andrei.popescu@demoimm.ro", role: "Administrator", status: "Activ" },
-  { name: "Maria Ionescu", email: "maria.ionescu@demoimm.ro", role: "Contabil", status: "Activ" },
-  { name: "Cristian Dumitru", email: "cristian.d@demoimm.ro", role: "Viewer", status: "Inactiv" },
+  { name: "Andrei Popescu", email: "andrei.popescu@imatech.ro", role: "Administrator", status: "Activ" },
+  { name: "Maria Ionescu", email: "maria.ionescu@imatech.ro", role: "Contabil", status: "Activ" },
+  { name: "Cristian Dumitru", email: "cristian.d@imatech.ro", role: "Vizualizare", status: "Inactiv" },
 ];
 
 export const formatRON = (n: number) =>

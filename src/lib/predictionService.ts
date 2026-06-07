@@ -354,10 +354,10 @@ export type MonthlyFinancialPoint = {
         averageDelayDays: Math.round(imbalance * 21),
         explanation:
           riskLevel === "Ridicat"
-            ? "Modelul estimeaza risc ridicat deoarece cheltuielile sau obligatiile depasesc nivelul veniturilor estimate."
+            ? "Analiza indica risc ridicat deoarece cheltuielile sau obligatiile depasesc nivelul veniturilor estimate."
             : riskLevel === "Mediu"
-              ? "Modelul estimeaza risc mediu deoarece marja financiara este redusa."
-              : "Modelul estimeaza risc scazut pe baza marjei financiare pozitive.",
+              ? "Analiza indica risc mediu deoarece marja financiara este redusa."
+              : "Analiza indica risc scazut pe baza marjei financiare pozitive.",
       },
     ];
   }
@@ -548,7 +548,7 @@ export type MonthlyFinancialPoint = {
         : `o pierdere estimata de ${Math.abs(profitForecast).toFixed(2)} RON`;
   
     const explanation =
-      `Modelul AI/ML estimeaza pentru perioada ${predictedPeriod} venituri de ${revenueForecast.toFixed(
+      `Analiza AI estimeaza pentru perioada ${predictedPeriod} venituri de ${revenueForecast.toFixed(
         2,
       )} RON si cheltuieli de ${expensesForecast.toFixed(
         2,
@@ -556,7 +556,6 @@ export type MonthlyFinancialPoint = {
       `Cash-flow-ul estimat pentru 30 de zile este ${cashFlowScenario.cashFlow30Days.toFixed(
         2,
       )} RON, iar riscul de intarziere la plata este ${paymentDelayRisk.toLowerCase()}. ` +
-      `Modelul selectat automat este ${selectedModel}, pe baza erorii istorice MAE. ` +
       `Nivelul de risc financiar estimat este ${riskLevel.toLowerCase()}, iar increderea predictiei este ${confidenceLevel.toLowerCase()}.`;
   
     return {

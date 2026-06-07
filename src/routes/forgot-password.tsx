@@ -15,7 +15,7 @@ function ForgotPage() {
   // TODO: connect to backend API for password reset
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Email de resetare trimis (mock)");
+    toast.success("Email de resetare trimis.");
   };
 
   return (

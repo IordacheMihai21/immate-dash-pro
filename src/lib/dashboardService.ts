@@ -267,6 +267,22 @@ export async function getDashboardData() {
     };
   });
 
+  const latestInvoices = invoices.slice(0, 8).map((invoice) => {
+    const supplier = getRelationParty(invoice.suppliers as RelationParty);
+    const customer = getRelationParty(invoice.customers as RelationParty);
+
+    return {
+      id: invoice.id,
+      invoiceNumber: invoice.invoice_number,
+      supplierName: supplier?.name ?? "Furnizor necunoscut",
+      customerName: customer?.name ?? "Client necunoscut",
+      issueDate: invoice.issue_date ?? invoice.created_at,
+      total: toNumber(invoice.payable_amount),
+      vat: toNumber(invoice.tax_amount),
+      status: invoice.status ?? "procesata",
+    };
+  });
+
   const vatDistribution = [
     {
       name: "TVA colectata",
@@ -290,6 +306,7 @@ export async function getDashboardData() {
     topSuppliers,
     docsPerMonth,
     latestDocuments,
+    latestInvoices,
     prediction: aiForecast,
   };
 }

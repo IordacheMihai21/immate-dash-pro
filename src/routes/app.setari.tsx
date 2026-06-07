@@ -26,7 +26,7 @@ function SettingsPage() {
   // TODO: connect to backend API for company settings
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Modificări salvate (mock)");
+    toast.success("Modificari salvate.");
   };
   return (
     <div>

@@ -133,7 +133,7 @@ function InvoiceDetail() {
     return (
       <div className="flex min-h-[400px] items-center justify-center gap-2 text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
-        Se incarca detaliile facturii din baza de date...
+        Se incarca detaliile facturii...
       </div>
     );
   }
@@ -333,7 +333,7 @@ function InvoiceDetail() {
                         {entity.entity_type}
                       </TableCell>
                       <TableCell>{entity.entity_value ?? "-"}</TableCell>
-                      <TableCell>{entity.extraction_method ?? "xml_parser"}</TableCell>
+                      <TableCell>{formatExtractionMethod(entity.extraction_method)}</TableCell>
                       <TableCell className="text-right tabular-nums">
                         {Number(entity.confidence ?? 1).toFixed(2)}
                       </TableCell>
@@ -373,7 +373,7 @@ function InvoiceDetail() {
                       <TableCell className="font-medium">
                         {relation.source_entity}
                       </TableCell>
-                      <TableCell>{relation.relation_type}</TableCell>
+                      <TableCell>{formatRelationType(relation.relation_type)}</TableCell>
                       <TableCell>{relation.target_entity}</TableCell>
                     </TableRow>
                   ))
@@ -387,7 +387,7 @@ function InvoiceDetail() {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm">
               <FileCode2 className="h-4 w-4" />
-              XML original salvat in baza de date
+              XML original al facturii
             </CardTitle>
           </CardHeader>
 
@@ -409,6 +409,29 @@ function InvoiceDetail() {
       </div>
     </div>
   );
+}
+
+function formatExtractionMethod(value: string | null | undefined) {
+  if (!value) {
+    return "Automat";
+  }
+
+  return "Automat";
+}
+
+function formatRelationType(value: string | null | undefined) {
+  const labels: Record<string, string> = {
+    are_furnizor: "Furnizor",
+    are_client: "Client",
+    are_total_de_plata: "Total de plata",
+    are_tva: "TVA",
+  };
+
+  if (!value) {
+    return "-";
+  }
+
+  return labels[value] ?? value.replace(/_/g, " ");
 }
 
 function Row({
