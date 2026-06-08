@@ -3,6 +3,8 @@ import {
   buildAiFinancialForecast,
   type MonthlyFinancialPoint,
 } from "./predictionService";
+import { evaluateDocumentExtraction } from "./extractionEvaluationService";
+import { buildRiskClassification } from "./riskClassificationService";
 
 type RelationParty =
   | {
@@ -103,6 +105,7 @@ export async function getDashboardData() {
       created_at,
       supplier_id,
       customer_id,
+      currency,
       tax_amount,
       payable_amount,
       status,
@@ -235,6 +238,8 @@ export async function getDashboardData() {
   );
 
   const aiForecast = buildAiFinancialForecast(monthlyFinancialPoints);
+  const riskClassification = buildRiskClassification(monthlyFinancialPoints, aiForecast);
+  const documentExtractionEvaluation = evaluateDocumentExtraction(invoices[0] ?? null);
 
   const docsPerMonthMap = new Map<string, number>();
 
@@ -308,5 +313,7 @@ export async function getDashboardData() {
     latestDocuments,
     latestInvoices,
     prediction: aiForecast,
+    riskClassification,
+    documentExtractionEvaluation,
   };
 }

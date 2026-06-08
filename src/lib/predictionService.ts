@@ -31,9 +31,17 @@ export type MonthlyFinancialPoint = {
   };
   
   export type ModelResult = {
+    model: string;
     modelName: string;
     prediction: number;
     mae: number;
+    mape: number;
+    rmse: number;
+    realVsPredicted: {
+      period: string;
+      actual: number;
+      predicted: number;
+    }[];
   };
   
   export type AiFinancialForecast = {
@@ -55,9 +63,18 @@ export type MonthlyFinancialPoint = {
   
     selectedModel: string;
     mae: number;
+    mape: number;
+    rmse: number;
+    confidenceScore: number;
+    realVsPredicted: {
+      period: string;
+      actual: number;
+      predicted: number;
+    }[];
     confidenceLevel: "Scazut" | "Mediu" | "Ridicat";
   
     modelComparison: ModelResult[];
+    businessExplanation: string;
   
     riskLevel: "Scazut" | "Mediu" | "Ridicat";
     paymentDelayRisk: "Scazut" | "Mediu" | "Ridicat";
@@ -100,6 +117,21 @@ export type MonthlyFinancialPoint = {
     const sum = window.reduce((acc, value) => acc + value, 0);
   
     return sum / window.length;
+  }
+
+  function weightedMovingAverage(values: number[], windowSize = 3): number {
+    if (values.length === 0) {
+      return 0;
+    }
+
+    const window = values.slice(-windowSize);
+    const weightedSum = window.reduce(
+      (sum, value, index) => sum + value * (index + 1),
+      0,
+    );
+    const totalWeight = window.reduce((sum, _value, index) => sum + index + 1, 0);
+
+    return totalWeight > 0 ? weightedSum / totalWeight : 0;
   }
   
   function linearRegression(values: number[]): number {
@@ -158,17 +190,65 @@ export type MonthlyFinancialPoint = {
   
     return sum / errors.length;
   }
+
+  function calculateMape(actual: number[], predicted: number[]): number {
+    const errors = actual
+      .map((value, index) => {
+        if (Math.abs(value) === 0) {
+          return null;
+        }
+
+        return Math.abs((value - predicted[index]) / value) * 100;
+      })
+      .filter((value): value is number => value !== null);
+
+    if (errors.length === 0) {
+      return 0;
+    }
+
+    return errors.reduce((sum, value) => sum + value, 0) / errors.length;
+  }
+
+  function calculateRmse(actual: number[], predicted: number[]): number {
+    if (actual.length === 0 || predicted.length === 0) {
+      return Number.POSITIVE_INFINITY;
+    }
+
+    const meanSquaredError =
+      actual.reduce((sum, value, index) => {
+        const error = value - predicted[index];
+
+        return sum + error * error;
+      }, 0) / actual.length;
+
+    return Math.sqrt(meanSquaredError);
+  }
+
+  function roundMetric(value: number, decimals = 2) {
+    if (!Number.isFinite(value)) {
+      return 0;
+    }
+
+    return Number(value.toFixed(decimals));
+  }
   
   function backtestModel(
     values: number[],
     modelName: string,
     predictor: (trainingValues: number[]) => number,
+    periods: string[] = values.map((_, index) => `P${index + 1}`),
   ): ModelResult {
     if (values.length < 3) {
+      const prediction = predictor(values);
+
       return {
+        model: modelName,
         modelName,
-        prediction: predictor(values),
+        prediction,
         mae: Number.POSITIVE_INFINITY,
+        mape: Number.POSITIVE_INFINITY,
+        rmse: Number.POSITIVE_INFINITY,
+        realVsPredicted: [],
       };
     }
   
@@ -182,20 +262,37 @@ export type MonthlyFinancialPoint = {
       actual.push(values[i]);
       predicted.push(forecast);
     }
+
+    const realVsPredicted = actual.map((value, index) => ({
+      period: periods[index + 2] ?? `P${index + 3}`,
+      actual: roundMetric(value),
+      predicted: roundMetric(predicted[index]),
+    }));
   
     return {
+      model: modelName,
       modelName,
       prediction: predictor(values),
       mae: calculateMae(actual, predicted),
+      mape: calculateMape(actual, predicted),
+      rmse: calculateRmse(actual, predicted),
+      realVsPredicted,
     };
   }
   
-  function selectBestModel(values: number[]): ModelResult {
+  function selectBestModel(values: number[], periods?: string[]): ModelResult {
     const models: ModelResult[] = [
-      backtestModel(values, "Linear Regression", linearRegression),
-      backtestModel(values, "Moving Average", (data) => movingAverage(data, 3)),
-      backtestModel(values, "Exponential Smoothing", (data) =>
+      backtestModel(values, "Regresie liniara", linearRegression, periods),
+      backtestModel(values, "Medie mobila", (data) => movingAverage(data, 3), periods),
+      backtestModel(
+        values,
+        "Medie mobila ponderata",
+        (data) => weightedMovingAverage(data, 3),
+        periods,
+      ),
+      backtestModel(values, "Netezire exponentiala", (data) =>
         exponentialSmoothing(data, 0.5),
+        periods,
       ),
     ];
   
@@ -203,40 +300,64 @@ export type MonthlyFinancialPoint = {
   
     if (validModels.length === 0) {
       return {
-        modelName: "Moving Average",
+        model: "Medie mobila",
+        modelName: "Medie mobila",
         prediction: movingAverage(values, 3),
         mae: 0,
+        mape: 0,
+        rmse: 0,
+        realVsPredicted: [],
       };
     }
   
     return validModels.sort((a, b) => a.mae - b.mae)[0];
   }
   
-  function getModelComparison(values: number[]): ModelResult[] {
+  function getModelComparison(values: number[], periods?: string[]): ModelResult[] {
     return [
-      backtestModel(values, "Linear Regression", linearRegression),
-      backtestModel(values, "Moving Average", (data) => movingAverage(data, 3)),
-      backtestModel(values, "Exponential Smoothing", (data) =>
+      backtestModel(values, "Regresie liniara", linearRegression, periods),
+      backtestModel(values, "Medie mobila", (data) => movingAverage(data, 3), periods),
+      backtestModel(
+        values,
+        "Medie mobila ponderata",
+        (data) => weightedMovingAverage(data, 3),
+        periods,
+      ),
+      backtestModel(values, "Netezire exponentiala", (data) =>
         exponentialSmoothing(data, 0.5),
+        periods,
       ),
     ].map((model) => ({
       ...model,
-      mae: Number.isFinite(model.mae) ? model.mae : 0,
+      mae: roundMetric(model.mae),
+      mape: roundMetric(model.mape),
+      rmse: roundMetric(model.rmse),
+      prediction: roundMetric(model.prediction),
     }));
   }
-  
-  function getConfidenceLevel(pointsCount: number, mae: number, averageValue: number) {
+
+  function getConfidenceScore(pointsCount: number, mape: number, rmse: number, averageValue: number) {
     if (pointsCount < 3) {
+      return 35;
+    }
+
+    const relativeRmse = averageValue > 0 ? (rmse / averageValue) * 100 : 80;
+    const errorPenalty = Math.min(75, mape * 0.65 + relativeRmse * 0.35);
+    const volumeBonus = Math.min(20, pointsCount * 3);
+
+    return Math.max(20, Math.min(95, Math.round(100 - errorPenalty + volumeBonus - 15)));
+  }
+  
+  function getConfidenceLevel(pointsCount: number, confidenceScore: number) {
+    if (pointsCount < 3 || confidenceScore < 50) {
       return "Scazut" as const;
     }
   
-    const relativeError = averageValue > 0 ? mae / averageValue : 1;
-  
-    if (pointsCount >= 6 && relativeError < 0.25) {
+    if (pointsCount >= 6 && confidenceScore >= 75) {
       return "Ridicat" as const;
     }
   
-    if (pointsCount >= 4 && relativeError < 0.45) {
+    if (pointsCount >= 4 && confidenceScore >= 58) {
       return "Mediu" as const;
     }
   
@@ -433,8 +554,14 @@ export type MonthlyFinancialPoint = {
         trendPercent: 0,
         selectedModel: "N/A",
         mae: 0,
+        mape: 0,
+        rmse: 0,
+        confidenceScore: 0,
+        realVsPredicted: [],
         confidenceLevel: "Scazut",
         modelComparison: [],
+        businessExplanation:
+          "Nu exista suficiente date financiare pentru generarea unei predictii.",
         riskLevel: "Scazut",
         paymentDelayRisk: "Scazut",
         demandSignals: [],
@@ -445,6 +572,7 @@ export type MonthlyFinancialPoint = {
       };
     }
   
+    const periods = orderedPoints.map((point) => getMonthLabel(point.monthKey));
     const revenueValues = orderedPoints.map((point) => toSafeNumber(point.revenue));
     const expenseValues = orderedPoints.map((point) => toSafeNumber(point.expenses));
     const vatValues = orderedPoints.map((point) => toSafeNumber(point.vat));
@@ -452,11 +580,12 @@ export type MonthlyFinancialPoint = {
       (point) => toSafeNumber(point.revenue) - toSafeNumber(point.expenses),
     );
   
-    const revenueModel = selectBestModel(revenueValues);
-    const expensesModel = selectBestModel(expenseValues);
-    const vatModel = selectBestModel(vatValues);
+    const revenueModel = selectBestModel(revenueValues, periods);
+    const expensesModel = selectBestModel(expenseValues, periods);
+    const vatModel = selectBestModel(vatValues, periods);
     const profitModel = selectBestModel(
       profitValues.map((value) => Math.max(value, 0)),
+      periods,
     );
   
     const revenueForecast = Math.max(revenueModel.prediction, 0);
@@ -503,11 +632,18 @@ export type MonthlyFinancialPoint = {
       revenueValues.reduce((sum, value) => sum + value, 0) / revenueValues.length;
   
     const averageMae = (revenueModel.mae + expensesModel.mae + vatModel.mae) / 3;
+    const averageMape = (revenueModel.mape + expensesModel.mape + vatModel.mape) / 3;
+    const averageRmse = (revenueModel.rmse + expensesModel.rmse + vatModel.rmse) / 3;
+    const confidenceScore = getConfidenceScore(
+      orderedPoints.length,
+      averageMape,
+      averageRmse,
+      averageRevenue,
+    );
   
     const confidenceLevel = getConfidenceLevel(
       orderedPoints.length,
-      averageMae,
-      averageRevenue,
+      confidenceScore,
     );
   
     const riskLevel = getRiskLevel(
@@ -525,14 +661,9 @@ export type MonthlyFinancialPoint = {
     const lastMonth = orderedPoints[orderedPoints.length - 1].monthKey;
     const predictedPeriod = getMonthLabel(getNextMonthKey(lastMonth));
   
-    const selectedModel =
-      revenueModel.modelName === expensesModel.modelName
-        ? revenueModel.modelName
-        : `${revenueModel.modelName} / ${expensesModel.modelName}`;
+    const selectedModel = revenueModel.modelName;
   
-    const modelComparison = getModelComparison(
-      orderedPoints.map((point) => point.revenue - point.expenses),
-    );
+    const modelComparison = getModelComparison(revenueValues, periods);
   
     const demandSignals = buildDemandSignals(orderedPoints);
     const clientRiskSignals = buildClientRiskSignals(
@@ -547,7 +678,7 @@ export type MonthlyFinancialPoint = {
         ? `un profit estimat de ${profitForecast.toFixed(2)} RON`
         : `o pierdere estimata de ${Math.abs(profitForecast).toFixed(2)} RON`;
   
-    const explanation =
+    const businessExplanation =
       `Analiza AI estimeaza pentru perioada ${predictedPeriod} venituri de ${revenueForecast.toFixed(
         2,
       )} RON si cheltuieli de ${expensesForecast.toFixed(
@@ -572,14 +703,19 @@ export type MonthlyFinancialPoint = {
       trendDirection,
       trendPercent,
       selectedModel,
-      mae: averageMae,
+      mae: roundMetric(averageMae),
+      mape: roundMetric(averageMape),
+      rmse: roundMetric(averageRmse),
+      confidenceScore,
+      realVsPredicted: revenueModel.realVsPredicted,
       confidenceLevel,
       modelComparison,
+      businessExplanation,
       riskLevel,
       paymentDelayRisk,
       demandSignals,
       clientRiskSignals,
       churnSignals,
-      explanation,
+      explanation: businessExplanation,
     };
   }

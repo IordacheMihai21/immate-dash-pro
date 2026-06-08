@@ -285,7 +285,9 @@ function Dashboard() {
 
             <div className="mt-5 space-y-3">
               <MiniInfo label="Venit estimat" value={formatRON(prediction.revenueForecast)} />
-              <MiniInfo label="Nivel risc" value={prediction.riskLevel} />
+              <MiniInfo label="Model selectat" value={prediction.selectedModel} />
+              <MiniInfo label="Scor incredere" value={`${prediction.confidenceScore}%`} />
+              <MiniInfo label="Nivel risc" value={dashboardData.riskClassification.paymentRiskClass} />
               <MiniInfo label="Risc plata" value={prediction.paymentDelayRisk} />
             </div>
 

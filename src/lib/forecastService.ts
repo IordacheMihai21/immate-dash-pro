@@ -4,6 +4,10 @@ import {
   type MonthlyFinancialPoint,
 } from "./predictionService";
 import {
+  buildRiskClassification,
+  type RiskClassificationResult,
+} from "./riskClassificationService";
+import {
   parseClientDataset,
   type ClientDatasetParseResult,
 } from "./clientDatasetParser";
@@ -122,12 +126,15 @@ export function forecastFromOfficialData(
 export async function analyzeSimulationDataset(file: File): Promise<{
   dataset: ClientDatasetParseResult;
   prediction: AiFinancialForecast;
+  riskClassification: RiskClassificationResult;
 }> {
   const dataset = await parseClientDataset(file);
   const prediction = buildAiFinancialForecast(dataset.monthlyPoints);
+  const riskClassification = buildRiskClassification(dataset.monthlyPoints, prediction);
 
   return {
     dataset,
     prediction,
+    riskClassification,
   };
 }

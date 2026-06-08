@@ -1,0 +1,139 @@
+import type { ReactNode } from "react";
+import { Link } from "@tanstack/react-router";
+import { Search, UploadCloud } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+
+export function ReportKpiCard({
+  title,
+  value,
+  description,
+  icon,
+  tone = "blue",
+}: {
+  title: string;
+  value: string;
+  description?: string;
+  icon: ReactNode;
+  tone?: "blue" | "emerald" | "amber" | "rose" | "slate";
+}) {
+  const toneClass = {
+    blue: "bg-blue-50 text-blue-600",
+    emerald: "bg-emerald-50 text-emerald-600",
+    amber: "bg-amber-50 text-amber-600",
+    rose: "bg-rose-50 text-rose-600",
+    slate: "bg-slate-100 text-slate-600",
+  }[tone];
+
+  return (
+    <Card className="h-full border-slate-200 bg-white shadow-sm">
+      <CardContent className="p-5">
+        <div className={cn("mb-5 inline-flex rounded-xl p-3", toneClass)}>{icon}</div>
+        <p className="text-sm font-medium text-slate-500">{title}</p>
+        <p className="mt-2 break-words text-2xl font-semibold text-slate-900">{value}</p>
+        {description && <p className="mt-1 text-xs leading-5 text-slate-500">{description}</p>}
+      </CardContent>
+    </Card>
+  );
+}
+
+export function ReportPanel({
+  title,
+  description,
+  action,
+  children,
+  className,
+  contentClassName,
+}: {
+  title: string;
+  description?: string;
+  action?: ReactNode;
+  children: ReactNode;
+  className?: string;
+  contentClassName?: string;
+}) {
+  return (
+    <Card className={cn("border-slate-200 bg-white shadow-sm", className)}>
+      <CardHeader className="flex flex-col gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <CardTitle className="text-base font-semibold text-slate-900">{title}</CardTitle>
+          {description && <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>}
+        </div>
+        {action}
+      </CardHeader>
+      <CardContent className={cn("p-5", contentClassName)}>{children}</CardContent>
+    </Card>
+  );
+}
+
+export function ImpactBadge({ value }: { value: string }) {
+  const normalized = value.toLowerCase();
+  const className =
+    normalized.includes("ridicat") || normalized.includes("ridicata")
+      ? "border-rose-200 bg-rose-50 text-rose-700"
+      : normalized.includes("mediu") || normalized.includes("medie")
+        ? "border-amber-200 bg-amber-50 text-amber-700"
+        : normalized.includes("scadere") || normalized.includes("scădere")
+          ? "border-rose-200 bg-rose-50 text-rose-700"
+          : normalized.includes("crestere") || normalized.includes("creștere")
+            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+            : normalized.includes("stabil")
+              ? "border-blue-200 bg-blue-50 text-blue-700"
+              : "border-emerald-200 bg-emerald-50 text-emerald-700";
+
+  return (
+    <span
+      className={cn("inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold", className)}
+    >
+      {value}
+    </span>
+  );
+}
+
+export function SearchInput({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+}) {
+  return (
+    <div className="relative w-full sm:max-w-xs">
+      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+      <Input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        className="bg-white pl-9"
+      />
+    </div>
+  );
+}
+
+export function ReportEmptyState() {
+  return (
+    <Card className="border-slate-200 bg-white shadow-sm">
+      <CardContent className="flex min-h-[300px] flex-col items-center justify-center p-8 text-center">
+        <div className="mb-4 rounded-full bg-blue-50 p-4 text-blue-600">
+          <UploadCloud className="h-6 w-6" />
+        </div>
+        <h2 className="text-base font-semibold text-slate-900">
+          Nu exista suficiente date pentru acest raport.
+        </h2>
+        <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
+          Incarca e-Facturi XML in sectiunea Documente pentru a genera analiza.
+        </p>
+        <Button className="mt-5" asChild>
+          <Link to="/app/documente">
+            <UploadCloud className="h-4 w-4" />
+            Incarca e-Factura XML
+          </Link>
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}

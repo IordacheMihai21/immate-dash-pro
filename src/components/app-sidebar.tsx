@@ -13,7 +13,6 @@ import {
   LayoutDashboard,
   LineChart,
   Menu,
-  PieChart,
   ReceiptText,
   Settings,
   Sparkles,
@@ -80,10 +79,10 @@ const menuGroups: SidebarGroup[] = [
     title: "Rapoarte",
     icon: BarChart3,
     items: [
-      { label: "Cash-flow", to: "/app/rapoarte", icon: LineChart },
-      { label: "TVA", to: "/app/rapoarte", icon: PieChart, active: false },
-      { label: "Profitabilitate", to: "/app/rapoarte", icon: BarChart3, active: false },
-      { label: "Activitate lunara", to: "/app/rapoarte", icon: Gauge, active: false },
+      { label: "Cash-flow", to: "/app/rapoarte/cash-flow", icon: LineChart },
+      { label: "TVA", to: "/app/rapoarte/tva", icon: ReceiptText },
+      { label: "Profitabilitate", to: "/app/rapoarte/profitabilitate", icon: BarChart3 },
+      { label: "Activitate lunara", to: "/app/rapoarte/activitate-lunara", icon: Gauge },
     ],
   },
   {
@@ -102,13 +101,7 @@ const supportItems: SidebarLink[] = [
   { label: "Ghid utilizare", icon: FileText, badge: "In curand" },
 ];
 
-export function AppSidebar({
-  mobileOpen,
-  onClose,
-}: {
-  mobileOpen: boolean;
-  onClose: () => void;
-}) {
+export function AppSidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
@@ -128,11 +121,7 @@ export function AppSidebar({
         )}
       >
         <div className="flex h-16 items-center justify-between border-b border-white/10 px-5">
-          <Link
-            to="/app"
-            className="flex min-w-0 items-center gap-3"
-            onClick={onClose}
-          >
+          <Link to="/app" className="flex min-w-0 items-center gap-3" onClick={onClose}>
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500 text-white shadow-lg shadow-blue-950/30">
               <Building2 className="h-4 w-4" />
             </div>
@@ -154,25 +143,13 @@ export function AppSidebar({
         </div>
 
         <nav className="flex-1 overflow-y-auto px-4 py-5">
-          <SidebarSection
-            title="MENU"
-            groups={menuGroups}
-            pathname={pathname}
-            onClose={onClose}
-          />
+          <SidebarSection title="MENU" groups={menuGroups} pathname={pathname} onClose={onClose} />
 
           <div className="mt-7">
-            <p className="mb-3 px-2 text-[11px] font-semibold uppercase text-slate-500">
-              SUPPORT
-            </p>
+            <p className="mb-3 px-2 text-[11px] font-semibold uppercase text-slate-500">SUPPORT</p>
             <ul className="space-y-1">
               {supportItems.map((item) => (
-                <SidebarItem
-                  key={item.label}
-                  item={item}
-                  pathname={pathname}
-                  onClose={onClose}
-                />
+                <SidebarItem key={item.label} item={item} pathname={pathname} onClose={onClose} />
               ))}
             </ul>
           </div>
@@ -207,9 +184,7 @@ function SidebarSection({
 }) {
   return (
     <div>
-      <p className="mb-3 px-2 text-[11px] font-semibold uppercase text-slate-500">
-        {title}
-      </p>
+      <p className="mb-3 px-2 text-[11px] font-semibold uppercase text-slate-500">{title}</p>
 
       <div className="space-y-5">
         {groups.map((group) => {
@@ -287,7 +262,7 @@ function SidebarItem({
   return (
     <li>
       <Link
-        to={item.to as any}
+        to={item.to}
         onClick={onClose}
         className={cn(
           "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition",

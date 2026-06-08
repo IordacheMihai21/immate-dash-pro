@@ -9,21 +9,39 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as ReportsRevenueRouteImport } from './routes/reports.revenue'
+import { Route as ReportsProfitabilityRouteImport } from './routes/reports.profitability'
+import { Route as ReportsExpensesRouteImport } from './routes/reports.expenses'
+import { Route as ReportsCashFlowRouteImport } from './routes/reports.cash-flow'
 import { Route as AppSetariRouteImport } from './routes/app.setari'
 import { Route as AppRapoarteRouteImport } from './routes/app.rapoarte'
 import { Route as AppFurnizoriRouteImport } from './routes/app.furnizori'
 import { Route as AppDocumenteRouteImport } from './routes/app.documente'
 import { Route as AppClientiRouteImport } from './routes/app.clienti'
 import { Route as AppAiForecastRouteImport } from './routes/app.ai-forecast'
+import { Route as AppRapoarteIndexRouteImport } from './routes/app.rapoarte.index'
 import { Route as AppEFacturiIndexRouteImport } from './routes/app.e-facturi.index'
+import { Route as AppRapoarteTvaRouteImport } from './routes/app.rapoarte.tva'
+import { Route as AppRapoarteRevenueRouteImport } from './routes/app.rapoarte.revenue'
+import { Route as AppRapoarteProfitabilityRouteImport } from './routes/app.rapoarte.profitability'
+import { Route as AppRapoarteProfitabilitateRouteImport } from './routes/app.rapoarte.profitabilitate'
+import { Route as AppRapoarteExpensesRouteImport } from './routes/app.rapoarte.expenses'
+import { Route as AppRapoarteCashFlowRouteImport } from './routes/app.rapoarte.cash-flow'
+import { Route as AppRapoarteActivitateLunaraRouteImport } from './routes/app.rapoarte.activitate-lunara'
 import { Route as AppEFacturiIdRouteImport } from './routes/app.e-facturi.$id'
 
+const ReportsRoute = ReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
@@ -53,6 +71,26 @@ const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppRoute,
+} as any)
+const ReportsRevenueRoute = ReportsRevenueRouteImport.update({
+  id: '/revenue',
+  path: '/revenue',
+  getParentRoute: () => ReportsRoute,
+} as any)
+const ReportsProfitabilityRoute = ReportsProfitabilityRouteImport.update({
+  id: '/profitability',
+  path: '/profitability',
+  getParentRoute: () => ReportsRoute,
+} as any)
+const ReportsExpensesRoute = ReportsExpensesRouteImport.update({
+  id: '/expenses',
+  path: '/expenses',
+  getParentRoute: () => ReportsRoute,
+} as any)
+const ReportsCashFlowRoute = ReportsCashFlowRouteImport.update({
+  id: '/cash-flow',
+  path: '/cash-flow',
+  getParentRoute: () => ReportsRoute,
 } as any)
 const AppSetariRoute = AppSetariRouteImport.update({
   id: '/setari',
@@ -84,11 +122,54 @@ const AppAiForecastRoute = AppAiForecastRouteImport.update({
   path: '/ai-forecast',
   getParentRoute: () => AppRoute,
 } as any)
+const AppRapoarteIndexRoute = AppRapoarteIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRapoarteRoute,
+} as any)
 const AppEFacturiIndexRoute = AppEFacturiIndexRouteImport.update({
   id: '/e-facturi/',
   path: '/e-facturi/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppRapoarteTvaRoute = AppRapoarteTvaRouteImport.update({
+  id: '/tva',
+  path: '/tva',
+  getParentRoute: () => AppRapoarteRoute,
+} as any)
+const AppRapoarteRevenueRoute = AppRapoarteRevenueRouteImport.update({
+  id: '/revenue',
+  path: '/revenue',
+  getParentRoute: () => AppRapoarteRoute,
+} as any)
+const AppRapoarteProfitabilityRoute =
+  AppRapoarteProfitabilityRouteImport.update({
+    id: '/profitability',
+    path: '/profitability',
+    getParentRoute: () => AppRapoarteRoute,
+  } as any)
+const AppRapoarteProfitabilitateRoute =
+  AppRapoarteProfitabilitateRouteImport.update({
+    id: '/profitabilitate',
+    path: '/profitabilitate',
+    getParentRoute: () => AppRapoarteRoute,
+  } as any)
+const AppRapoarteExpensesRoute = AppRapoarteExpensesRouteImport.update({
+  id: '/expenses',
+  path: '/expenses',
+  getParentRoute: () => AppRapoarteRoute,
+} as any)
+const AppRapoarteCashFlowRoute = AppRapoarteCashFlowRouteImport.update({
+  id: '/cash-flow',
+  path: '/cash-flow',
+  getParentRoute: () => AppRapoarteRoute,
+} as any)
+const AppRapoarteActivitateLunaraRoute =
+  AppRapoarteActivitateLunaraRouteImport.update({
+    id: '/activitate-lunara',
+    path: '/activitate-lunara',
+    getParentRoute: () => AppRapoarteRoute,
+  } as any)
 const AppEFacturiIdRoute = AppEFacturiIdRouteImport.update({
   id: '/e-facturi/$id',
   path: '/e-facturi/$id',
@@ -101,30 +182,55 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/reports': typeof ReportsRouteWithChildren
   '/app/ai-forecast': typeof AppAiForecastRoute
   '/app/clienti': typeof AppClientiRoute
   '/app/documente': typeof AppDocumenteRoute
   '/app/furnizori': typeof AppFurnizoriRoute
-  '/app/rapoarte': typeof AppRapoarteRoute
+  '/app/rapoarte': typeof AppRapoarteRouteWithChildren
   '/app/setari': typeof AppSetariRoute
+  '/reports/cash-flow': typeof ReportsCashFlowRoute
+  '/reports/expenses': typeof ReportsExpensesRoute
+  '/reports/profitability': typeof ReportsProfitabilityRoute
+  '/reports/revenue': typeof ReportsRevenueRoute
   '/app/': typeof AppIndexRoute
   '/app/e-facturi/$id': typeof AppEFacturiIdRoute
+  '/app/rapoarte/activitate-lunara': typeof AppRapoarteActivitateLunaraRoute
+  '/app/rapoarte/cash-flow': typeof AppRapoarteCashFlowRoute
+  '/app/rapoarte/expenses': typeof AppRapoarteExpensesRoute
+  '/app/rapoarte/profitabilitate': typeof AppRapoarteProfitabilitateRoute
+  '/app/rapoarte/profitability': typeof AppRapoarteProfitabilityRoute
+  '/app/rapoarte/revenue': typeof AppRapoarteRevenueRoute
+  '/app/rapoarte/tva': typeof AppRapoarteTvaRoute
   '/app/e-facturi/': typeof AppEFacturiIndexRoute
+  '/app/rapoarte/': typeof AppRapoarteIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/reports': typeof ReportsRouteWithChildren
   '/app/ai-forecast': typeof AppAiForecastRoute
   '/app/clienti': typeof AppClientiRoute
   '/app/documente': typeof AppDocumenteRoute
   '/app/furnizori': typeof AppFurnizoriRoute
-  '/app/rapoarte': typeof AppRapoarteRoute
   '/app/setari': typeof AppSetariRoute
+  '/reports/cash-flow': typeof ReportsCashFlowRoute
+  '/reports/expenses': typeof ReportsExpensesRoute
+  '/reports/profitability': typeof ReportsProfitabilityRoute
+  '/reports/revenue': typeof ReportsRevenueRoute
   '/app': typeof AppIndexRoute
   '/app/e-facturi/$id': typeof AppEFacturiIdRoute
+  '/app/rapoarte/activitate-lunara': typeof AppRapoarteActivitateLunaraRoute
+  '/app/rapoarte/cash-flow': typeof AppRapoarteCashFlowRoute
+  '/app/rapoarte/expenses': typeof AppRapoarteExpensesRoute
+  '/app/rapoarte/profitabilitate': typeof AppRapoarteProfitabilitateRoute
+  '/app/rapoarte/profitability': typeof AppRapoarteProfitabilityRoute
+  '/app/rapoarte/revenue': typeof AppRapoarteRevenueRoute
+  '/app/rapoarte/tva': typeof AppRapoarteTvaRoute
   '/app/e-facturi': typeof AppEFacturiIndexRoute
+  '/app/rapoarte': typeof AppRapoarteIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -133,15 +239,28 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/reports': typeof ReportsRouteWithChildren
   '/app/ai-forecast': typeof AppAiForecastRoute
   '/app/clienti': typeof AppClientiRoute
   '/app/documente': typeof AppDocumenteRoute
   '/app/furnizori': typeof AppFurnizoriRoute
-  '/app/rapoarte': typeof AppRapoarteRoute
+  '/app/rapoarte': typeof AppRapoarteRouteWithChildren
   '/app/setari': typeof AppSetariRoute
+  '/reports/cash-flow': typeof ReportsCashFlowRoute
+  '/reports/expenses': typeof ReportsExpensesRoute
+  '/reports/profitability': typeof ReportsProfitabilityRoute
+  '/reports/revenue': typeof ReportsRevenueRoute
   '/app/': typeof AppIndexRoute
   '/app/e-facturi/$id': typeof AppEFacturiIdRoute
+  '/app/rapoarte/activitate-lunara': typeof AppRapoarteActivitateLunaraRoute
+  '/app/rapoarte/cash-flow': typeof AppRapoarteCashFlowRoute
+  '/app/rapoarte/expenses': typeof AppRapoarteExpensesRoute
+  '/app/rapoarte/profitabilitate': typeof AppRapoarteProfitabilitateRoute
+  '/app/rapoarte/profitability': typeof AppRapoarteProfitabilityRoute
+  '/app/rapoarte/revenue': typeof AppRapoarteRevenueRoute
+  '/app/rapoarte/tva': typeof AppRapoarteTvaRoute
   '/app/e-facturi/': typeof AppEFacturiIndexRoute
+  '/app/rapoarte/': typeof AppRapoarteIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -151,30 +270,55 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/reports'
     | '/app/ai-forecast'
     | '/app/clienti'
     | '/app/documente'
     | '/app/furnizori'
     | '/app/rapoarte'
     | '/app/setari'
+    | '/reports/cash-flow'
+    | '/reports/expenses'
+    | '/reports/profitability'
+    | '/reports/revenue'
     | '/app/'
     | '/app/e-facturi/$id'
+    | '/app/rapoarte/activitate-lunara'
+    | '/app/rapoarte/cash-flow'
+    | '/app/rapoarte/expenses'
+    | '/app/rapoarte/profitabilitate'
+    | '/app/rapoarte/profitability'
+    | '/app/rapoarte/revenue'
+    | '/app/rapoarte/tva'
     | '/app/e-facturi/'
+    | '/app/rapoarte/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/reports'
     | '/app/ai-forecast'
     | '/app/clienti'
     | '/app/documente'
     | '/app/furnizori'
-    | '/app/rapoarte'
     | '/app/setari'
+    | '/reports/cash-flow'
+    | '/reports/expenses'
+    | '/reports/profitability'
+    | '/reports/revenue'
     | '/app'
     | '/app/e-facturi/$id'
+    | '/app/rapoarte/activitate-lunara'
+    | '/app/rapoarte/cash-flow'
+    | '/app/rapoarte/expenses'
+    | '/app/rapoarte/profitabilitate'
+    | '/app/rapoarte/profitability'
+    | '/app/rapoarte/revenue'
+    | '/app/rapoarte/tva'
     | '/app/e-facturi'
+    | '/app/rapoarte'
   id:
     | '__root__'
     | '/'
@@ -182,15 +326,28 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/reports'
     | '/app/ai-forecast'
     | '/app/clienti'
     | '/app/documente'
     | '/app/furnizori'
     | '/app/rapoarte'
     | '/app/setari'
+    | '/reports/cash-flow'
+    | '/reports/expenses'
+    | '/reports/profitability'
+    | '/reports/revenue'
     | '/app/'
     | '/app/e-facturi/$id'
+    | '/app/rapoarte/activitate-lunara'
+    | '/app/rapoarte/cash-flow'
+    | '/app/rapoarte/expenses'
+    | '/app/rapoarte/profitabilitate'
+    | '/app/rapoarte/profitability'
+    | '/app/rapoarte/revenue'
+    | '/app/rapoarte/tva'
     | '/app/e-facturi/'
+    | '/app/rapoarte/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -199,10 +356,18 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  ReportsRoute: typeof ReportsRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/reports': {
+      id: '/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/register': {
       id: '/register'
       path: '/register'
@@ -244,6 +409,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/'
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/reports/revenue': {
+      id: '/reports/revenue'
+      path: '/revenue'
+      fullPath: '/reports/revenue'
+      preLoaderRoute: typeof ReportsRevenueRouteImport
+      parentRoute: typeof ReportsRoute
+    }
+    '/reports/profitability': {
+      id: '/reports/profitability'
+      path: '/profitability'
+      fullPath: '/reports/profitability'
+      preLoaderRoute: typeof ReportsProfitabilityRouteImport
+      parentRoute: typeof ReportsRoute
+    }
+    '/reports/expenses': {
+      id: '/reports/expenses'
+      path: '/expenses'
+      fullPath: '/reports/expenses'
+      preLoaderRoute: typeof ReportsExpensesRouteImport
+      parentRoute: typeof ReportsRoute
+    }
+    '/reports/cash-flow': {
+      id: '/reports/cash-flow'
+      path: '/cash-flow'
+      fullPath: '/reports/cash-flow'
+      preLoaderRoute: typeof ReportsCashFlowRouteImport
+      parentRoute: typeof ReportsRoute
     }
     '/app/setari': {
       id: '/app/setari'
@@ -287,12 +480,68 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAiForecastRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/rapoarte/': {
+      id: '/app/rapoarte/'
+      path: '/'
+      fullPath: '/app/rapoarte/'
+      preLoaderRoute: typeof AppRapoarteIndexRouteImport
+      parentRoute: typeof AppRapoarteRoute
+    }
     '/app/e-facturi/': {
       id: '/app/e-facturi/'
       path: '/e-facturi'
       fullPath: '/app/e-facturi/'
       preLoaderRoute: typeof AppEFacturiIndexRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/app/rapoarte/tva': {
+      id: '/app/rapoarte/tva'
+      path: '/tva'
+      fullPath: '/app/rapoarte/tva'
+      preLoaderRoute: typeof AppRapoarteTvaRouteImport
+      parentRoute: typeof AppRapoarteRoute
+    }
+    '/app/rapoarte/revenue': {
+      id: '/app/rapoarte/revenue'
+      path: '/revenue'
+      fullPath: '/app/rapoarte/revenue'
+      preLoaderRoute: typeof AppRapoarteRevenueRouteImport
+      parentRoute: typeof AppRapoarteRoute
+    }
+    '/app/rapoarte/profitability': {
+      id: '/app/rapoarte/profitability'
+      path: '/profitability'
+      fullPath: '/app/rapoarte/profitability'
+      preLoaderRoute: typeof AppRapoarteProfitabilityRouteImport
+      parentRoute: typeof AppRapoarteRoute
+    }
+    '/app/rapoarte/profitabilitate': {
+      id: '/app/rapoarte/profitabilitate'
+      path: '/profitabilitate'
+      fullPath: '/app/rapoarte/profitabilitate'
+      preLoaderRoute: typeof AppRapoarteProfitabilitateRouteImport
+      parentRoute: typeof AppRapoarteRoute
+    }
+    '/app/rapoarte/expenses': {
+      id: '/app/rapoarte/expenses'
+      path: '/expenses'
+      fullPath: '/app/rapoarte/expenses'
+      preLoaderRoute: typeof AppRapoarteExpensesRouteImport
+      parentRoute: typeof AppRapoarteRoute
+    }
+    '/app/rapoarte/cash-flow': {
+      id: '/app/rapoarte/cash-flow'
+      path: '/cash-flow'
+      fullPath: '/app/rapoarte/cash-flow'
+      preLoaderRoute: typeof AppRapoarteCashFlowRouteImport
+      parentRoute: typeof AppRapoarteRoute
+    }
+    '/app/rapoarte/activitate-lunara': {
+      id: '/app/rapoarte/activitate-lunara'
+      path: '/activitate-lunara'
+      fullPath: '/app/rapoarte/activitate-lunara'
+      preLoaderRoute: typeof AppRapoarteActivitateLunaraRouteImport
+      parentRoute: typeof AppRapoarteRoute
     }
     '/app/e-facturi/$id': {
       id: '/app/e-facturi/$id'
@@ -304,12 +553,38 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppRapoarteRouteChildren {
+  AppRapoarteActivitateLunaraRoute: typeof AppRapoarteActivitateLunaraRoute
+  AppRapoarteCashFlowRoute: typeof AppRapoarteCashFlowRoute
+  AppRapoarteExpensesRoute: typeof AppRapoarteExpensesRoute
+  AppRapoarteProfitabilitateRoute: typeof AppRapoarteProfitabilitateRoute
+  AppRapoarteProfitabilityRoute: typeof AppRapoarteProfitabilityRoute
+  AppRapoarteRevenueRoute: typeof AppRapoarteRevenueRoute
+  AppRapoarteTvaRoute: typeof AppRapoarteTvaRoute
+  AppRapoarteIndexRoute: typeof AppRapoarteIndexRoute
+}
+
+const AppRapoarteRouteChildren: AppRapoarteRouteChildren = {
+  AppRapoarteActivitateLunaraRoute: AppRapoarteActivitateLunaraRoute,
+  AppRapoarteCashFlowRoute: AppRapoarteCashFlowRoute,
+  AppRapoarteExpensesRoute: AppRapoarteExpensesRoute,
+  AppRapoarteProfitabilitateRoute: AppRapoarteProfitabilitateRoute,
+  AppRapoarteProfitabilityRoute: AppRapoarteProfitabilityRoute,
+  AppRapoarteRevenueRoute: AppRapoarteRevenueRoute,
+  AppRapoarteTvaRoute: AppRapoarteTvaRoute,
+  AppRapoarteIndexRoute: AppRapoarteIndexRoute,
+}
+
+const AppRapoarteRouteWithChildren = AppRapoarteRoute._addFileChildren(
+  AppRapoarteRouteChildren,
+)
+
 interface AppRouteChildren {
   AppAiForecastRoute: typeof AppAiForecastRoute
   AppClientiRoute: typeof AppClientiRoute
   AppDocumenteRoute: typeof AppDocumenteRoute
   AppFurnizoriRoute: typeof AppFurnizoriRoute
-  AppRapoarteRoute: typeof AppRapoarteRoute
+  AppRapoarteRoute: typeof AppRapoarteRouteWithChildren
   AppSetariRoute: typeof AppSetariRoute
   AppIndexRoute: typeof AppIndexRoute
   AppEFacturiIdRoute: typeof AppEFacturiIdRoute
@@ -321,7 +596,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppClientiRoute: AppClientiRoute,
   AppDocumenteRoute: AppDocumenteRoute,
   AppFurnizoriRoute: AppFurnizoriRoute,
-  AppRapoarteRoute: AppRapoarteRoute,
+  AppRapoarteRoute: AppRapoarteRouteWithChildren,
   AppSetariRoute: AppSetariRoute,
   AppIndexRoute: AppIndexRoute,
   AppEFacturiIdRoute: AppEFacturiIdRoute,
@@ -330,12 +605,30 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface ReportsRouteChildren {
+  ReportsCashFlowRoute: typeof ReportsCashFlowRoute
+  ReportsExpensesRoute: typeof ReportsExpensesRoute
+  ReportsProfitabilityRoute: typeof ReportsProfitabilityRoute
+  ReportsRevenueRoute: typeof ReportsRevenueRoute
+}
+
+const ReportsRouteChildren: ReportsRouteChildren = {
+  ReportsCashFlowRoute: ReportsCashFlowRoute,
+  ReportsExpensesRoute: ReportsExpensesRoute,
+  ReportsProfitabilityRoute: ReportsProfitabilityRoute,
+  ReportsRevenueRoute: ReportsRevenueRoute,
+}
+
+const ReportsRouteWithChildren =
+  ReportsRoute._addFileChildren(ReportsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  ReportsRoute: ReportsRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
