@@ -5,7 +5,6 @@ import {
   Building2,
   ChevronRight,
   CircleHelp,
-  FileArchive,
   FileCode2,
   FileText,
   Gauge,
@@ -15,8 +14,6 @@ import {
   Menu,
   ReceiptText,
   Settings,
-  Sparkles,
-  UploadCloud,
   Users,
   X,
 } from "lucide-react";
@@ -43,8 +40,6 @@ const menuGroups: SidebarGroup[] = [
     icon: LayoutDashboard,
     items: [
       { label: "Overview", to: "/app", icon: Gauge, exact: true },
-      { label: "Financiar", icon: BarChart3, badge: "In curand" },
-      { label: "AI Insights", icon: Sparkles, badge: "In curand" },
     ],
   },
   {
@@ -52,8 +47,6 @@ const menuGroups: SidebarGroup[] = [
     icon: FileText,
     items: [
       { label: "Documente financiare", to: "/app/documente", icon: FileText },
-      { label: "Import e-Factura XML", to: "/app/documente", icon: UploadCloud, active: false },
-      { label: "Arhiva documente", icon: FileArchive, badge: "In curand" },
     ],
   },
   {
@@ -61,7 +54,6 @@ const menuGroups: SidebarGroup[] = [
     icon: FileCode2,
     items: [
       { label: "Toate facturile", to: "/app/e-facturi", icon: ReceiptText },
-      { label: "Detalii factura", icon: FileCode2, badge: "In curand" },
       { label: "Furnizori", to: "/app/furnizori", icon: Handshake },
       { label: "Clienti", to: "/app/clienti", icon: Users },
     ],
@@ -71,8 +63,6 @@ const menuGroups: SidebarGroup[] = [
     icon: BrainCircuit,
     items: [
       { label: "Predictii pe date reale", to: "/app/ai-forecast", icon: BrainCircuit },
-      { label: "Simulare Excel / CSV", to: "/app/ai-forecast", icon: LineChart, active: false },
-      { label: "Scenarii business", icon: Sparkles, badge: "In curand" },
     ],
   },
   {
@@ -90,15 +80,15 @@ const menuGroups: SidebarGroup[] = [
     icon: Settings,
     items: [
       { label: "Profil companie", to: "/app/setari", icon: Building2 },
-      { label: "Utilizatori", to: "/app/setari", icon: Users, active: false },
-      { label: "Preferinte", to: "/app/setari", icon: Settings, active: false },
+      { label: "Utilizatori", to: "/app/setari/utilizatori", icon: Users },
+      { label: "Preferinte", to: "/app/setari/preferinte", icon: Settings },
     ],
   },
 ];
 
 const supportItems: SidebarLink[] = [
-  { label: "Ajutor", icon: CircleHelp, badge: "In curand" },
-  { label: "Ghid utilizare", icon: FileText, badge: "In curand" },
+  { label: "Ajutor", to: "/app/ajutor", icon: CircleHelp },
+  { label: "Ghid utilizare", to: "/app/ghid-utilizare", icon: FileText },
 ];
 
 export function AppSidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => void }) {
@@ -142,7 +132,7 @@ export function AppSidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClo
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-4 py-5">
+        <nav className="hide-scrollbar flex-1 overflow-y-auto px-4 py-5">
           <SidebarSection title="MENU" groups={menuGroups} pathname={pathname} onClose={onClose} />
 
           <div className="mt-7">

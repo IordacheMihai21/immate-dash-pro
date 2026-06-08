@@ -16,6 +16,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Legend,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -146,6 +147,7 @@ function AiForecastPage() {
     { period: "60 zile", value: prediction.cashFlow60Days },
     { period: "90 zile", value: prediction.cashFlow90Days },
   ];
+  const revenueComparisonData = buildRevenueComparisonData(prediction);
   const businessStatus = getBusinessStatus(riskClassification.paymentRiskClass);
 
   return (
@@ -299,6 +301,8 @@ function AiForecastPage() {
               />
             </div>
 
+            <RevenueComparisonChart data={revenueComparisonData} />
+
             <RecommendationsCard prediction={prediction} riskClassification={riskClassification} />
           </>
         )}
@@ -310,6 +314,70 @@ function AiForecastPage() {
         extractionEvaluation={extractionEvaluation}
       />
     </div>
+  );
+}
+
+type RevenueComparisonPoint = {
+  period: string;
+  actual: number | null;
+  predicted: number | null;
+  forecast30Days: number | null;
+};
+
+function RevenueComparisonChart({ data }: { data: RevenueComparisonPoint[] }) {
+  return (
+    <ChartCard
+      title="Venit real vs venit estimat"
+      description="Compara veniturile reale din e-Facturile incarcate cu estimarile generate de AI si directia probabila pentru urmatoarele 30 de zile."
+      className="border-slate-200 bg-white shadow-sm"
+    >
+      {data.length === 0 ? (
+        <div className="flex h-[300px] items-center justify-center rounded-xl bg-slate-50 p-6 text-center text-sm text-slate-500">
+          Nu exista suficient istoric pentru comparatia real vs estimat.
+        </div>
+      ) : (
+        <ResponsiveContainer width="100%" height={320}>
+          <LineChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey="period" stroke="#64748b" fontSize={12} />
+            <YAxis stroke="#64748b" fontSize={12} />
+            <Tooltip
+              formatter={(value: number) => formatRON(Number(value))}
+              contentStyle={tooltipStyle}
+            />
+            <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+            <Line
+              type="monotone"
+              dataKey="actual"
+              name="Venit real"
+              stroke="#10b981"
+              strokeWidth={2.5}
+              dot={{ r: 3 }}
+              connectNulls
+            />
+            <Line
+              type="monotone"
+              dataKey="predicted"
+              name="Venit estimat"
+              stroke="#2563eb"
+              strokeWidth={2.5}
+              dot={{ r: 3 }}
+              connectNulls
+            />
+            <Line
+              type="monotone"
+              dataKey="forecast30Days"
+              name="Directie 30 zile"
+              stroke="#f59e0b"
+              strokeDasharray="6 4"
+              strokeWidth={2.5}
+              dot={{ r: 3 }}
+              connectNulls
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      )}
+    </ChartCard>
   );
 }
 
@@ -834,6 +902,31 @@ function getRecommendations(
   recommendations.add("Verifică periodic documentele importate pentru date financiare corecte.");
 
   return Array.from(recommendations).slice(0, 5);
+}
+
+function buildRevenueComparisonData(prediction: AiFinancialForecast): RevenueComparisonPoint[] {
+  const points = prediction.realVsPredicted ?? [];
+
+  if (points.length === 0) {
+    return [];
+  }
+
+  const lastPoint = points[points.length - 1];
+
+  return [
+    ...points.map((point, index) => ({
+      period: point.period,
+      actual: point.actual,
+      predicted: point.predicted,
+      forecast30Days: index === points.length - 1 ? point.predicted : null,
+    })),
+    {
+      period: "Urmatoarele 30 zile",
+      actual: null,
+      predicted: null,
+      forecast30Days: prediction.revenueForecast || lastPoint.predicted,
+    },
+  ];
 }
 
 const tooltipStyle = {

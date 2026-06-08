@@ -165,21 +165,34 @@ export async function getDashboardData() {
     invoices.map((invoice) => invoice.customer_id).filter(Boolean),
   );
 
-  const monthlyTotals = new Map<string, number>();
+  const monthlyTotals = new Map<
+    string,
+    {
+      value: number;
+      invoiceCount: number;
+    }
+  >();
 
   invoices.forEach((invoice) => {
     const monthKey = getMonthKey(invoice.issue_date ?? invoice.created_at);
-    const previous = monthlyTotals.get(monthKey) ?? 0;
+    const previous = monthlyTotals.get(monthKey) ?? {
+      value: 0,
+      invoiceCount: 0,
+    };
 
-    monthlyTotals.set(monthKey, previous + toNumber(invoice.payable_amount));
+    monthlyTotals.set(monthKey, {
+      value: previous.value + toNumber(invoice.payable_amount),
+      invoiceCount: previous.invoiceCount + 1,
+    });
   });
 
   const monthlyInvoiceValue = Array.from(monthlyTotals.entries())
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([month, value]) => ({
-      month: getMonthLabel(month),
-      monthKey: month,
-      value,
+    .map(([monthKey, values]) => ({
+      month: getMonthLabel(monthKey),
+      monthKey,
+      value: values.value,
+      invoiceCount: values.invoiceCount,
     }));
 
   const supplierTotals = new Map<string, number>();
@@ -196,6 +209,25 @@ export async function getDashboardData() {
     .map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value)
     .slice(0, 5);
+
+  const customerTotals = new Map<string, number>();
+
+  invoices.forEach((invoice) => {
+    const customer = getRelationParty(invoice.customers as RelationParty);
+    const customerName = customer?.name ?? "Client necunoscut";
+    const previous = customerTotals.get(customerName) ?? 0;
+
+    customerTotals.set(customerName, previous + toNumber(invoice.payable_amount));
+  });
+
+  const topCustomers = Array.from(customerTotals.entries())
+    .map(([name, value]) => ({
+      name,
+      value,
+      share: totalValue > 0 ? (value / totalValue) * 100 : 0,
+    }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 6);
 
   const monthlyFinancialMap = new Map<string, MonthlyFinancialPoint>();
 
@@ -252,8 +284,9 @@ export async function getDashboardData() {
 
   const docsPerMonth = Array.from(docsPerMonthMap.entries())
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([month, docs]) => ({
-      month: getMonthLabel(month),
+    .map(([monthKey, docs]) => ({
+      month: getMonthLabel(monthKey),
+      monthKey,
       docs,
     }));
 
@@ -309,6 +342,7 @@ export async function getDashboardData() {
     monthlyInvoiceValue,
     vatDistribution,
     topSuppliers,
+    topCustomers,
     docsPerMonth,
     latestDocuments,
     latestInvoices,

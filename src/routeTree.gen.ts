@@ -22,12 +22,17 @@ import { Route as ReportsExpensesRouteImport } from './routes/reports.expenses'
 import { Route as ReportsCashFlowRouteImport } from './routes/reports.cash-flow'
 import { Route as AppSetariRouteImport } from './routes/app.setari'
 import { Route as AppRapoarteRouteImport } from './routes/app.rapoarte'
+import { Route as AppGhidUtilizareRouteImport } from './routes/app.ghid-utilizare'
 import { Route as AppFurnizoriRouteImport } from './routes/app.furnizori'
 import { Route as AppDocumenteRouteImport } from './routes/app.documente'
 import { Route as AppClientiRouteImport } from './routes/app.clienti'
+import { Route as AppAjutorRouteImport } from './routes/app.ajutor'
 import { Route as AppAiForecastRouteImport } from './routes/app.ai-forecast'
+import { Route as AppSetariIndexRouteImport } from './routes/app.setari.index'
 import { Route as AppRapoarteIndexRouteImport } from './routes/app.rapoarte.index'
 import { Route as AppEFacturiIndexRouteImport } from './routes/app.e-facturi.index'
+import { Route as AppSetariUtilizatoriRouteImport } from './routes/app.setari.utilizatori'
+import { Route as AppSetariPreferinteRouteImport } from './routes/app.setari.preferinte'
 import { Route as AppRapoarteTvaRouteImport } from './routes/app.rapoarte.tva'
 import { Route as AppRapoarteRevenueRouteImport } from './routes/app.rapoarte.revenue'
 import { Route as AppRapoarteProfitabilityRouteImport } from './routes/app.rapoarte.profitability'
@@ -102,6 +107,11 @@ const AppRapoarteRoute = AppRapoarteRouteImport.update({
   path: '/rapoarte',
   getParentRoute: () => AppRoute,
 } as any)
+const AppGhidUtilizareRoute = AppGhidUtilizareRouteImport.update({
+  id: '/ghid-utilizare',
+  path: '/ghid-utilizare',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppFurnizoriRoute = AppFurnizoriRouteImport.update({
   id: '/furnizori',
   path: '/furnizori',
@@ -117,10 +127,20 @@ const AppClientiRoute = AppClientiRouteImport.update({
   path: '/clienti',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAjutorRoute = AppAjutorRouteImport.update({
+  id: '/ajutor',
+  path: '/ajutor',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAiForecastRoute = AppAiForecastRouteImport.update({
   id: '/ai-forecast',
   path: '/ai-forecast',
   getParentRoute: () => AppRoute,
+} as any)
+const AppSetariIndexRoute = AppSetariIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppSetariRoute,
 } as any)
 const AppRapoarteIndexRoute = AppRapoarteIndexRouteImport.update({
   id: '/',
@@ -131,6 +151,16 @@ const AppEFacturiIndexRoute = AppEFacturiIndexRouteImport.update({
   id: '/e-facturi/',
   path: '/e-facturi/',
   getParentRoute: () => AppRoute,
+} as any)
+const AppSetariUtilizatoriRoute = AppSetariUtilizatoriRouteImport.update({
+  id: '/utilizatori',
+  path: '/utilizatori',
+  getParentRoute: () => AppSetariRoute,
+} as any)
+const AppSetariPreferinteRoute = AppSetariPreferinteRouteImport.update({
+  id: '/preferinte',
+  path: '/preferinte',
+  getParentRoute: () => AppSetariRoute,
 } as any)
 const AppRapoarteTvaRoute = AppRapoarteTvaRouteImport.update({
   id: '/tva',
@@ -184,11 +214,13 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/reports': typeof ReportsRouteWithChildren
   '/app/ai-forecast': typeof AppAiForecastRoute
+  '/app/ajutor': typeof AppAjutorRoute
   '/app/clienti': typeof AppClientiRoute
   '/app/documente': typeof AppDocumenteRoute
   '/app/furnizori': typeof AppFurnizoriRoute
+  '/app/ghid-utilizare': typeof AppGhidUtilizareRoute
   '/app/rapoarte': typeof AppRapoarteRouteWithChildren
-  '/app/setari': typeof AppSetariRoute
+  '/app/setari': typeof AppSetariRouteWithChildren
   '/reports/cash-flow': typeof ReportsCashFlowRoute
   '/reports/expenses': typeof ReportsExpensesRoute
   '/reports/profitability': typeof ReportsProfitabilityRoute
@@ -202,8 +234,11 @@ export interface FileRoutesByFullPath {
   '/app/rapoarte/profitability': typeof AppRapoarteProfitabilityRoute
   '/app/rapoarte/revenue': typeof AppRapoarteRevenueRoute
   '/app/rapoarte/tva': typeof AppRapoarteTvaRoute
+  '/app/setari/preferinte': typeof AppSetariPreferinteRoute
+  '/app/setari/utilizatori': typeof AppSetariUtilizatoriRoute
   '/app/e-facturi/': typeof AppEFacturiIndexRoute
   '/app/rapoarte/': typeof AppRapoarteIndexRoute
+  '/app/setari/': typeof AppSetariIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -212,10 +247,11 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/reports': typeof ReportsRouteWithChildren
   '/app/ai-forecast': typeof AppAiForecastRoute
+  '/app/ajutor': typeof AppAjutorRoute
   '/app/clienti': typeof AppClientiRoute
   '/app/documente': typeof AppDocumenteRoute
   '/app/furnizori': typeof AppFurnizoriRoute
-  '/app/setari': typeof AppSetariRoute
+  '/app/ghid-utilizare': typeof AppGhidUtilizareRoute
   '/reports/cash-flow': typeof ReportsCashFlowRoute
   '/reports/expenses': typeof ReportsExpensesRoute
   '/reports/profitability': typeof ReportsProfitabilityRoute
@@ -229,8 +265,11 @@ export interface FileRoutesByTo {
   '/app/rapoarte/profitability': typeof AppRapoarteProfitabilityRoute
   '/app/rapoarte/revenue': typeof AppRapoarteRevenueRoute
   '/app/rapoarte/tva': typeof AppRapoarteTvaRoute
+  '/app/setari/preferinte': typeof AppSetariPreferinteRoute
+  '/app/setari/utilizatori': typeof AppSetariUtilizatoriRoute
   '/app/e-facturi': typeof AppEFacturiIndexRoute
   '/app/rapoarte': typeof AppRapoarteIndexRoute
+  '/app/setari': typeof AppSetariIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -241,11 +280,13 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/reports': typeof ReportsRouteWithChildren
   '/app/ai-forecast': typeof AppAiForecastRoute
+  '/app/ajutor': typeof AppAjutorRoute
   '/app/clienti': typeof AppClientiRoute
   '/app/documente': typeof AppDocumenteRoute
   '/app/furnizori': typeof AppFurnizoriRoute
+  '/app/ghid-utilizare': typeof AppGhidUtilizareRoute
   '/app/rapoarte': typeof AppRapoarteRouteWithChildren
-  '/app/setari': typeof AppSetariRoute
+  '/app/setari': typeof AppSetariRouteWithChildren
   '/reports/cash-flow': typeof ReportsCashFlowRoute
   '/reports/expenses': typeof ReportsExpensesRoute
   '/reports/profitability': typeof ReportsProfitabilityRoute
@@ -259,8 +300,11 @@ export interface FileRoutesById {
   '/app/rapoarte/profitability': typeof AppRapoarteProfitabilityRoute
   '/app/rapoarte/revenue': typeof AppRapoarteRevenueRoute
   '/app/rapoarte/tva': typeof AppRapoarteTvaRoute
+  '/app/setari/preferinte': typeof AppSetariPreferinteRoute
+  '/app/setari/utilizatori': typeof AppSetariUtilizatoriRoute
   '/app/e-facturi/': typeof AppEFacturiIndexRoute
   '/app/rapoarte/': typeof AppRapoarteIndexRoute
+  '/app/setari/': typeof AppSetariIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -272,9 +316,11 @@ export interface FileRouteTypes {
     | '/register'
     | '/reports'
     | '/app/ai-forecast'
+    | '/app/ajutor'
     | '/app/clienti'
     | '/app/documente'
     | '/app/furnizori'
+    | '/app/ghid-utilizare'
     | '/app/rapoarte'
     | '/app/setari'
     | '/reports/cash-flow'
@@ -290,8 +336,11 @@ export interface FileRouteTypes {
     | '/app/rapoarte/profitability'
     | '/app/rapoarte/revenue'
     | '/app/rapoarte/tva'
+    | '/app/setari/preferinte'
+    | '/app/setari/utilizatori'
     | '/app/e-facturi/'
     | '/app/rapoarte/'
+    | '/app/setari/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -300,10 +349,11 @@ export interface FileRouteTypes {
     | '/register'
     | '/reports'
     | '/app/ai-forecast'
+    | '/app/ajutor'
     | '/app/clienti'
     | '/app/documente'
     | '/app/furnizori'
-    | '/app/setari'
+    | '/app/ghid-utilizare'
     | '/reports/cash-flow'
     | '/reports/expenses'
     | '/reports/profitability'
@@ -317,8 +367,11 @@ export interface FileRouteTypes {
     | '/app/rapoarte/profitability'
     | '/app/rapoarte/revenue'
     | '/app/rapoarte/tva'
+    | '/app/setari/preferinte'
+    | '/app/setari/utilizatori'
     | '/app/e-facturi'
     | '/app/rapoarte'
+    | '/app/setari'
   id:
     | '__root__'
     | '/'
@@ -328,9 +381,11 @@ export interface FileRouteTypes {
     | '/register'
     | '/reports'
     | '/app/ai-forecast'
+    | '/app/ajutor'
     | '/app/clienti'
     | '/app/documente'
     | '/app/furnizori'
+    | '/app/ghid-utilizare'
     | '/app/rapoarte'
     | '/app/setari'
     | '/reports/cash-flow'
@@ -346,8 +401,11 @@ export interface FileRouteTypes {
     | '/app/rapoarte/profitability'
     | '/app/rapoarte/revenue'
     | '/app/rapoarte/tva'
+    | '/app/setari/preferinte'
+    | '/app/setari/utilizatori'
     | '/app/e-facturi/'
     | '/app/rapoarte/'
+    | '/app/setari/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -452,6 +510,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRapoarteRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/ghid-utilizare': {
+      id: '/app/ghid-utilizare'
+      path: '/ghid-utilizare'
+      fullPath: '/app/ghid-utilizare'
+      preLoaderRoute: typeof AppGhidUtilizareRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/furnizori': {
       id: '/app/furnizori'
       path: '/furnizori'
@@ -473,12 +538,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppClientiRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/ajutor': {
+      id: '/app/ajutor'
+      path: '/ajutor'
+      fullPath: '/app/ajutor'
+      preLoaderRoute: typeof AppAjutorRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/ai-forecast': {
       id: '/app/ai-forecast'
       path: '/ai-forecast'
       fullPath: '/app/ai-forecast'
       preLoaderRoute: typeof AppAiForecastRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/app/setari/': {
+      id: '/app/setari/'
+      path: '/'
+      fullPath: '/app/setari/'
+      preLoaderRoute: typeof AppSetariIndexRouteImport
+      parentRoute: typeof AppSetariRoute
     }
     '/app/rapoarte/': {
       id: '/app/rapoarte/'
@@ -493,6 +572,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/e-facturi/'
       preLoaderRoute: typeof AppEFacturiIndexRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/app/setari/utilizatori': {
+      id: '/app/setari/utilizatori'
+      path: '/utilizatori'
+      fullPath: '/app/setari/utilizatori'
+      preLoaderRoute: typeof AppSetariUtilizatoriRouteImport
+      parentRoute: typeof AppSetariRoute
+    }
+    '/app/setari/preferinte': {
+      id: '/app/setari/preferinte'
+      path: '/preferinte'
+      fullPath: '/app/setari/preferinte'
+      preLoaderRoute: typeof AppSetariPreferinteRouteImport
+      parentRoute: typeof AppSetariRoute
     }
     '/app/rapoarte/tva': {
       id: '/app/rapoarte/tva'
@@ -579,13 +672,31 @@ const AppRapoarteRouteWithChildren = AppRapoarteRoute._addFileChildren(
   AppRapoarteRouteChildren,
 )
 
+interface AppSetariRouteChildren {
+  AppSetariPreferinteRoute: typeof AppSetariPreferinteRoute
+  AppSetariUtilizatoriRoute: typeof AppSetariUtilizatoriRoute
+  AppSetariIndexRoute: typeof AppSetariIndexRoute
+}
+
+const AppSetariRouteChildren: AppSetariRouteChildren = {
+  AppSetariPreferinteRoute: AppSetariPreferinteRoute,
+  AppSetariUtilizatoriRoute: AppSetariUtilizatoriRoute,
+  AppSetariIndexRoute: AppSetariIndexRoute,
+}
+
+const AppSetariRouteWithChildren = AppSetariRoute._addFileChildren(
+  AppSetariRouteChildren,
+)
+
 interface AppRouteChildren {
   AppAiForecastRoute: typeof AppAiForecastRoute
+  AppAjutorRoute: typeof AppAjutorRoute
   AppClientiRoute: typeof AppClientiRoute
   AppDocumenteRoute: typeof AppDocumenteRoute
   AppFurnizoriRoute: typeof AppFurnizoriRoute
+  AppGhidUtilizareRoute: typeof AppGhidUtilizareRoute
   AppRapoarteRoute: typeof AppRapoarteRouteWithChildren
-  AppSetariRoute: typeof AppSetariRoute
+  AppSetariRoute: typeof AppSetariRouteWithChildren
   AppIndexRoute: typeof AppIndexRoute
   AppEFacturiIdRoute: typeof AppEFacturiIdRoute
   AppEFacturiIndexRoute: typeof AppEFacturiIndexRoute
@@ -593,11 +704,13 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAiForecastRoute: AppAiForecastRoute,
+  AppAjutorRoute: AppAjutorRoute,
   AppClientiRoute: AppClientiRoute,
   AppDocumenteRoute: AppDocumenteRoute,
   AppFurnizoriRoute: AppFurnizoriRoute,
+  AppGhidUtilizareRoute: AppGhidUtilizareRoute,
   AppRapoarteRoute: AppRapoarteRouteWithChildren,
-  AppSetariRoute: AppSetariRoute,
+  AppSetariRoute: AppSetariRouteWithChildren,
   AppIndexRoute: AppIndexRoute,
   AppEFacturiIdRoute: AppEFacturiIdRoute,
   AppEFacturiIndexRoute: AppEFacturiIndexRoute,

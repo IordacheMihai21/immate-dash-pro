@@ -1,16 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
-  Area,
-  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
   Cell,
+  ComposedChart,
+  LabelList,
+  Legend,
   Line,
   LineChart,
   Pie,
   PieChart,
+  PolarAngleAxis,
+  PolarGrid,
+  PolarRadiusAxis,
+  Radar,
+  RadarChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -123,11 +129,21 @@ function Dashboard() {
       return [];
     }
 
-    return dashboardData.monthlyInvoiceValue.map((item, index) => ({
-      month: item.month,
-      venituri: item.value,
-      documente: dashboardData.docsPerMonth[index]?.docs ?? 0,
-    }));
+    return buildMonthlyDashboardData(dashboardData);
+  }, [dashboardData]);
+  const parameterData = useMemo(() => {
+    if (!dashboardData) {
+      return [];
+    }
+
+    return buildBusinessParameterData(dashboardData);
+  }, [dashboardData]);
+  const customerConcentrationData = useMemo(() => {
+    if (!dashboardData) {
+      return [];
+    }
+
+    return buildCustomerConcentrationData(dashboardData);
   }, [dashboardData]);
 
   if (isLoading) {
@@ -301,70 +317,182 @@ function Dashboard() {
       <section className="grid gap-4 xl:grid-cols-3">
         <AdminPanel
           title="Statistici"
-          description="Compara venituri si documente procesate pe perioada recenta"
+          description="Analizeaza activitatea, parametrii principali si concentrarea pe clienti."
           className="xl:col-span-2"
           contentClassName="p-0"
         >
-          <Tabs defaultValue="overview" className="p-5">
+          <Tabs defaultValue="activitate" className="p-5">
             <TabsList className="mb-4">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="venituri">Venituri</TabsTrigger>
-              <TabsTrigger value="documente">Documente</TabsTrigger>
+              <TabsTrigger value="activitate">Activitate</TabsTrigger>
+              <TabsTrigger value="parametri">Parametri</TabsTrigger>
+              <TabsTrigger value="clienti">Clienti</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview">
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={monthlyData}>
-                  <defs>
-                    <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
-                  <YAxis stroke="#64748b" fontSize={12} />
-                  <Tooltip
-                    formatter={(value: number) => formatRON(Number(value))}
-                    contentStyle={tooltipStyle}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="venituri"
-                    name="Venituri"
-                    stroke="#2563eb"
-                    fill="url(#revenueGradient)"
-                    strokeWidth={2.5}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+            <TabsContent value="activitate">
+              <TabIntro
+                title="Activitatea lunara a companiei"
+                description="Urmareste ritmul documentelor si facturilor procesate in fiecare luna."
+              />
+
+              {monthlyData.length === 0 ? (
+                <ChartEmptyState message="Nu exista suficiente date pentru analiza activitatii lunare." />
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <ComposedChart data={monthlyData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
+                    <YAxis
+                      yAxisId="value"
+                      stroke="#64748b"
+                      fontSize={12}
+                      tickFormatter={(value: number) => formatCompactNumber(value)}
+                    />
+                    <YAxis
+                      yAxisId="count"
+                      orientation="right"
+                      stroke="#64748b"
+                      fontSize={12}
+                      allowDecimals={false}
+                    />
+                    <Tooltip formatter={formatActivityTooltip} contentStyle={tooltipStyle} />
+                    <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+                    <Bar
+                      yAxisId="count"
+                      dataKey="facturi"
+                      name="Facturi procesate"
+                      fill="#2563eb"
+                      radius={[8, 8, 0, 0]}
+                    />
+                    <Bar
+                      yAxisId="count"
+                      dataKey="documente"
+                      name="Documente procesate"
+                      fill="#10b981"
+                      radius={[8, 8, 0, 0]}
+                    />
+                    <Line
+                      yAxisId="value"
+                      type="monotone"
+                      dataKey="valoareMedieFactura"
+                      name="Valoare medie / factura"
+                      stroke="#f59e0b"
+                      strokeWidth={2.5}
+                      dot={{ r: 3 }}
+                    />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              )}
             </TabsContent>
 
-            <TabsContent value="venituri">
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
-                  <YAxis stroke="#64748b" fontSize={12} />
-                  <Tooltip
-                    formatter={(value: number) => formatRON(Number(value))}
-                    contentStyle={tooltipStyle}
-                  />
-                  <Bar dataKey="venituri" name="Venituri" fill="#2563eb" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+            <TabsContent value="parametri">
+              <TabIntro
+                title="Parametrii principali ai companiei"
+                description="Compara principalele zone financiare si operationale intr-o vedere sintetica."
+              />
+
+              {parameterData.length === 0 ? (
+                <ChartEmptyState message="Nu exista suficiente date pentru parametrii companiei." />
+              ) : (
+                <div className="space-y-4">
+                  <ResponsiveContainer width="100%" height={320}>
+                    <RadarChart data={parameterData} outerRadius={110}>
+                      <PolarGrid stroke="#e2e8f0" />
+                      <PolarAngleAxis dataKey="parameter" stroke="#64748b" fontSize={12} />
+                      <PolarRadiusAxis
+                        angle={30}
+                        domain={[0, 100]}
+                        tick={{ fontSize: 11, fill: "#64748b" }}
+                      />
+                      <Tooltip content={<BusinessParameterTooltip />} />
+                      <Radar
+                        name="Profil companie"
+                        dataKey="value"
+                        stroke="#2563eb"
+                        fill="#2563eb"
+                        fillOpacity={0.18}
+                        strokeWidth={2.5}
+                      />
+                    </RadarChart>
+                  </ResponsiveContainer>
+
+                  <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+                    <h4 className="text-sm font-semibold text-blue-950">
+                      Cum se interpreteaza graficul?
+                    </h4>
+                    <p className="mt-2 text-sm leading-6 text-blue-900">
+                      Graficul prezinta un profil sintetic al companiei. Valorile mai mari indica
+                      zone cu impact mai puternic asupra activitatii, precum veniturile, TVA-ul,
+                      riscul financiar, clientii si furnizorii.
+                    </p>
+                  </div>
+                </div>
+              )}
             </TabsContent>
 
-            <TabsContent value="documente">
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
-                  <YAxis stroke="#64748b" fontSize={12} />
-                  <Tooltip contentStyle={tooltipStyle} />
-                  <Bar dataKey="documente" name="Documente" fill="#10b981" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+            <TabsContent value="clienti">
+              <TabIntro
+                title="Concentrarea valorii pe clienti"
+                description="Identifica clientii care au cea mai mare influenta asupra activitatii financiare."
+              />
+
+              {customerConcentrationData.length === 0 ? (
+                <ChartEmptyState message="Nu exista suficiente date despre clienti pentru aceasta analiza." />
+              ) : (
+                <div className="space-y-4">
+                  <ResponsiveContainer width="100%" height={320}>
+                    <BarChart
+                      data={customerConcentrationData}
+                      layout="vertical"
+                      margin={{ left: 24, right: 64 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis
+                        type="number"
+                        stroke="#64748b"
+                        fontSize={12}
+                        tickFormatter={(value: number) => formatCompactNumber(value)}
+                      />
+                      <YAxis
+                        type="category"
+                        dataKey="name"
+                        stroke="#64748b"
+                        fontSize={12}
+                        width={130}
+                      />
+                      <Tooltip formatter={formatCustomerTooltip} contentStyle={tooltipStyle} />
+                      <Bar
+                        dataKey="value"
+                        name="Valoare facturi"
+                        fill="#8b5cf6"
+                        radius={[0, 8, 8, 0]}
+                      >
+                        <LabelList dataKey="shareLabel" position="right" fontSize={12} />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {customerConcentrationData.slice(0, 4).map((customer) => (
+                      <div
+                        key={customer.name}
+                        className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 p-3"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-slate-900">
+                            {customer.name}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            Pondere in total: {customer.shareLabel}
+                          </p>
+                        </div>
+                        <p className="text-sm font-semibold text-slate-900">
+                          {formatRON(customer.value)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </AdminPanel>
@@ -632,6 +760,54 @@ function KpiDetail({ title, value }: { title: string; value: string }) {
   );
 }
 
+function TabIntro({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="mb-4">
+      <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+      <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
+    </div>
+  );
+}
+
+function ChartEmptyState({ message }: { message: string }) {
+  return (
+    <div className="flex h-[300px] items-center justify-center rounded-xl bg-slate-50 p-6 text-center text-sm text-slate-500">
+      {message}
+    </div>
+  );
+}
+
+function BusinessParameterTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{
+    payload?: {
+      parameter: string;
+      value: number;
+      description: string;
+    };
+  }>;
+}) {
+  const item = payload?.[0]?.payload;
+
+  if (!active || !item) {
+    return null;
+  }
+
+  const level = getBusinessScoreLabel(item.value);
+
+  return (
+    <div className="max-w-xs rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-lg">
+      <p className="font-semibold text-slate-900">
+        {item.parameter}: {level}
+      </p>
+      <p className="mt-1 leading-5 text-slate-600">{item.description.replace("{level}", level)}</p>
+    </div>
+  );
+}
+
 function MiniInfo({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 p-3">
@@ -749,6 +925,169 @@ function getPercentChange(current: number, previous: number) {
 function formatPercent(value: number) {
   const sign = value > 0 ? "+" : "";
   return `${sign}${value.toFixed(1)}%`;
+}
+
+function buildMonthlyDashboardData(dashboardData: DashboardData) {
+  const monthMap = new Map<
+    string,
+    {
+      monthKey: string;
+      month: string;
+      venituri: number;
+      facturi: number;
+      documente: number;
+      valoareMedieFactura: number;
+    }
+  >();
+
+  function ensureMonth(monthKey: string, month: string) {
+    const existing = monthMap.get(monthKey);
+
+    if (existing) {
+      return existing;
+    }
+
+    const created = {
+      monthKey,
+      month,
+      venituri: 0,
+      facturi: 0,
+      documente: 0,
+      valoareMedieFactura: 0,
+    };
+
+    monthMap.set(monthKey, created);
+
+    return created;
+  }
+
+  dashboardData.monthlyInvoiceValue.forEach((item) => {
+    const month = ensureMonth(item.monthKey, item.month);
+
+    month.venituri = item.value;
+    month.facturi = item.invoiceCount;
+    month.valoareMedieFactura = item.invoiceCount > 0 ? item.value / item.invoiceCount : 0;
+  });
+
+  dashboardData.docsPerMonth.forEach((item) => {
+    const month = ensureMonth(item.monthKey, item.month);
+
+    month.documente = item.docs;
+  });
+
+  return Array.from(monthMap.values()).sort((a, b) => a.monthKey.localeCompare(b.monthKey));
+}
+
+function buildBusinessParameterData(dashboardData: DashboardData) {
+  const prediction = dashboardData.prediction;
+  const maxValue = Math.max(
+    dashboardData.totalValue,
+    dashboardData.totalVat,
+    Math.abs(prediction.cashFlow30Days),
+    1,
+  );
+  const maxRelations = Math.max(dashboardData.customerCount, dashboardData.supplierCount, 1);
+
+  return [
+    {
+      parameter: "Activitate financiara",
+      value: normalizeToScore(dashboardData.totalValue, maxValue),
+      description: "Veniturile au un impact {level} in profilul companiei.",
+    },
+    {
+      parameter: "Impact fiscal",
+      value: normalizeToScore(dashboardData.totalVat, maxValue),
+      description: "TVA-ul are o pondere {level} in profilul financiar analizat.",
+    },
+    {
+      parameter: "Lichiditate",
+      value:
+        prediction.cashFlow30Days >= 0
+          ? normalizeToScore(prediction.cashFlow30Days, maxValue)
+          : 20,
+      description: "Arata cat de bine sustine lichiditatea activitatea curenta.",
+    },
+    {
+      parameter: "Stabilitate financiara",
+      value: getRiskScore(prediction.riskLevel),
+      description: "Nivelul indica stabilitatea estimata a companiei.",
+    },
+    {
+      parameter: "Diversitate clienti",
+      value: normalizeToScore(dashboardData.customerCount, maxRelations),
+      description: "Arata cat de diversificata este baza de clienti.",
+    },
+    {
+      parameter: "Diversitate furnizori",
+      value: normalizeToScore(dashboardData.supplierCount, maxRelations),
+      description: "Arata cat de diversificata este baza de furnizori.",
+    },
+  ];
+}
+
+function buildCustomerConcentrationData(dashboardData: DashboardData) {
+  return dashboardData.topCustomers
+    .filter((customer) => customer.value > 0)
+    .map((customer) => ({
+      ...customer,
+      shareLabel: `${customer.share.toFixed(1)}%`,
+    }));
+}
+
+function normalizeToScore(value: number, maxValue: number) {
+  if (!Number.isFinite(value) || !Number.isFinite(maxValue) || maxValue <= 0) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(100, Math.round((Math.max(value, 0) / maxValue) * 100)));
+}
+
+function getRiskScore(risk: "Scazut" | "Mediu" | "Ridicat") {
+  if (risk === "Ridicat") {
+    return 25;
+  }
+
+  if (risk === "Mediu") {
+    return 55;
+  }
+
+  return 85;
+}
+
+function formatCompactNumber(value: number) {
+  if (!Number.isFinite(value)) {
+    return "0";
+  }
+
+  if (Math.abs(value) >= 1000) {
+    return `${Math.round(value / 1000)}k`;
+  }
+
+  return String(Math.round(value));
+}
+
+function formatActivityTooltip(value: number | string, name: string) {
+  if (name === "Valoare medie / factura") {
+    return [formatRON(Number(value)), name];
+  }
+
+  return [`${Number(value)} ${name === "Facturi procesate" ? "facturi" : "documente"}`, name];
+}
+
+function getBusinessScoreLabel(value: number) {
+  if (value <= 33) {
+    return "redus";
+  }
+
+  if (value <= 66) {
+    return "mediu";
+  }
+
+  return "ridicat";
+}
+
+function formatCustomerTooltip(value: number | string, name: string) {
+  return [formatRON(Number(value)), name];
 }
 
 function getFinancialHealthScore(
