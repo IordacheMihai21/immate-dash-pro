@@ -1,23 +1,35 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Eye, Loader2, Search, Wallet } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowDownCircle,
+  ArrowUpCircle,
+  Eye,
+  LineChart as LineChartIcon,
+  Loader2,
+  Search,
+  ShieldAlert,
+  TrendingDown,
+  TrendingUp,
+  Wallet,
+} from "lucide-react";
 import {
   Bar,
-  BarChart,
   CartesianGrid,
-  Cell,
+  ComposedChart,
+  Legend,
   Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
-import { ChartCard } from "@/components/chart-card";
-import { PageHeader } from "@/components/page-header";
 import {
   ImpactBadge,
+  ReportActionCard,
   ReportEmptyState,
+  ReportHero,
+  ReportInsightCard,
   ReportKpiCard,
   ReportPanel,
   SearchInput,
@@ -56,6 +68,14 @@ export const Route = createFileRoute("/app/rapoarte/cash-flow")({
 type DashboardData = Awaited<ReturnType<typeof getDashboardData>>;
 type CashFlowTab = "all" | "high" | "recent";
 
+type CashFlowMonthlyPoint = {
+  monthKey: string;
+  month: string;
+  cashIn: number;
+  cashOut: number;
+  net: number;
+};
+
 function CashFlowReportPage() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [invoices, setInvoices] = useState<ReportInvoice[]>([]);
@@ -86,10 +106,7 @@ function CashFlowReportPage() {
 
   const report = useMemo(() => {
     const classifiedInvoices = dashboardData
-      ? filterInvoicesByClassification(invoices, dashboardData.companyCui, [
-          "revenue",
-          "expense",
-        ])
+      ? filterInvoicesByClassification(invoices, dashboardData.companyCui, ["revenue", "expense"])
       : [];
     const invoiceTotal = classifiedInvoices.reduce(
       (sum, invoice) => sum + getInvoiceTotal(invoice),
@@ -99,10 +116,13 @@ function CashFlowReportPage() {
       classifiedInvoices.length > 0 ? invoiceTotal / classifiedInvoices.length : 0;
     const newestTime = getNewestInvoiceTime(classifiedInvoices);
     const monthlyPoints = dashboardData?.monthlyInvoiceValue ?? [];
-    const averageMonthlyRevenue =
-      monthlyPoints.length > 0
-        ? monthlyPoints.reduce((sum, point) => sum + point.value, 0) / monthlyPoints.length
-        : 0;
+    const cashFlowMonthly = dashboardData ? buildCashFlowMonthly(dashboardData) : [];
+    const totalCashIn = cashFlowMonthly.reduce((sum, point) => sum + point.cashIn, 0);
+    const totalCashOut = cashFlowMonthly.reduce((sum, point) => sum + point.cashOut, 0);
+    const netCashFlow = totalCashIn - totalCashOut;
+    const riskMonths = cashFlowMonthly.filter((point) => point.net < 0);
+    const bestMonth = getBestCashFlowMonth(cashFlowMonthly);
+    const weakestMonth = getWeakestCashFlowMonth(cashFlowMonthly);
 
     const rows = classifiedInvoices
       .map((invoice) => {
@@ -157,11 +177,13 @@ function CashFlowReportPage() {
             { period: "90 zile", value: dashboardData.prediction.cashFlow90Days },
           ]
         : [],
-      revenueSafetyChart: monthlyPoints.map((point) => ({
-        month: point.month,
-        venituri: point.value,
-        pragSiguranta: averageMonthlyRevenue,
-      })),
+      cashFlowMonthly,
+      totalCashIn,
+      totalCashOut,
+      netCashFlow,
+      riskMonths,
+      bestMonth,
+      weakestMonth,
       rows: filteredRows,
     };
   }, [activeTab, dashboardData, invoices, search]);
@@ -177,9 +199,17 @@ function CashFlowReportPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Raport cash-flow"
-        description="Analizează presiunea pe lichiditate, perioadele cu risc și facturile care influențează fluxul de numerar."
+      <ReportHero
+        title="Cash-flow"
+        subtitle="Analizeaza lichiditatea, miscarea lunara a banilor si lunile in care fluxul de numerar poate pune presiune pe companie."
+        eyebrow="Raport lichiditate"
+        badge="Date din e-Facturi XML"
+        icon={<Wallet className="h-3.5 w-3.5" />}
+        actions={
+          <Button asChild className="rounded-full bg-white text-slate-950 hover:bg-slate-100">
+            <Link to="/app/documente">Importa documente</Link>
+          </Button>
+        }
       />
 
       {errorMessage && (
@@ -192,101 +222,187 @@ function CashFlowReportPage() {
         <ReportEmptyState />
       ) : (
         <>
-          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <ReportKpiCard
-              title="Cash-flow 30 zile"
-              value={formatRON(dashboardData.prediction.cashFlow30Days)}
-              description="Estimare de lichiditate pe termen scurt"
+              title="Sold net estimat"
+              value={formatRON(report.netCashFlow)}
+              description="Diferenta dintre intrari si iesiri in lunile analizate"
               icon={<Wallet className="h-5 w-5" />}
-              tone={dashboardData.prediction.cashFlow30Days >= 0 ? "emerald" : "rose"}
+              tone={report.netCashFlow >= 0 ? "emerald" : "rose"}
+              badge={report.netCashFlow >= 0 ? "Pozitiv" : "Sub presiune"}
             />
             <ReportKpiCard
-              title="Cash-flow 60 zile"
-              value={formatRON(dashboardData.prediction.cashFlow60Days)}
-              description="Estimare pentru următoarele două luni"
-              icon={<Wallet className="h-5 w-5" />}
-              tone={dashboardData.prediction.cashFlow60Days >= 0 ? "emerald" : "rose"}
+              title="Intrari totale"
+              value={formatRON(report.totalCashIn)}
+              description="Valoarea facturilor emise de companie"
+              icon={<ArrowUpCircle className="h-5 w-5" />}
+              tone="emerald"
             />
             <ReportKpiCard
-              title="Cash-flow 90 zile"
-              value={formatRON(dashboardData.prediction.cashFlow90Days)}
-              description="Estimare pentru următoarele trei luni"
-              icon={<Wallet className="h-5 w-5" />}
-              tone={dashboardData.prediction.cashFlow90Days >= 0 ? "emerald" : "rose"}
+              title="Iesiri totale"
+              value={formatRON(report.totalCashOut)}
+              description="Valoarea facturilor primite de la furnizori"
+              icon={<ArrowDownCircle className="h-5 w-5" />}
+              tone="rose"
             />
             <ReportKpiCard
-              title="Presiune lichiditate"
-              value={report.liquidityPressure}
-              description={`Nivel risc estimat: ${dashboardData.prediction.riskLevel}`}
+              title="Luni cu presiune pe cash-flow"
+              value={String(report.riskMonths.length)}
+              description="Luni in care iesirile depasesc intrarile"
               icon={<AlertTriangle className="h-5 w-5" />}
-              tone={
-                report.liquidityPressure === "Ridicată"
-                  ? "rose"
-                  : report.liquidityPressure === "Medie"
-                    ? "amber"
-                    : "emerald"
-              }
+              tone={report.riskMonths.length > 0 ? "amber" : "emerald"}
             />
             <ReportKpiCard
+              title="Cea mai buna luna"
+              value={report.bestMonth?.month ?? "-"}
+              description={report.bestMonth ? formatRON(report.bestMonth.net) : "Nu exista date"}
+              icon={<TrendingUp className="h-5 w-5" />}
+              tone="blue"
+            />
+            <ReportKpiCard
+              title="Cea mai slaba luna"
+              value={report.weakestMonth?.month ?? "-"}
+              description={
+                report.weakestMonth ? formatRON(report.weakestMonth.net) : "Nu exista date"
+              }
+              icon={<TrendingDown className="h-5 w-5" />}
+              tone={report.weakestMonth && report.weakestMonth.net < 0 ? "rose" : "slate"}
+            />
+          </section>
+
+          <ReportPanel
+            eyebrow="Miscare lunara"
+            title="Cash-in vs Cash-out vs Net cash-flow"
+            description="Compara intrarile, iesirile si soldul net pe fiecare luna disponibila."
+          >
+            {report.cashFlowMonthly.length === 0 ? (
+              <div className="flex h-[340px] items-center justify-center rounded-2xl bg-slate-50 p-6 text-center text-sm text-slate-500">
+                Nu exista suficiente date lunare pentru graficul de cash-flow.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={360}>
+                <ComposedChart
+                  data={report.cashFlowMonthly}
+                  margin={{ left: 4, right: 12, top: 12 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                  <XAxis dataKey="month" stroke="#64748b" fontSize={12} tickLine={false} />
+                  <YAxis stroke="#64748b" fontSize={12} tickLine={false} />
+                  <Tooltip formatter={(value: number) => formatRON(Number(value))} />
+                  <Legend iconType="circle" wrapperStyle={{ fontSize: 12, paddingTop: 16 }} />
+                  <Bar
+                    dataKey="cashIn"
+                    name="Intrari"
+                    fill="#10b981"
+                    radius={[8, 8, 0, 0]}
+                    maxBarSize={38}
+                  />
+                  <Bar
+                    dataKey="cashOut"
+                    name="Iesiri"
+                    fill="#f97316"
+                    radius={[8, 8, 0, 0]}
+                    maxBarSize={38}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="net"
+                    name="Net cash-flow"
+                    stroke="#2563eb"
+                    strokeWidth={3}
+                    dot={{ r: 3 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            )}
+          </ReportPanel>
+
+          <section className="grid gap-4 lg:grid-cols-3">
+            <ReportInsightCard
+              title="Luni cu risc"
+              value={
+                report.riskMonths.length > 0
+                  ? report.riskMonths.map((month) => month.month).join(", ")
+                  : "Fara luni negative"
+              }
+              description="Lunile cu sold net negativ trebuie urmarite inainte de angajarea unor plati suplimentare."
+              icon={<ShieldAlert className="h-5 w-5" />}
+              tone={report.riskMonths.length > 0 ? "amber" : "emerald"}
+            />
+            <ReportInsightCard
+              title="Evolutia lichiditatii"
+              value={getLiquidityTrend(report.cashFlowMonthly)}
+              description="Semnal calculat din ultimele luni disponibile, pe baza soldului net lunar."
+              icon={<LineChartIcon className="h-5 w-5" />}
+              tone="blue"
+            />
+            <ReportInsightCard
               title="Facturi cu impact ridicat"
               value={String(report.highImpactCount)}
-              description="Peste media facturilor cu cel puțin 25%"
+              description="Facturile mari pot schimba rapid disponibilul pe termen scurt."
               icon={<Search className="h-5 w-5" />}
               tone="amber"
             />
           </section>
 
+          <ReportPanel
+            eyebrow="Recomandari"
+            title="Recomandari operationale"
+            description="Actiuni simple pentru reducerea presiunii pe lichiditate."
+          >
+            <div className="grid gap-3 md:grid-cols-3">
+              <ReportActionCard
+                priority={report.riskMonths.length > 0 ? "Ridicata" : "Scazuta"}
+                title="Urmareste lunile negative"
+                description="Planifica platile esentiale in functie de lunile in care iesirile depasesc intrarile."
+              />
+              <ReportActionCard
+                priority={report.highImpactCount > 0 ? "Medie" : "Scazuta"}
+                title="Verifica facturile mari"
+                description="Facturile cu impact ridicat merita revizuite inainte de decizii de plata sau incasare."
+              />
+              <ReportActionCard
+                priority="Medie"
+                title="Actualizeaza dupa import"
+                description="Importa documentele noi pentru ca raportul sa reflecte miscarea reala a banilor."
+              />
+            </div>
+          </ReportPanel>
+
           <div className="grid gap-4 xl:grid-cols-2">
-            <ChartCard
+            <ReportPanel
               title="Scenariu cash-flow 30/60/90 zile"
-              description="Cash-flow estimat pentru următoarele intervale"
-              className="border-slate-200 bg-white shadow-sm"
+              description="Cash-flow estimat pentru urmatoarele intervale"
             >
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={report.liquidityScenario}>
+                <ComposedChart data={report.liquidityScenario}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis dataKey="period" stroke="#64748b" fontSize={12} />
                   <YAxis stroke="#64748b" fontSize={12} />
                   <Tooltip formatter={(value: number) => formatRON(Number(value))} />
-                  <Bar dataKey="value" name="Cash-flow">
-                    {report.liquidityScenario.map((entry) => (
-                      <Cell key={entry.period} fill={entry.value >= 0 ? "#10b981" : "#ef4444"} />
-                    ))}
-                  </Bar>
-                </BarChart>
+                  <Bar
+                    dataKey="value"
+                    name="Cash-flow estimat"
+                    fill="#2563eb"
+                    radius={[8, 8, 0, 0]}
+                  />
+                </ComposedChart>
               </ResponsiveContainer>
-            </ChartCard>
+            </ReportPanel>
 
-            <ChartCard
-              title="Venituri lunare vs medie"
-              description="Comparație cu media lunară procesată"
-              className="border-slate-200 bg-white shadow-sm"
+            <ReportPanel
+              title="Interpretare cash-flow"
+              description="Concluzie business pe baza lichiditatii si facturilor cu impact."
             >
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={report.revenueSafetyChart}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
-                  <YAxis stroke="#64748b" fontSize={12} />
-                  <Tooltip formatter={(value: number) => formatRON(Number(value))} />
-                  <Line
-                    type="monotone"
-                    dataKey="venituri"
-                    name="Venituri"
-                    stroke="#2563eb"
-                    strokeWidth={2.5}
-                    dot={{ r: 3 }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="pragSiguranta"
-                    name="Prag de siguranță"
-                    stroke="#f59e0b"
-                    strokeDasharray="6 4"
-                    dot={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </ChartCard>
+              <p className="text-sm leading-6 text-slate-600">
+                {getCashFlowInterpretation(
+                  dashboardData.prediction.cashFlow30Days,
+                  report.highImpactCount,
+                  report.liquidityPressure,
+                )}
+              </p>
+            </ReportPanel>
           </div>
 
           <ReportPanel
@@ -356,16 +472,6 @@ function CashFlowReportPage() {
               </Table>
             </div>
           </ReportPanel>
-
-          <ReportPanel title="Interpretare cash-flow">
-            <p className="text-sm leading-6 text-slate-600">
-              {getCashFlowInterpretation(
-                dashboardData.prediction.cashFlow30Days,
-                report.highImpactCount,
-                report.liquidityPressure,
-              )}
-            </p>
-          </ReportPanel>
         </>
       )}
     </div>
@@ -410,6 +516,85 @@ function getLiquidityPressure(cashFlow30Days: number, averageInvoiceValue: numbe
   }
 
   return "Scăzută";
+}
+
+function buildCashFlowMonthly(dashboardData: DashboardData): CashFlowMonthlyPoint[] {
+  const monthMap = new Map<string, CashFlowMonthlyPoint>();
+
+  function ensureMonth(monthKey: string, month: string) {
+    const existing = monthMap.get(monthKey);
+
+    if (existing) {
+      return existing;
+    }
+
+    const created = {
+      monthKey,
+      month,
+      cashIn: 0,
+      cashOut: 0,
+      net: 0,
+    };
+
+    monthMap.set(monthKey, created);
+
+    return created;
+  }
+
+  dashboardData.monthlyInvoiceValue.forEach((point) => {
+    const month = ensureMonth(point.monthKey, point.month);
+
+    month.cashIn = point.value;
+    month.net = month.cashIn - month.cashOut;
+  });
+
+  dashboardData.monthlyExpenseValue.forEach((point) => {
+    const month = ensureMonth(point.monthKey, point.month);
+
+    month.cashOut = point.value;
+    month.net = month.cashIn - month.cashOut;
+  });
+
+  return Array.from(monthMap.values()).sort((a, b) => a.monthKey.localeCompare(b.monthKey));
+}
+
+function getBestCashFlowMonth(points: CashFlowMonthlyPoint[]) {
+  return points.reduce<CashFlowMonthlyPoint | null>((best, point) => {
+    if (!best) {
+      return point;
+    }
+
+    return point.net > best.net ? point : best;
+  }, null);
+}
+
+function getWeakestCashFlowMonth(points: CashFlowMonthlyPoint[]) {
+  return points.reduce<CashFlowMonthlyPoint | null>((weakest, point) => {
+    if (!weakest) {
+      return point;
+    }
+
+    return point.net < weakest.net ? point : weakest;
+  }, null);
+}
+
+function getLiquidityTrend(points: CashFlowMonthlyPoint[]) {
+  if (points.length < 2) {
+    return "Istoric limitat";
+  }
+
+  const latest = points[points.length - 1];
+  const previous = points[points.length - 2];
+
+  if (latest.net > previous.net) {
+    return "In imbunatatire";
+  }
+
+  if (latest.net < previous.net) {
+    return "In scadere";
+  }
+
+  return "Stabila";
 }
 
 function getCashFlowInterpretation(

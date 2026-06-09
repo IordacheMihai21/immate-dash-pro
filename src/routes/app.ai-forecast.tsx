@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import {
   AlertTriangle,
   BrainCircuit,
+  FileText,
   Loader2,
   Percent,
   Save,
@@ -24,9 +25,15 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { AdminPanel, InfoBanner, StatCard } from "@/components/admin-ui";
+import { InfoBanner } from "@/components/admin-ui";
 import { ChartCard } from "@/components/chart-card";
-import { PageHeader } from "@/components/page-header";
+import {
+  ReportActionCard,
+  ReportHero,
+  ReportInsightCard,
+  ReportKpiCard,
+  ReportPanel,
+} from "@/components/report-ui";
 import {
   Accordion,
   AccordionContent,
@@ -125,10 +132,12 @@ function AiForecastPage() {
 
   if (errorMessage || !dashboardData) {
     return (
-      <div>
-        <PageHeader
+      <div className="space-y-6">
+        <ReportHero
           title="AI Forecast"
-          description="Predicții generate pe baza e-Facturilor XML încărcate în IMMapp."
+          subtitle="Estimari si scenarii generate pe baza e-Facturilor XML incarcate in IMMapp."
+          eyebrow="Planificare business"
+          icon={<BrainCircuit className="h-3.5 w-3.5" />}
         />
 
         <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
@@ -152,9 +161,26 @@ function AiForecastPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <ReportHero
         title="AI Forecast"
-        description="Predicții generate pe baza e-Facturilor XML încărcate în IMMapp."
+        subtitle="Estimari, scenarii si recomandari pentru planificarea afacerii, generate exclusiv din documentele e-Factura XML incarcate."
+        eyebrow="Predictii si scenarii"
+        badge={forecastStatus === "outdated" ? "Necesita actualizare" : "Actualizat"}
+        icon={<BrainCircuit className="h-3.5 w-3.5" />}
+        actions={
+          <Button
+            onClick={handleUpdateForecast}
+            disabled={isUpdatingForecast}
+            className="rounded-full bg-white text-slate-950 hover:bg-slate-100"
+          >
+            {isUpdatingForecast ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            {isUpdatingForecast ? "Se actualizeaza..." : "Actualizeaza predictia"}
+          </Button>
+        }
       />
 
       <section className="space-y-5">
@@ -202,22 +228,22 @@ function AiForecastPage() {
             />
 
             <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              <StatCard
+              <ReportKpiCard
                 title="Venit estimat"
                 value={formatRON(prediction.revenueForecast)}
                 description={`Perioada: ${prediction.predictedPeriod}`}
                 icon={<TrendingUp className="h-5 w-5" />}
                 tone="blue"
               />
-              <StatCard
+              <ReportKpiCard
                 title="Cheltuieli estimate"
                 value={formatRON(prediction.expensesForecast)}
                 description="Costuri estimate pentru perioada următoare"
                 icon={<Wallet className="h-5 w-5" />}
                 tone="slate"
               />
-              <StatCard
-                title="Profit / Pierdere estimată"
+              <ReportKpiCard
+                title="Profit estimat"
                 value={formatRON(prediction.profitForecast)}
                 description={
                   prediction.profitForecast >= 0
@@ -227,36 +253,15 @@ function AiForecastPage() {
                 icon={<Percent className="h-5 w-5" />}
                 tone={prediction.profitForecast >= 0 ? "emerald" : "rose"}
               />
-              <StatCard
-                title="TVA estimată"
-                value={formatRON(prediction.vatForecast)}
-                description="TVA estimată din facturile procesate"
-                icon={<Percent className="h-5 w-5" />}
-                tone="amber"
+              <ReportKpiCard
+                title="Nivel de incredere"
+                value={prediction.confidenceLevel}
+                description={`${prediction.confidenceScore}% scor intern de incredere`}
+                icon={<Target className="h-5 w-5" />}
+                tone="blue"
               />
-              <StatCard
-                title="Cash-flow 30 zile"
-                value={formatRON(prediction.cashFlow30Days)}
-                description="Lichiditate estimată pe termen scurt"
-                icon={<Wallet className="h-5 w-5" />}
-                tone={prediction.cashFlow30Days >= 0 ? "emerald" : "rose"}
-              />
-              <StatCard
-                title="Cash-flow 60 zile"
-                value={formatRON(prediction.cashFlow60Days)}
-                description="Lichiditate estimată pe termen mediu"
-                icon={<Wallet className="h-5 w-5" />}
-                tone={prediction.cashFlow60Days >= 0 ? "emerald" : "rose"}
-              />
-              <StatCard
-                title="Cash-flow 90 zile"
-                value={formatRON(prediction.cashFlow90Days)}
-                description="Lichiditate estimată pentru următoarele 3 luni"
-                icon={<Wallet className="h-5 w-5" />}
-                tone={prediction.cashFlow90Days >= 0 ? "emerald" : "rose"}
-              />
-              <StatCard
-                title="Risc de plată"
+              <ReportKpiCard
+                title="Risc estimat"
                 value={formatRiskClass(riskClassification.paymentRiskClass)}
                 description="Nivel estimat pentru întârzieri posibile"
                 icon={<AlertTriangle className="h-5 w-5" />}
@@ -268,14 +273,18 @@ function AiForecastPage() {
                       : "emerald"
                 }
               />
-              <StatCard
-                title="Nivel de încredere"
-                value={prediction.confidenceLevel}
-                description="Bazat pe istoricul financiar disponibil"
-                icon={<Target className="h-5 w-5" />}
-                tone="blue"
+              <ReportKpiCard
+                title="Date disponibile pentru predictie"
+                value={`${dashboardData.invoiceCount} facturi`}
+                description={`${dashboardData.documentsProcessed} documente procesate in istoricul curent`}
+                icon={<FileText className="h-5 w-5" />}
+                tone="emerald"
               />
             </section>
+
+            <RevenueComparisonChart data={revenueComparisonData} />
+
+            <ScenarioSection prediction={prediction} />
 
             <div className="grid gap-4 xl:grid-cols-3">
               <ChartCard
@@ -307,8 +316,6 @@ function AiForecastPage() {
                 riskClassification={riskClassification}
               />
             </div>
-
-            <RevenueComparisonChart data={revenueComparisonData} />
 
             <RecommendationsCard prediction={prediction} riskClassification={riskClassification} />
           </>
@@ -388,6 +395,62 @@ function RevenueComparisonChart({ data }: { data: RevenueComparisonPoint[] }) {
   );
 }
 
+function ScenarioSection({ prediction }: { prediction: AiFinancialForecast }) {
+  const scenarios = [
+    {
+      title: "Scenariu prudent",
+      revenue: prediction.revenueForecast * 0.9,
+      expenses: prediction.expensesForecast * 1.05,
+      description:
+        "Ipoteza in care veniturile cresc mai lent, iar costurile raman usor peste nivelul estimat.",
+      tone: "amber" as const,
+    },
+    {
+      title: "Scenariu realist",
+      revenue: prediction.revenueForecast,
+      expenses: prediction.expensesForecast,
+      description:
+        "Estimarea centrala calculata din istoricul financiar disponibil in documentele incarcate.",
+      tone: "blue" as const,
+    },
+    {
+      title: "Scenariu optimist",
+      revenue: prediction.revenueForecast * 1.1,
+      expenses: prediction.expensesForecast * 0.98,
+      description:
+        "Ipoteza in care veniturile depasesc estimarea, iar presiunea cheltuielilor ramane controlata.",
+      tone: "emerald" as const,
+    },
+  ];
+
+  return (
+    <ReportPanel
+      eyebrow="Planificare"
+      title="Scenarii pentru perioada urmatoare"
+      description="Scenariile sunt orientative si ajuta la planificare, fara a garanta rezultatele viitoare."
+    >
+      <div className="grid gap-4 lg:grid-cols-3">
+        {scenarios.map((scenario) => {
+          const profit = scenario.revenue - scenario.expenses;
+
+          return (
+            <ReportInsightCard
+              key={scenario.title}
+              title={scenario.title}
+              value={formatRON(profit)}
+              description={`${scenario.description} Venit estimat: ${formatRON(
+                scenario.revenue,
+              )}. Cheltuieli estimate: ${formatRON(scenario.expenses)}.`}
+              icon={<Target className="h-5 w-5" />}
+              tone={scenario.tone}
+            />
+          );
+        })}
+      </div>
+    </ReportPanel>
+  );
+}
+
 function BusinessSummaryCard({
   prediction,
   riskClassification,
@@ -404,7 +467,7 @@ function BusinessSummaryCard({
   onUpdateForecast: () => void;
 }) {
   return (
-    <Card className="overflow-hidden border-slate-200 bg-white shadow-sm">
+    <Card className="overflow-hidden rounded-3xl border-slate-200 bg-white shadow-sm">
       <CardContent className="p-5 lg:p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-4xl">
@@ -504,18 +567,29 @@ function RecommendationsCard({
   riskClassification: RiskClassificationResult;
 }) {
   return (
-    <AdminPanel title="Recomandări" description="Acțiuni practice pentru perioada următoare.">
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {getRecommendations(prediction, riskClassification).map((recommendation) => (
-          <div
-            key={recommendation}
-            className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-sm leading-6 text-slate-700"
-          >
-            {recommendation}
-          </div>
-        ))}
+    <ReportPanel
+      eyebrow="Recomandari"
+      title="Ce influenteaza predictia"
+      description="Elemente de urmarit pentru ca estimarile sa ramana utile in planificarea afacerii."
+    >
+      <div className="grid gap-4 xl:grid-cols-3">
+        <ReportActionCard
+          priority={prediction.cashFlow30Days < 0 ? "Ridicata" : "Medie"}
+          title="Ce influenteaza estimarea"
+          description={getForecastInfluence(prediction, riskClassification)}
+        />
+        <ReportActionCard
+          priority={prediction.realVsPredicted.length < 3 ? "Medie" : "Scazuta"}
+          title="Date de completat"
+          description={getMissingDataGuidance(prediction)}
+        />
+        <ReportActionCard
+          priority={riskClassification.paymentRiskClass === "Ridicat" ? "Ridicata" : "Medie"}
+          title="Ce trebuie monitorizat"
+          description={getMonitoringGuidance(prediction, riskClassification)}
+        />
       </div>
-    </AdminPanel>
+    </ReportPanel>
   );
 }
 
@@ -884,31 +958,42 @@ function getBusinessInterpretation(
   return "Trendul financiar este stabil pe baza datelor curente. Compania poate folosi predicția pentru planificare și pentru verificarea impactului noilor e-Facturi importate.";
 }
 
-function getRecommendations(
+function getForecastInfluence(
   prediction: AiFinancialForecast,
   riskClassification: RiskClassificationResult,
 ) {
-  const recommendations = new Set<string>();
-
-  recommendations.add("Actualizează predicția după fiecare import de e-Facturi.");
-  recommendations.add("Urmărește încasările estimate în următoarele 30 de zile.");
-
   if (prediction.cashFlow30Days < 0) {
-    recommendations.add("Prioritizează plățile esențiale.");
-    recommendations.add("Verifică facturile cu valoare mare.");
-  }
-
-  if (riskClassification.paymentRiskClass !== "Scazut") {
-    recommendations.add("Revizuiește clienții și furnizorii cu impact financiar mare.");
+    return "Cash-flow-ul estimat negativ are impact direct asupra scenariilor. Verifica incasarile apropiate si platile esentiale.";
   }
 
   if (riskClassification.financialTrendClass === "Scadere") {
-    recommendations.add("Verifică e-Facturile recente care pot explica scăderea veniturilor.");
+    return "Trendul veniturilor influenteaza estimarea. Urmareste clientii principali si facturile recente cu valori mari.";
   }
 
-  recommendations.add("Verifică periodic documentele importate pentru date financiare corecte.");
+  return "Estimarea este influentata de istoricul veniturilor, cheltuielilor, TVA-ului si ritmul documentelor importate.";
+}
 
-  return Array.from(recommendations).slice(0, 5);
+function getMissingDataGuidance(prediction: AiFinancialForecast) {
+  if (prediction.realVsPredicted.length < 3) {
+    return "Istoricul disponibil este limitat. Importa mai multe e-Facturi XML pentru comparatii lunare si scenarii mai stabile.";
+  }
+
+  return "Datele disponibile permit comparatii istorice. Continua importul dupa fiecare perioada de facturare pentru rezultate la zi.";
+}
+
+function getMonitoringGuidance(
+  prediction: AiFinancialForecast,
+  riskClassification: RiskClassificationResult,
+) {
+  if (riskClassification.paymentRiskClass === "Ridicat") {
+    return "Monitorizeaza incasarile, facturile mari si clientii cu posibile intarzieri inainte de noi angajamente financiare.";
+  }
+
+  if (prediction.profitForecast < 0) {
+    return "Urmareste costurile estimate si verifica daca facturile primite cresc mai rapid decat veniturile.";
+  }
+
+  return "Monitorizeaza cash-flow-ul la 30 de zile, evolutia veniturilor si schimbarile aparute dupa importuri noi.";
 }
 
 function buildRevenueComparisonData(prediction: AiFinancialForecast): RevenueComparisonPoint[] {

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Eye, Loader2, ReceiptText, Truck, Wallet } from "lucide-react";
+import { AlertTriangle, Eye, Loader2, ReceiptText, Truck, UploadCloud, Wallet } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -13,10 +13,12 @@ import {
   YAxis,
 } from "recharts";
 import { ChartCard } from "@/components/chart-card";
-import { PageHeader } from "@/components/page-header";
 import {
   ImpactBadge,
+  ReportActionCard,
   ReportEmptyState,
+  ReportHero,
+  ReportInsightCard,
   ReportKpiCard,
   ReportPanel,
   SearchInput,
@@ -88,7 +90,10 @@ function ExpensesReportPage() {
     const expenseInvoices = dashboardData
       ? filterInvoicesByClassification(invoices, dashboardData.companyCui, ["expense"])
       : [];
-    const totalExpenses = expenseInvoices.reduce((sum, invoice) => sum + getInvoiceTotal(invoice), 0);
+    const totalExpenses = expenseInvoices.reduce(
+      (sum, invoice) => sum + getInvoiceTotal(invoice),
+      0,
+    );
     const averageInvoice = expenseInvoices.length > 0 ? totalExpenses / expenseInvoices.length : 0;
     const newestTime = getNewestInvoiceTime(expenseInvoices);
     const supplierMap = new Map<string, { name: string; total: number; count: number }>();
@@ -104,6 +109,8 @@ function ExpensesReportPage() {
 
     const suppliers = Array.from(supplierMap.values()).sort((a, b) => b.total - a.total);
     const topSupplier = suppliers[0];
+    const topSupplierShare =
+      totalExpenses > 0 && topSupplier ? (topSupplier.total / totalExpenses) * 100 : 0;
     const monthlyChart = dashboardData
       ? buildMonthlyReportPoints(invoices, [], {
           companyCui: dashboardData.companyCui,
@@ -160,9 +167,11 @@ function ExpensesReportPage() {
       totalExpenses,
       averageInvoice,
       topSupplier,
+      topSupplierShare,
       highExpenseInvoices: rows.filter((row) => row.impact === "Ridicat").length,
       suppliers: suppliers.slice(0, 8),
       monthlyChart,
+      costTrend: getCostTrend(monthlyChart),
       rows: filteredRows,
     };
   }, [activeTab, dashboardData, invoices, search]);
@@ -178,9 +187,20 @@ function ExpensesReportPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Raport cheltuieli"
-        description="Analizează costurile, furnizorii importanți și facturile care pun presiune pe cheltuieli."
+      <ReportHero
+        title="Cheltuieli"
+        subtitle="Analizeaza costurile, furnizorii importanti si facturile care pot pune presiune pe cash-flow."
+        eyebrow="Raport costuri"
+        badge="Facturi primite"
+        icon={<Wallet className="h-3.5 w-3.5" />}
+        actions={
+          <Button asChild className="rounded-full bg-white text-slate-950 hover:bg-slate-100">
+            <Link to="/app/documente">
+              <UploadCloud className="h-4 w-4" />
+              Importa documente
+            </Link>
+          </Button>
+        }
       />
 
       {errorMessage && (
@@ -271,6 +291,54 @@ function ExpensesReportPage() {
             </ChartCard>
           </div>
 
+          <section className="grid gap-4 lg:grid-cols-3">
+            <ReportInsightCard
+              title="Concentrare furnizor principal"
+              value={formatPercent(report.topSupplierShare)}
+              description="Arata cat de mult depind costurile de furnizorul cu cea mai mare valoare."
+              icon={<Truck className="h-5 w-5" />}
+              tone={report.topSupplierShare > 50 ? "amber" : "emerald"}
+            />
+            <ReportInsightCard
+              title="Presiune costuri"
+              value={report.costTrend}
+              description="Semnal calculat din ultimele luni disponibile in facturile primite."
+              icon={<AlertTriangle className="h-5 w-5" />}
+              tone={report.costTrend === "In crestere" ? "rose" : "blue"}
+            />
+            <ReportInsightCard
+              title="Facturi cost ridicat"
+              value={String(report.highExpenseInvoices)}
+              description="Facturi care pot schimba rapid nivelul cheltuielilor lunare."
+              icon={<ReceiptText className="h-5 w-5" />}
+              tone="amber"
+            />
+          </section>
+
+          <ReportPanel
+            eyebrow="Recomandari"
+            title="Semnale de cost de urmarit"
+            description="Puncte utile pentru controlul cheltuielilor si al furnizorilor critici."
+          >
+            <div className="grid gap-3 md:grid-cols-3">
+              <ReportActionCard
+                priority={report.topSupplierShare > 50 ? "Medie" : "Scazuta"}
+                title="Verifica dependenta de furnizor"
+                description="Daca un furnizor concentreaza costurile, verifica termenele, preturile si alternativele."
+              />
+              <ReportActionCard
+                priority={report.highExpenseInvoices > 0 ? "Medie" : "Scazuta"}
+                title="Revizuieste facturile mari"
+                description="Costurile ridicate merita verificate inainte de planificarea platilor."
+              />
+              <ReportActionCard
+                priority="Scazuta"
+                title="Actualizeaza lunar"
+                description="Importa documentele noi pentru a surprinde rapid cresterea costurilor."
+              />
+            </div>
+          </ReportPanel>
+
           <ReportPanel
             title="Facturi care influențează cheltuielile"
             description="Filtrează costurile ridicate și facturile recente."
@@ -348,4 +416,23 @@ function ExpensesReportPage() {
       )}
     </div>
   );
+}
+
+function getCostTrend(monthly: { cheltuieli: number }[]) {
+  if (monthly.length < 2) {
+    return "Istoric limitat";
+  }
+
+  const latest = monthly[monthly.length - 1];
+  const previous = monthly[monthly.length - 2];
+
+  if (latest.cheltuieli > previous.cheltuieli) {
+    return "In crestere";
+  }
+
+  if (latest.cheltuieli < previous.cheltuieli) {
+    return "In scadere";
+  }
+
+  return "Stabil";
 }

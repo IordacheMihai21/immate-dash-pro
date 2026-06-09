@@ -1,12 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Eye, FileText, Loader2, Percent, PieChart as PieChartIcon, Wallet } from "lucide-react";
+import {
+  Calculator,
+  Eye,
+  FileText,
+  Loader2,
+  Percent,
+  PieChart as PieChartIcon,
+  ShieldAlert,
+  TrendingUp,
+  Wallet,
+} from "lucide-react";
 import {
   Bar,
-  BarChart,
   CartesianGrid,
   Cell,
+  ComposedChart,
   Legend,
+  Line,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -14,11 +25,12 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ChartCard } from "@/components/chart-card";
-import { PageHeader } from "@/components/page-header";
 import {
   ImpactBadge,
+  ReportActionCard,
   ReportEmptyState,
+  ReportHero,
+  ReportInsightCard,
   ReportKpiCard,
   ReportPanel,
   SearchInput,
@@ -95,35 +107,65 @@ function VatReportPage() {
     const revenueInvoices = dashboardData
       ? filterInvoicesByClassification(invoices, dashboardData.companyCui, ["revenue"])
       : [];
-    const classifiedInvoices = dashboardData
-      ? filterInvoicesByClassification(invoices, dashboardData.companyCui, [
-          "revenue",
-          "expense",
-        ])
+    const expenseInvoices = dashboardData
+      ? filterInvoicesByClassification(invoices, dashboardData.companyCui, ["expense"])
       : [];
-    const totalVat = revenueInvoices.reduce((sum, invoice) => sum + toNumber(invoice.tax_amount), 0);
-    const totalWithVat = revenueInvoices.reduce((sum, invoice) => sum + getInvoiceTotal(invoice), 0);
-    const baseWithoutVat = revenueInvoices.reduce((sum, invoice) => sum + getInvoiceBase(invoice), 0);
+    const classifiedInvoices = dashboardData
+      ? filterInvoicesByClassification(invoices, dashboardData.companyCui, ["revenue", "expense"])
+      : [];
+    const collectedVat = revenueInvoices.reduce(
+      (sum, invoice) => sum + toNumber(invoice.tax_amount),
+      0,
+    );
+    const deductibleVat = expenseInvoices.reduce(
+      (sum, invoice) => sum + toNumber(invoice.tax_amount),
+      0,
+    );
+    const estimatedVatToPay = Math.max(collectedVat - deductibleVat, 0);
+    const totalWithVat = revenueInvoices.reduce(
+      (sum, invoice) => sum + getInvoiceTotal(invoice),
+      0,
+    );
+    const baseWithoutVat = revenueInvoices.reduce(
+      (sum, invoice) => sum + getInvoiceBase(invoice),
+      0,
+    );
     const classifiedVat = classifiedInvoices.reduce(
       (sum, invoice) => sum + toNumber(invoice.tax_amount),
       0,
     );
     const averageVat =
       classifiedInvoices.length > 0 ? classifiedVat / classifiedInvoices.length : 0;
-    const vatShare = totalWithVat > 0 ? (totalVat / totalWithVat) * 100 : 0;
+    const vatShare = totalWithVat > 0 ? (collectedVat / totalWithVat) * 100 : 0;
+    const deductibleRatio = collectedVat > 0 ? (deductibleVat / collectedVat) * 100 : 0;
     const newestTime = getNewestInvoiceTime(classifiedInvoices);
-    const monthlyVat = dashboardData
+    const monthlyCollected = dashboardData
       ? buildMonthlyReportPoints(invoices, [], {
           companyCui: dashboardData.companyCui,
           classifications: ["revenue"],
-        }).map((point) => ({
-          month: point.month,
-          tva: point.vat,
-        }))
+        })
       : [];
+    const monthlyDeductible = dashboardData
+      ? buildMonthlyReportPoints(invoices, [], {
+          companyCui: dashboardData.companyCui,
+          classifications: ["expense"],
+        })
+      : [];
+    const monthlyVatBalance = buildVatMonthlyBalance(monthlyCollected, monthlyDeductible);
+    const maxVatMonth = monthlyVatBalance.reduce<(typeof monthlyVatBalance)[number] | null>(
+      (max, point) => {
+        if (!max) {
+          return point;
+        }
+
+        return point.dePlata > max.dePlata ? point : max;
+      },
+      null,
+    );
+    const highPressureMonths = monthlyVatBalance.filter((point) => point.dePlata > 0);
     const fiscalStructure = [
       { name: "Baza fără TVA", value: baseWithoutVat },
-      { name: "TVA", value: totalVat },
+      { name: "TVA colectată", value: collectedVat },
     ];
 
     const rows = classifiedInvoices
@@ -173,11 +215,16 @@ function VatReportPage() {
     });
 
     return {
-      totalVat,
+      collectedVat,
+      deductibleVat,
+      estimatedVatToPay,
       totalWithVat,
       baseWithoutVat,
       vatShare,
-      monthlyVat,
+      deductibleRatio,
+      monthlyVatBalance,
+      maxVatMonth,
+      highPressureMonths,
       fiscalStructure,
       rows: filteredRows,
       highVatCount: rows.filter((row) => row.impact === "Ridicat").length,
@@ -195,9 +242,17 @@ function VatReportPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Raport TVA"
-        description="Urmărește TVA-ul colectat, ponderea fiscală și facturile cu impact fiscal ridicat."
+      <ReportHero
+        title="TVA"
+        subtitle="Urmareste TVA-ul colectat, TVA-ul deductibil si estimarea de plata pentru o planificare fiscala mai clara."
+        eyebrow="Raport fiscal"
+        badge="Expunere TVA"
+        icon={<Percent className="h-3.5 w-3.5" />}
+        actions={
+          <Button asChild className="rounded-full bg-white text-slate-950 hover:bg-slate-100">
+            <Link to="/app/documente">Importa documente</Link>
+          </Button>
+        }
       />
 
       {errorMessage && (
@@ -210,58 +265,102 @@ function VatReportPage() {
         <ReportEmptyState />
       ) : (
         <>
-          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <ReportKpiCard
               title="TVA colectată"
-              value={formatRON(report.totalVat)}
-              description="TVA identificată în facturile procesate"
+              value={formatRON(report.collectedVat)}
+              description="TVA din facturile emise de companie"
               icon={<Percent className="h-5 w-5" />}
               tone="amber"
             />
             <ReportKpiCard
-              title="Baza fără TVA"
-              value={formatRON(report.baseWithoutVat)}
-              description="Valoarea fiscală fără TVA"
+              title="TVA deductibilă"
+              value={formatRON(report.deductibleVat)}
+              description="TVA din facturile primite de la furnizori"
               icon={<FileText className="h-5 w-5" />}
               tone="blue"
             />
             <ReportKpiCard
-              title="Total cu TVA"
-              value={formatRON(report.totalWithVat)}
-              description="Valoare totală procesată"
+              title="TVA estimată de plată"
+              value={formatRON(report.estimatedVatToPay)}
+              description="Diferenta estimata intre TVA colectata si deductibila"
               icon={<Wallet className="h-5 w-5" />}
-              tone="emerald"
+              tone={report.estimatedVatToPay > 0 ? "rose" : "emerald"}
             />
             <ReportKpiCard
-              title="Pondere TVA"
-              value={formatPercent(report.vatShare)}
-              description="TVA raportat la totalul cu TVA"
+              title="Lună cu TVA maximă"
+              value={report.maxVatMonth?.month ?? "-"}
+              description={
+                report.maxVatMonth ? formatRON(report.maxVatMonth.dePlata) : "Nu exista date"
+              }
               icon={<PieChartIcon className="h-5 w-5" />}
+              tone="amber"
+            />
+            <ReportKpiCard
+              title="Trend TVA"
+              value={getVatTrend(report.monthlyVatBalance)}
+              description="Directia estimata din ultimele luni disponibile"
+              icon={<TrendingUp className="h-5 w-5" />}
+              tone="blue"
+            />
+            <ReportKpiCard
+              title="Raport deductibilă/colectată"
+              value={formatPercent(report.deductibleRatio)}
+              description="Cat din TVA colectata este acoperita de TVA deductibila"
+              icon={<Calculator className="h-5 w-5" />}
               tone="slate"
             />
           </section>
 
-          <div className="grid gap-4 xl:grid-cols-2">
-            <ChartCard
-              title="Evoluție TVA lunară"
-              description="TVA grupat după data emiterii facturilor"
-              className="border-slate-200 bg-white shadow-sm"
-            >
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={report.monthlyVat}>
+          <ReportPanel
+            eyebrow="Evolutie fiscala"
+            title="TVA colectata vs TVA deductibila vs TVA de plata"
+            description="Compara pozitia TVA lunara pe baza facturilor emise si primite."
+          >
+            {report.monthlyVatBalance.length === 0 ? (
+              <div className="flex h-[340px] items-center justify-center rounded-2xl bg-slate-50 p-6 text-center text-sm text-slate-500">
+                Nu exista suficiente date lunare pentru evolutia TVA.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={360}>
+                <ComposedChart
+                  data={report.monthlyVatBalance}
+                  margin={{ left: 4, right: 12, top: 12 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
                   <YAxis stroke="#64748b" fontSize={12} />
+                  <Legend iconType="circle" wrapperStyle={{ fontSize: 12, paddingTop: 16 }} />
                   <Tooltip formatter={(value: number) => formatRON(Number(value))} />
-                  <Bar dataKey="tva" name="TVA" fill="#f59e0b" radius={[8, 8, 0, 0]} />
-                </BarChart>
+                  <Bar
+                    dataKey="colectata"
+                    name="TVA colectata"
+                    fill="#f59e0b"
+                    radius={[8, 8, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="deductibila"
+                    name="TVA deductibila"
+                    fill="#2563eb"
+                    radius={[8, 8, 0, 0]}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="dePlata"
+                    name="TVA de plata"
+                    stroke="#ef4444"
+                    strokeWidth={3}
+                    dot={{ r: 3 }}
+                  />
+                </ComposedChart>
               </ResponsiveContainer>
-            </ChartCard>
+            )}
+          </ReportPanel>
 
-            <ChartCard
+          <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(300px,0.8fr)]">
+            <ReportPanel
               title="Structura valori fiscale"
-              description="Baza fără TVA comparată cu TVA-ul procesat"
-              className="border-slate-200 bg-white shadow-sm"
+              description="Baza fara TVA comparata cu TVA-ul colectat."
             >
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
@@ -281,8 +380,49 @@ function VatReportPage() {
                   <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
                 </PieChart>
               </ResponsiveContainer>
-            </ChartCard>
-          </div>
+            </ReportPanel>
+
+            <div className="grid gap-4">
+              <ReportInsightCard
+                title="Luni cu presiune TVA"
+                value={String(report.highPressureMonths.length)}
+                description="Luni in care TVA estimata de plata este peste zero si trebuie planificata in cash-flow."
+                icon={<ShieldAlert className="h-5 w-5" />}
+                tone={report.highPressureMonths.length > 0 ? "amber" : "emerald"}
+              />
+              <ReportInsightCard
+                title="Balanta TVA"
+                value={formatRON(report.estimatedVatToPay)}
+                description="Estimare prudenta pentru suma care poate trebui pregatita pentru obligatiile fiscale."
+                icon={<Calculator className="h-5 w-5" />}
+                tone={report.estimatedVatToPay > 0 ? "rose" : "emerald"}
+              />
+            </div>
+          </section>
+
+          <ReportPanel
+            eyebrow="Atentie fiscala"
+            title="Alerte si recomandari TVA"
+            description="Puncte de verificat inainte de inchiderea perioadei fiscale."
+          >
+            <div className="grid gap-3 md:grid-cols-3">
+              <ReportActionCard
+                priority={report.estimatedVatToPay > 0 ? "Medie" : "Scazuta"}
+                title="Planifica TVA de plata"
+                description="Pastreaza lichiditate pentru lunile in care TVA colectata depaseste TVA deductibila."
+              />
+              <ReportActionCard
+                priority={report.highVatCount > 0 ? "Medie" : "Scazuta"}
+                title="Verifica facturile cu TVA ridicat"
+                description="Facturile cu TVA mare pot schimba rapid obligatia fiscala estimata."
+              />
+              <ReportActionCard
+                priority="Scazuta"
+                title="Actualizeaza dupa import"
+                description="Recalculeaza raportul dupa fiecare import de e-Facturi XML."
+              />
+            </div>
+          </ReportPanel>
 
           <ReportPanel
             title="Facturi cu impact TVA"
@@ -362,7 +502,8 @@ function VatReportPage() {
 
           <ReportPanel title="Interpretare TVA">
             <p className="text-sm leading-6 text-slate-600">
-              TVA-ul reprezintă {formatPercent(report.vatShare)} din valoarea totală procesată.
+              TVA-ul colectat reprezintă {formatPercent(report.vatShare)} din valoarea totală
+              procesată.
               {report.highVatCount > 0
                 ? ` Cele mai importante obligații fiscale vin din ${report.highVatCount} facturi cu TVA ridicat.`
                 : " Nu există concentrații fiscale majore în facturile procesate."}
@@ -372,4 +513,75 @@ function VatReportPage() {
       )}
     </div>
   );
+}
+
+function buildVatMonthlyBalance(
+  collected: { monthKey: string; month: string; vat: number }[],
+  deductible: { monthKey: string; month: string; vat: number }[],
+) {
+  const monthMap = new Map<
+    string,
+    {
+      monthKey: string;
+      month: string;
+      colectata: number;
+      deductibila: number;
+      dePlata: number;
+    }
+  >();
+
+  function ensureMonth(monthKey: string, month: string) {
+    const existing = monthMap.get(monthKey);
+
+    if (existing) {
+      return existing;
+    }
+
+    const created = {
+      monthKey,
+      month,
+      colectata: 0,
+      deductibila: 0,
+      dePlata: 0,
+    };
+
+    monthMap.set(monthKey, created);
+
+    return created;
+  }
+
+  collected.forEach((point) => {
+    const month = ensureMonth(point.monthKey, point.month);
+
+    month.colectata = point.vat;
+    month.dePlata = Math.max(month.colectata - month.deductibila, 0);
+  });
+
+  deductible.forEach((point) => {
+    const month = ensureMonth(point.monthKey, point.month);
+
+    month.deductibila = point.vat;
+    month.dePlata = Math.max(month.colectata - month.deductibila, 0);
+  });
+
+  return Array.from(monthMap.values()).sort((a, b) => a.monthKey.localeCompare(b.monthKey));
+}
+
+function getVatTrend(points: ReturnType<typeof buildVatMonthlyBalance>) {
+  if (points.length < 2) {
+    return "Istoric limitat";
+  }
+
+  const latest = points[points.length - 1];
+  const previous = points[points.length - 2];
+
+  if (latest.dePlata > previous.dePlata) {
+    return "In crestere";
+  }
+
+  if (latest.dePlata < previous.dePlata) {
+    return "In scadere";
+  }
+
+  return "Stabil";
 }

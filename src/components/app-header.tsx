@@ -23,14 +23,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import {
-  getCompanyProfile,
-  type CompanyProfile,
-} from "@/lib/companyService";
-import {
-  getCurrentUserProfile,
-  type CurrentUserProfile,
-} from "@/lib/authUserService";
+import { getCompanyProfile, type CompanyProfile } from "@/lib/companyService";
+import { getCurrentUserProfile, type CurrentUserProfile } from "@/lib/authUserService";
 import { supabase } from "@/lib/supabaseClient";
 
 const fallbackCompany = {
@@ -45,11 +39,7 @@ function getCompanyDisplay(profile: CompanyProfile | null | undefined) {
   };
 }
 
-export function AppHeader({
-  onSidebarToggle,
-}: {
-  onSidebarToggle: () => void;
-}) {
+export function AppHeader({ onSidebarToggle }: { onSidebarToggle: () => void }) {
   const [darkMode, setDarkMode] = useState(false);
   const [companyDisplay, setCompanyDisplay] = useState(fallbackCompany);
   const [userProfile, setUserProfile] = useState<CurrentUserProfile>({
@@ -99,14 +89,8 @@ export function AppHeader({
 
     return () => {
       isMounted = false;
-      window.removeEventListener(
-        "immapp:company-profile-updated",
-        handleProfileUpdated,
-      );
-      window.removeEventListener(
-        "immapp:auth-user-updated",
-        handleAuthUserUpdated,
-      );
+      window.removeEventListener("immapp:company-profile-updated", handleProfileUpdated);
+      window.removeEventListener("immapp:auth-user-updated", handleAuthUserUpdated);
     };
   }, []);
 
@@ -209,7 +193,7 @@ export function AppHeader({
               />
               <NotificationItem
                 title="Documente procesate"
-                description="Noile facturi sunt disponibile in dashboard."
+                description="Noile facturi sunt disponibile in panoul principal."
               />
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
@@ -220,11 +204,7 @@ export function AppHeader({
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-10 gap-2 rounded-lg px-2"
-              >
+              <Button type="button" variant="ghost" className="h-10 gap-2 rounded-lg px-2">
                 <Avatar className="h-8 w-8">
                   <AvatarFallback className="bg-blue-500 text-xs text-white">
                     {userProfile.initials}
@@ -280,21 +260,13 @@ export function AppHeader({
   );
 }
 
-function NotificationItem({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
+function NotificationItem({ title, description }: { title: string; description: string }) {
   return (
     <DropdownMenuItem className="items-start gap-3 py-3">
       <span className="mt-1 h-2 w-2 rounded-full bg-blue-500" />
       <span>
         <span className="block text-sm font-medium">{title}</span>
-        <span className="mt-0.5 block text-xs text-muted-foreground">
-          {description}
-        </span>
+        <span className="mt-0.5 block text-xs text-muted-foreground">{description}</span>
       </span>
     </DropdownMenuItem>
   );

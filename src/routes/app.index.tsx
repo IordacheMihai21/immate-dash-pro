@@ -9,11 +9,9 @@ import {
   Building2,
   CheckCircle2,
   ClipboardCheck,
-  Clock3,
   Eye,
   FileText,
   Gauge,
-  Layers3,
   Loader2,
   ReceiptText,
   ShieldCheck,
@@ -21,7 +19,6 @@ import {
   TrendingUp,
   UploadCloud,
   Users,
-  Wallet,
   Zap,
 } from "lucide-react";
 import {
@@ -60,7 +57,7 @@ import { formatRON } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/")({
-  head: () => ({ meta: [{ title: "Dashboard - IMMapp" }] }),
+  head: () => ({ meta: [{ title: "Overview financiar - IMMapp" }] }),
   component: Dashboard,
 });
 
@@ -129,9 +126,9 @@ type RelationshipTooltipProps = {
 };
 
 const periodOptions: { value: PeriodFilter; label: string }[] = [
-  { value: "30", label: "30 days" },
-  { value: "90", label: "90 days" },
-  { value: "all", label: "All data" },
+  { value: "30", label: "30 zile" },
+  { value: "90", label: "90 zile" },
+  { value: "all", label: "Toate datele" },
 ];
 
 const relationshipColors = ["#2563eb", "#10b981", "#f59e0b", "#8b5cf6"];
@@ -152,7 +149,7 @@ function Dashboard() {
       const data = await getDashboardData();
       setDashboardData(data);
     } catch {
-      setErrorMessage("Nu s-au putut incarca datele pentru dashboard.");
+      setErrorMessage("Nu s-au putut incarca datele pentru panoul principal.");
     } finally {
       setIsLoading(false);
     }
@@ -186,7 +183,7 @@ function Dashboard() {
     return (
       <div className="flex min-h-[420px] items-center justify-center gap-2 text-slate-500">
         <Loader2 className="h-4 w-4 animate-spin" />
-        Loading dashboard...
+        Se incarca privirea financiara...
       </div>
     );
   }
@@ -194,7 +191,7 @@ function Dashboard() {
   if (errorMessage || !dashboardData || !model) {
     return (
       <div className="rounded-3xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-700">
-        {errorMessage || "Dashboard data could not be loaded."}
+        {errorMessage || "Nu s-au putut incarca datele pentru overview."}
       </div>
     );
   }
@@ -209,116 +206,128 @@ function Dashboard() {
 
       <section className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
         <CommandKpiCard
-          title="Business Health Score"
+          title="Scor de sanatate financiara"
           value={`${model.healthScore}%`}
-          description="Overall operating signal based on risk, confidence and current activity."
+          description="Semnal rapid despre stabilitate, risc si activitatea curenta."
           badge={model.status.label}
           icon={<Gauge className="h-5 w-5" />}
           tone={model.status.tone}
           onClick={() =>
             setFocusedKpi({
-              title: "Business Health Score",
+              title: "Scor de sanatate financiara",
               value: `${model.healthScore}%`,
               icon: <Gauge className="h-6 w-6" />,
               explanation:
-                "The score combines forecast confidence, risk level, cash-flow pressure, document quality and relationship concentration.",
+                "Scorul combina increderea predictiei, nivelul de risc, presiunea pe cash-flow, calitatea datelor si concentrarea relatiilor comerciale.",
               businessMeaning:
-                "It gives the owner a fast read on whether the company looks stable, needs attention or is entering a risk zone.",
+                "Ofera proprietarului o imagine rapida: compania este stabila, necesita atentie sau intra intr-o zona de risc.",
             })
           }
         />
         <CommandKpiCard
-          title="Monthly activity"
-          value={`${model.latestMonth?.invoices ?? 0} invoices`}
-          description={model.latestMonth ? `${model.latestMonth.documents} documents in ${model.latestMonth.month}` : "No monthly activity yet"}
+          title="Activitate lunara"
+          value={`${model.latestMonth?.invoices ?? 0} facturi`}
+          description={
+            model.latestMonth
+              ? `${model.latestMonth.documents} documente in ${model.latestMonth.month}`
+              : "Nu exista inca activitate lunara"
+          }
           badge={model.activityTrend}
           icon={<Activity className="h-5 w-5" />}
           tone="blue"
           onClick={() =>
             setFocusedKpi({
-              title: "Monthly activity",
-              value: `${model.latestMonth?.invoices ?? 0} invoices`,
+              title: "Activitate lunara",
+              value: `${model.latestMonth?.invoices ?? 0} facturi`,
               icon: <Activity className="h-6 w-6" />,
               explanation:
-                "Monthly activity follows document and invoice volume, not revenue or profit.",
+                "Activitatea lunara urmareste volumul de documente si facturi, nu venitul sau profitul.",
               businessMeaning:
-                "It shows whether the business operations are active enough to support reliable financial visibility.",
+                "Arata daca ritmul operational este suficient pentru o vizibilitate financiara relevanta.",
             })
           }
         />
         <CommandKpiCard
-          title="Processed documents"
+          title="Documente procesate"
           value={String(dashboardData.documentsProcessed)}
-          description="Official e-Factura XML files included in the workspace."
-          badge={`${dashboardData.invoiceCount} invoices`}
+          description="Fisiere e-Factura XML incluse in analiza companiei."
+          badge={`${dashboardData.invoiceCount} facturi`}
           icon={<FileText className="h-5 w-5" />}
           tone="emerald"
           onClick={() =>
             setFocusedKpi({
-              title: "Processed documents",
+              title: "Documente procesate",
               value: String(dashboardData.documentsProcessed),
               icon: <FileText className="h-6 w-6" />,
               explanation:
-                "Documents are the operational source for invoices, dashboard signals and AI forecast history.",
+                "Documentele sunt sursa operationala pentru facturi, indicatori si istoricul folosit in predictii.",
               businessMeaning:
-                "More complete document coverage improves the quality of overview insights and recommendations.",
+                "Cu cat istoricul de documente este mai complet, cu atat concluziile si recomandarile sunt mai utile.",
             })
           }
         />
         <CommandKpiCard
-          title="Data quality"
+          title="Calitatea datelor"
           value={`${dashboardData.documentExtractionEvaluation.fieldCompletenessRate.toFixed(1)}%`}
-          description="Completeness of key fields extracted from the latest invoice."
+          description="Completitudinea campurilor importante din documentele analizate."
           badge={dashboardData.documentExtractionEvaluation.extractionQualityLabel}
           icon={<ClipboardCheck className="h-5 w-5" />}
           tone={getQualityTone(dashboardData.documentExtractionEvaluation.fieldCompletenessRate)}
           onClick={() =>
             setFocusedKpi({
-              title: "Data quality",
+              title: "Calitatea datelor",
               value: `${dashboardData.documentExtractionEvaluation.fieldCompletenessRate.toFixed(1)}%`,
               icon: <ClipboardCheck className="h-6 w-6" />,
               explanation:
-                "Data quality tracks how many important invoice fields are available for analysis.",
+                "Calitatea datelor arata cate campuri importante din facturi sunt disponibile pentru analiza.",
               businessMeaning:
-                "High completeness reduces manual checking and makes dashboards and forecasts more trustworthy.",
+                "O completitudine buna reduce verificarile manuale si face indicatorii mai usor de folosit in decizii.",
             })
           }
         />
         <CommandKpiCard
-          title="Customer concentration"
+          title="Concentrare clienti"
           value={formatPercent(model.topCustomerShare)}
-          description={model.topCustomerName ? `Top customer: ${model.topCustomerName}` : "No customer concentration yet"}
+          description={
+            model.topCustomerName
+              ? `Client principal: ${model.topCustomerName}`
+              : "Nu exista inca o concentrare relevanta"
+          }
           badge={getConcentrationLabel(model.topCustomerShare)}
           icon={<Users className="h-5 w-5" />}
           tone={model.topCustomerShare > 50 ? "amber" : "violet"}
           onClick={() =>
             setFocusedKpi({
-              title: "Customer concentration",
+              title: "Concentrare clienti",
               value: formatPercent(model.topCustomerShare),
               icon: <Users className="h-6 w-6" />,
               explanation:
-                "Customer concentration shows how much activity depends on the largest customer.",
+                "Concentrarea clientilor arata cat de mult depinde activitatea de cel mai important client.",
               businessMeaning:
-                "A high percentage can create dependency risk if that customer delays orders or payments.",
+                "O pondere ridicata poate crea risc de dependenta daca acel client intarzie comenzile sau platile.",
             })
           }
         />
         <CommandKpiCard
-          title="Supplier stability"
+          title="Stabilitate furnizori"
           value={formatPercent(model.topSupplierShare)}
-          description={model.topSupplierName ? `Top supplier: ${model.topSupplierName}` : "No supplier dependency yet"}
+          description={
+            model.topSupplierName
+              ? `Furnizor principal: ${model.topSupplierName}`
+              : "Nu exista inca o dependenta relevanta"
+          }
           badge={getConcentrationLabel(model.topSupplierShare)}
           icon={<Building2 className="h-5 w-5" />}
           tone={model.topSupplierShare > 50 ? "amber" : "slate"}
           onClick={() =>
             setFocusedKpi({
-              title: "Supplier stability",
+              title: "Stabilitate furnizori",
               value: formatPercent(model.topSupplierShare),
               icon: <Building2 className="h-6 w-6" />,
               explanation:
-                "Supplier stability indicates whether expenses are spread across multiple suppliers or concentrated in one relationship.",
+                "Stabilitatea furnizorilor arata daca cheltuielile sunt distribuite intre mai multi parteneri sau concentrate intr-o singura relatie.",
               businessMeaning:
-                "A balanced supplier base can reduce operational pressure when one supplier changes pricing or terms.",
+                "O baza echilibrata de furnizori reduce presiunea operationala cand un furnizor modifica preturile sau conditiile.",
             })
           }
         />
@@ -327,10 +336,18 @@ function Dashboard() {
       <Tabs value={overviewTab} onValueChange={(value) => setOverviewTab(value as OverviewTab)}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <TabsList className="grid h-auto w-full grid-cols-2 rounded-2xl bg-slate-100 p-1 sm:w-auto sm:grid-cols-4">
-            <TabsTrigger value="status" className="rounded-xl">Status</TabsTrigger>
-            <TabsTrigger value="activity" className="rounded-xl">Activity</TabsTrigger>
-            <TabsTrigger value="risks" className="rounded-xl">Risks</TabsTrigger>
-            <TabsTrigger value="actions" className="rounded-xl">Actions</TabsTrigger>
+            <TabsTrigger value="status" className="rounded-xl">
+              Status
+            </TabsTrigger>
+            <TabsTrigger value="activity" className="rounded-xl">
+              Activitate
+            </TabsTrigger>
+            <TabsTrigger value="risks" className="rounded-xl">
+              Riscuri
+            </TabsTrigger>
+            <TabsTrigger value="actions" className="rounded-xl">
+              Actiuni
+            </TabsTrigger>
           </TabsList>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
@@ -357,9 +374,9 @@ function Dashboard() {
         <TabsContent value="status" className="mt-4 space-y-4">
           <section className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.85fr)]">
             <CommandPanel
-              eyebrow="Operations"
-              title="Document Pipeline"
-              description="Operational document flow from import to attention points."
+              eyebrow="Operatiuni"
+              title="Flux documente"
+              description="Urmareste parcursul documentelor de la import pana la elementele care necesita atentie."
             >
               <ResponsiveContainer width="100%" height={320}>
                 <BarChart data={model.pipelineStages} margin={{ left: 8, right: 12, top: 12 }}>
@@ -367,7 +384,7 @@ function Dashboard() {
                   <XAxis dataKey="stage" stroke="#64748b" fontSize={12} tickLine={false} />
                   <YAxis stroke="#64748b" fontSize={12} allowDecimals={false} tickLine={false} />
                   <Tooltip content={<PipelineTooltip />} />
-                  <Bar dataKey="value" name="Documents" radius={[12, 12, 0, 0]}>
+                  <Bar dataKey="value" name="Documente" radius={[12, 12, 0, 0]}>
                     {model.pipelineStages.map((stage) => (
                       <Cell key={stage.stage} fill={stage.color} />
                     ))}
@@ -383,25 +400,31 @@ function Dashboard() {
         <TabsContent value="activity" className="mt-4 space-y-4">
           <section className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(300px,0.75fr)]">
             <CommandPanel
-              eyebrow="Pulse"
-              title="Business Pulse"
-              description="Activity index based on document and invoice volume, not raw revenue."
+              eyebrow="Ritm"
+              title="Pulsul afacerii"
+              description="Indice de activitate calculat din volumul de documente si facturi, nu din venit brut."
             >
               {model.pulseData.length === 0 ? (
-                <CommandEmptyState message="Import documents to build the activity timeline." />
+                <CommandEmptyState message="Importa documente pentru a construi evolutia activitatii." />
               ) : (
                 <ResponsiveContainer width="100%" height={340}>
                   <ComposedChart data={model.pulseData} margin={{ left: 8, right: 12, top: 12 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                     <XAxis dataKey="month" stroke="#64748b" fontSize={12} tickLine={false} />
                     <YAxis yAxisId="count" stroke="#64748b" fontSize={12} allowDecimals={false} />
-                    <YAxis yAxisId="index" orientation="right" domain={[0, 100]} stroke="#64748b" fontSize={12} />
+                    <YAxis
+                      yAxisId="index"
+                      orientation="right"
+                      domain={[0, 100]}
+                      stroke="#64748b"
+                      fontSize={12}
+                    />
                     <Tooltip content={<PulseTooltip />} />
                     <Legend iconType="circle" wrapperStyle={{ fontSize: 12, paddingTop: 14 }} />
                     <Bar
                       yAxisId="count"
                       dataKey="documents"
-                      name="Documents"
+                      name="Documente"
                       fill="#93c5fd"
                       radius={[8, 8, 0, 0]}
                       maxBarSize={36}
@@ -409,7 +432,7 @@ function Dashboard() {
                     <Bar
                       yAxisId="count"
                       dataKey="invoices"
-                      name="Invoices"
+                      name="Facturi"
                       fill="#10b981"
                       radius={[8, 8, 0, 0]}
                       maxBarSize={36}
@@ -418,7 +441,7 @@ function Dashboard() {
                       yAxisId="index"
                       type="monotone"
                       dataKey="activityIndex"
-                      name="Business Pulse"
+                      name="Pulsul afacerii"
                       stroke="#111827"
                       strokeWidth={3}
                       dot={{ r: 3 }}
@@ -438,9 +461,9 @@ function Dashboard() {
         <TabsContent value="risks" className="mt-4 space-y-4">
           <section className="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.9fr)]">
             <CommandPanel
-              eyebrow="Relationships"
-              title="Commercial Relationships"
-              description="Dependency and diversity across customers and suppliers."
+              eyebrow="Parteneri"
+              title="Relatii comerciale"
+              description="Echilibrul si dependentele fata de clienti si furnizori."
             >
               <ResponsiveContainer width="100%" height={320}>
                 <BarChart
@@ -450,11 +473,20 @@ function Dashboard() {
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
                   <XAxis type="number" stroke="#64748b" fontSize={12} />
-                  <YAxis type="category" dataKey="label" stroke="#64748b" width={138} fontSize={12} />
+                  <YAxis
+                    type="category"
+                    dataKey="label"
+                    stroke="#64748b"
+                    width={138}
+                    fontSize={12}
+                  />
                   <Tooltip content={<RelationshipTooltip />} />
-                  <Bar dataKey="value" name="Value" radius={[0, 10, 10, 0]}>
+                  <Bar dataKey="value" name="Valoare" radius={[0, 10, 10, 0]}>
                     {model.relationshipData.map((entry, index) => (
-                      <Cell key={entry.label} fill={relationshipColors[index % relationshipColors.length]} />
+                      <Cell
+                        key={entry.label}
+                        fill={relationshipColors[index % relationshipColors.length]}
+                      />
                     ))}
                   </Bar>
                 </BarChart>
@@ -490,38 +522,55 @@ function OverviewHero({
         <div>
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-emerald-50">
             <Sparkles className="h-3.5 w-3.5" />
-            Executive Command Center
+            Centru executiv de control
           </div>
           <h1 className="text-3xl font-semibold tracking-normal text-white lg:text-4xl">
-            Financial Overview
+            Overview financiar
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-200">
-            A fast business view of company health, document activity, commercial risk and AI-guided next steps.
+            O vedere rapida asupra sanatatii financiare, activitatii documentelor, riscurilor
+            comerciale si actiunilor recomandate de AI.
           </p>
 
           <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             <HeroMiniMetric label="Status" value={model.status.label} tone={model.status.tone} />
-            <HeroMiniMetric label="Analyzed period" value={getPeriodLabel(selectedPeriod)} tone="blue" />
-            <HeroMiniMetric label="Latest activity" value={model.latestActivityDate} tone="slate" />
+            <HeroMiniMetric
+              label="Perioada analizata"
+              value={getPeriodLabel(selectedPeriod)}
+              tone="blue"
+            />
+            <HeroMiniMetric
+              label="Ultima activitate"
+              value={model.latestActivityDate}
+              tone="slate"
+            />
           </div>
 
           <div className="mt-6 flex flex-wrap gap-3">
             <Button asChild className="rounded-full bg-white text-slate-950 hover:bg-slate-100">
               <Link to="/app/documente">
                 <UploadCloud className="h-4 w-4" />
-                Import documents
+                Importa documente
               </Link>
             </Button>
-            <Button asChild variant="outline" className="rounded-full border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white">
-              <Link to="/app/rapoarte">
+            <Button
+              asChild
+              variant="outline"
+              className="rounded-full border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+            >
+              <Link to="/app/rapoarte/cash-flow">
                 <BarChart3 className="h-4 w-4" />
-                View reports
+                Vezi cash-flow
               </Link>
             </Button>
-            <Button asChild variant="outline" className="rounded-full border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white">
+            <Button
+              asChild
+              variant="outline"
+              className="rounded-full border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+            >
               <Link to="/app/ai-forecast">
                 <BrainCircuit className="h-4 w-4" />
-                AI analysis
+                Analiza AI
               </Link>
             </Button>
           </div>
@@ -530,9 +579,9 @@ function OverviewHero({
         <div className="rounded-3xl border border-white/15 bg-white/10 p-5 backdrop-blur">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-sm font-medium text-slate-200">Business Health Score</p>
+              <p className="text-sm font-medium text-slate-200">Scor de sanatate financiara</p>
               <p className="mt-3 text-5xl font-semibold text-white">{model.healthScore}</p>
-              <p className="mt-2 text-sm text-slate-300">out of 100</p>
+              <p className="mt-2 text-sm text-slate-300">din 100</p>
             </div>
             <div
               className="relative grid h-28 w-28 shrink-0 place-items-center rounded-full"
@@ -594,7 +643,9 @@ function CommandKpiCard({
     >
       <div className="flex items-start justify-between gap-4">
         <div className={cn("rounded-2xl p-3", toneClasses[tone].icon)}>{icon}</div>
-        <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", toneClasses[tone].badge)}>
+        <span
+          className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", toneClasses[tone].badge)}
+        >
           {badge}
         </span>
       </div>
@@ -631,27 +682,45 @@ function CommandPanel({
 function HealthSnapshot({ model }: { model: ReturnType<typeof buildExecutiveOverview> }) {
   return (
     <aside className="rounded-3xl border border-slate-200 bg-slate-950 p-5 text-white shadow-sm">
-      <p className="text-xs font-semibold uppercase text-emerald-300">Snapshot</p>
-      <h2 className="mt-1 text-lg font-semibold">What needs attention</h2>
+      <p className="text-xs font-semibold uppercase text-emerald-300">Sinteza</p>
+      <h2 className="mt-1 text-lg font-semibold">Ce necesita atentie</h2>
       <p className="mt-2 text-sm leading-6 text-slate-300">
-        A short read of the current operating position.
+        O citire scurta a pozitiei operationale curente.
       </p>
 
       <div className="mt-5 space-y-3">
         <SnapshotRow
-          label="Cash-flow pressure"
+          label="Presiune cash-flow"
           value={model.cashFlowSignal}
-          tone={model.cashFlowSignal === "Risk" ? "rose" : model.cashFlowSignal === "Attention" ? "amber" : "emerald"}
+          tone={
+            model.cashFlowSignal === "Risc"
+              ? "rose"
+              : model.cashFlowSignal === "Atentie"
+                ? "amber"
+                : "emerald"
+          }
         />
         <SnapshotRow
-          label="Document quality"
+          label="Calitatea documentelor"
           value={model.qualitySignal}
-          tone={model.qualitySignal === "Risk" ? "rose" : model.qualitySignal === "Attention" ? "amber" : "emerald"}
+          tone={
+            model.qualitySignal === "Risc"
+              ? "rose"
+              : model.qualitySignal === "Atentie"
+                ? "amber"
+                : "emerald"
+          }
         />
         <SnapshotRow
-          label="Relationship risk"
+          label="Risc relatii comerciale"
           value={model.relationshipSignal}
-          tone={model.relationshipSignal === "Risk" ? "rose" : model.relationshipSignal === "Attention" ? "amber" : "emerald"}
+          tone={
+            model.relationshipSignal === "Risc"
+              ? "rose"
+              : model.relationshipSignal === "Atentie"
+                ? "amber"
+                : "emerald"
+          }
         />
       </div>
     </aside>
@@ -661,22 +730,22 @@ function HealthSnapshot({ model }: { model: ReturnType<typeof buildExecutiveOver
 function ActivityDigest({ model }: { model: ReturnType<typeof buildExecutiveOverview> }) {
   const items = [
     {
-      label: "Average monthly invoices",
+      label: "Media lunara de facturi",
       value: String(model.averageMonthlyInvoices),
       icon: <ReceiptText className="h-4 w-4" />,
     },
     {
-      label: "Activity trend",
+      label: "Tendinta activitatii",
       value: model.activityTrend,
       icon: <TrendingUp className="h-4 w-4" />,
     },
     {
-      label: "Classified invoices",
+      label: "Facturi clasificate",
       value: String(model.classifiedInvoiceCount),
       icon: <CheckCircle2 className="h-4 w-4" />,
     },
     {
-      label: "Needs attention",
+      label: "Necesita atentie",
       value: String(model.needsAttentionCount),
       icon: <AlertTriangle className="h-4 w-4" />,
     },
@@ -685,7 +754,10 @@ function ActivityDigest({ model }: { model: ReturnType<typeof buildExecutiveOver
   return (
     <aside className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
       {items.map((item) => (
-        <div key={item.label} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div
+          key={item.label}
+          className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
+        >
           <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
             {item.icon}
           </div>
@@ -700,12 +772,12 @@ function ActivityDigest({ model }: { model: ReturnType<typeof buildExecutiveOver
 function RiskSignalPanel({ model }: { model: ReturnType<typeof buildExecutiveOverview> }) {
   return (
     <aside className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-xs font-semibold uppercase text-amber-600">Risk scan</p>
-      <h2 className="mt-1 text-lg font-semibold text-slate-950">Dependency overview</h2>
+      <p className="text-xs font-semibold uppercase text-amber-600">Scanare riscuri</p>
+      <h2 className="mt-1 text-lg font-semibold text-slate-950">Privire asupra dependentelor</h2>
       <div className="mt-5 space-y-4">
-        <RiskMeter label="Top customer dependency" value={model.topCustomerShare} />
-        <RiskMeter label="Top supplier dependency" value={model.topSupplierShare} />
-        <RiskMeter label="Unclassified pressure" value={model.unclassifiedShare} />
+        <RiskMeter label="Dependenta de clientul principal" value={model.topCustomerShare} />
+        <RiskMeter label="Dependenta de furnizorul principal" value={model.topSupplierShare} />
+        <RiskMeter label="Presiune facturi neclasificate" value={model.unclassifiedShare} />
       </div>
     </aside>
   );
@@ -716,15 +788,15 @@ function ActionQueue({ actions }: { actions: ActionItem[] }) {
     <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
       <div className="flex flex-col gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase text-emerald-600">AI guidance</p>
-          <h2 className="mt-1 text-lg font-semibold text-slate-950">AI Action Queue</h2>
+          <p className="text-xs font-semibold uppercase text-emerald-600">Ghidare AI</p>
+          <h2 className="mt-1 text-lg font-semibold text-slate-950">Actiuni recomandate de AI</h2>
           <p className="mt-1 text-sm leading-6 text-slate-500">
-            Prioritized recommendations generated from the current overview signals.
+            Recomandari prioritizate pe baza semnalelor curente din overview.
           </p>
         </div>
         <Button asChild className="rounded-full">
           <Link to="/app/ai-forecast">
-            Open AI analysis
+            Deschide analiza AI
             <ArrowRight className="h-4 w-4" />
           </Link>
         </Button>
@@ -743,7 +815,7 @@ function ActionQueue({ actions }: { actions: ActionItem[] }) {
             <h3 className="mt-4 text-base font-semibold text-slate-950">{action.title}</h3>
             <p className="mt-2 text-sm leading-6 text-slate-600">{action.explanation}</p>
             <div className="mt-4 rounded-2xl bg-white p-3 text-sm leading-6 text-slate-700">
-              <span className="font-semibold text-slate-950">Next step: </span>
+              <span className="font-semibold text-slate-950">Pas recomandat: </span>
               {action.nextStep}
             </div>
           </div>
@@ -757,36 +829,38 @@ function RecentInvoicesTable({ invoices }: { invoices: DashboardData["latestInvo
   return (
     <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
       <div className="border-b border-slate-100 p-5">
-        <p className="text-xs font-semibold uppercase text-slate-500">Recent activity</p>
-        <h2 className="mt-1 text-lg font-semibold text-slate-950">Latest invoices</h2>
+        <p className="text-xs font-semibold uppercase text-slate-500">Activitate recenta</p>
+        <h2 className="mt-1 text-lg font-semibold text-slate-950">Ultimele facturi</h2>
         <p className="mt-1 text-sm leading-6 text-slate-500">
-          Recent invoices remain available for operational drill-down.
+          Facturile recente raman disponibile pentru verificari operationale rapide.
         </p>
       </div>
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="bg-slate-50/70">
-              <TableHead>Invoice</TableHead>
-              <TableHead>Supplier</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Date</TableHead>
+              <TableHead>Factura</TableHead>
+              <TableHead>Furnizor</TableHead>
+              <TableHead>Client</TableHead>
+              <TableHead>Data</TableHead>
               <TableHead className="text-right">Total</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Action</TableHead>
+              <TableHead className="text-right">Actiune</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {invoices.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="py-8 text-center text-slate-500">
-                  No invoices available yet.
+                  Nu exista facturi disponibile inca.
                 </TableCell>
               </TableRow>
             ) : (
               invoices.map((invoice) => (
                 <TableRow key={invoice.id} className="hover:bg-slate-50/70">
-                  <TableCell className="font-medium text-slate-900">{invoice.invoiceNumber}</TableCell>
+                  <TableCell className="font-medium text-slate-900">
+                    {invoice.invoiceNumber}
+                  </TableCell>
                   <TableCell>{invoice.supplierName}</TableCell>
                   <TableCell>{invoice.customerName}</TableCell>
                   <TableCell>{formatDate(invoice.issueDate)}</TableCell>
@@ -800,7 +874,7 @@ function RecentInvoicesTable({ invoices }: { invoices: DashboardData["latestInvo
                     <Button variant="outline" size="sm" asChild>
                       <Link to="/app/e-facturi/$id" params={{ id: invoice.id }}>
                         <Eye className="h-4 w-4" />
-                        View
+                        Vezi
                       </Link>
                     </Button>
                   </TableCell>
@@ -828,8 +902,8 @@ function KpiDialog({ data, onClose }: { data: FocusedKpi; onClose: () => void })
               <DialogDescription>{data.value}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
-              <KpiDetail title="What it means" value={data.explanation} />
-              <KpiDetail title="Business meaning" value={data.businessMeaning} />
+              <KpiDetail title="Ce inseamna" value={data.explanation} />
+              <KpiDetail title="Impact business" value={data.businessMeaning} />
             </div>
           </>
         )}
@@ -861,7 +935,9 @@ function SnapshotRow({ label, value, tone }: { label: string; value: string; ton
     <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-semibold text-white">{label}</p>
-        <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", darkToneClasses[tone])}>
+        <span
+          className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", darkToneClasses[tone])}
+        >
           {value}
         </span>
       </div>
@@ -876,12 +952,17 @@ function RiskMeter({ label, value }: { label: string; value: number }) {
     <div>
       <div className="mb-2 flex items-center justify-between gap-3">
         <p className="text-sm font-medium text-slate-700">{label}</p>
-        <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", toneClasses[tone].badge)}>
+        <span
+          className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", toneClasses[tone].badge)}
+        >
           {formatPercent(value)}
         </span>
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-        <div className={cn("h-full rounded-full", meterToneClasses[tone])} style={{ width: `${Math.min(value, 100)}%` }} />
+        <div
+          className={cn("h-full rounded-full", meterToneClasses[tone])}
+          style={{ width: `${Math.min(value, 100)}%` }}
+        />
       </div>
     </div>
   );
@@ -896,9 +977,21 @@ function PriorityBadge({ priority }: { priority: ActionItem["priority"] }) {
 
   return (
     <span className={cn("rounded-full border px-2.5 py-1 text-xs font-semibold", className)}>
-      {priority}
+      {formatPriority(priority)}
     </span>
   );
+}
+
+function formatPriority(priority: ActionItem["priority"]) {
+  if (priority === "High") {
+    return "Prioritate ridicata";
+  }
+
+  if (priority === "Medium") {
+    return "Prioritate medie";
+  }
+
+  return "Prioritate scazuta";
 }
 
 function CommandEmptyState({ message }: { message: string }) {
@@ -919,9 +1012,13 @@ function PulseTooltip({ active, payload }: PulseTooltipProps) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-xl">
       <p className="mb-3 font-semibold text-slate-950">{point.month}</p>
-      <TooltipRow label="Documents" value={String(point.documents)} color="bg-blue-300" />
-      <TooltipRow label="Invoices" value={String(point.invoices)} color="bg-emerald-500" />
-      <TooltipRow label="Business Pulse" value={`${point.activityIndex}/100`} color="bg-slate-950" />
+      <TooltipRow label="Documente" value={String(point.documents)} color="bg-blue-300" />
+      <TooltipRow label="Facturi" value={String(point.invoices)} color="bg-emerald-500" />
+      <TooltipRow
+        label="Pulsul afacerii"
+        value={`${point.activityIndex}/100`}
+        color="bg-slate-950"
+      />
     </div>
   );
 }
@@ -936,7 +1033,7 @@ function PipelineTooltip({ active, payload }: PipelineTooltipProps) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-xl">
       <p className="font-semibold text-slate-950">{stage.stage}</p>
-      <p className="mt-1 text-slate-600">{stage.value} items</p>
+      <p className="mt-1 text-slate-600">{stage.value} elemente</p>
       <p className="mt-2 max-w-xs text-xs leading-5 text-slate-500">{stage.description}</p>
     </div>
   );
@@ -979,7 +1076,9 @@ function buildExecutiveOverview(dashboardData: DashboardData, selectedPeriod: Pe
   const topCustomer = dashboardData.topCustomers[0] ?? null;
   const topSupplier = dashboardData.topSuppliers[0] ?? null;
   const topSupplierShare =
-    dashboardData.totalExpenses > 0 && topSupplier ? (topSupplier.value / dashboardData.totalExpenses) * 100 : 0;
+    dashboardData.totalExpenses > 0 && topSupplier
+      ? (topSupplier.value / dashboardData.totalExpenses) * 100
+      : 0;
   const unclassifiedShare =
     dashboardData.totalValue > 0
       ? (dashboardData.unclassifiedInvoiceValue / dashboardData.totalValue) * 100
@@ -1012,10 +1111,10 @@ function buildExecutiveOverview(dashboardData: DashboardData, selectedPeriod: Pe
     Math.max(dashboardData.documentExtractionEvaluation.missingFields.length, 0);
   const pipelineStages = buildPipelineStages(dashboardData, needsAttentionCount);
   const relationshipData = [
-    { label: "Active customers", value: dashboardData.customerCount, type: "count" as const },
-    { label: "Active suppliers", value: dashboardData.supplierCount, type: "count" as const },
-    { label: "Top customer share", value: topCustomer?.share ?? 0, type: "percent" as const },
-    { label: "Top supplier share", value: topSupplierShare, type: "percent" as const },
+    { label: "Clienti activi", value: dashboardData.customerCount, type: "count" as const },
+    { label: "Furnizori activi", value: dashboardData.supplierCount, type: "count" as const },
+    { label: "Pondere client principal", value: topCustomer?.share ?? 0, type: "percent" as const },
+    { label: "Pondere furnizor principal", value: topSupplierShare, type: "percent" as const },
   ];
   const actions = buildActionQueue({
     dashboardData,
@@ -1028,14 +1127,19 @@ function buildExecutiveOverview(dashboardData: DashboardData, selectedPeriod: Pe
   return {
     healthScore,
     status,
-    qualitySignal: qualityRate < 70 ? "Risk" : qualityRate < 90 ? "Attention" : "Stable",
-    cashFlowSignal: prediction.cashFlow30Days < 0 ? "Risk" : prediction.cashFlow30Days < 1000 ? "Attention" : "Stable",
+    qualitySignal: qualityRate < 70 ? "Risc" : qualityRate < 90 ? "Atentie" : "Stabil",
+    cashFlowSignal:
+      prediction.cashFlow30Days < 0
+        ? "Risc"
+        : prediction.cashFlow30Days < 1000
+          ? "Atentie"
+          : "Stabil",
     relationshipSignal:
       Math.max(topCustomer?.share ?? 0, topSupplierShare) > 60
-        ? "Risk"
+        ? "Risc"
         : Math.max(topCustomer?.share ?? 0, topSupplierShare) > 40
-          ? "Attention"
-          : "Stable",
+          ? "Atentie"
+          : "Stabil",
     latestActivityDate: getLatestActivityDate(dashboardData),
     latestMonth,
     averageMonthlyInvoices,
@@ -1108,7 +1212,9 @@ function buildMonthlyDashboardData(dashboardData: DashboardData): MonthlyOvervie
     month.documents = item.docs;
   });
 
-  return buildBusinessPulse(Array.from(monthMap.values()).sort((a, b) => a.monthKey.localeCompare(b.monthKey)));
+  return buildBusinessPulse(
+    Array.from(monthMap.values()).sort((a, b) => a.monthKey.localeCompare(b.monthKey)),
+  );
 }
 
 function buildBusinessPulse(
@@ -1139,30 +1245,34 @@ function filterMonthlyData(points: MonthlyOverviewPoint[], period: PeriodFilter)
   return points.slice(-monthCount);
 }
 
-function buildPipelineStages(dashboardData: DashboardData, attentionCount: number): PipelineStage[] {
+function buildPipelineStages(
+  dashboardData: DashboardData,
+  attentionCount: number,
+): PipelineStage[] {
   return [
     {
-      stage: "Imported",
+      stage: "Importate",
       value: dashboardData.documentsProcessed,
-      description: "Documents uploaded into the official document flow.",
+      description: "Documente incarcate in fluxul oficial de lucru.",
       color: "#2563eb",
     },
     {
-      stage: "Processed",
+      stage: "Procesate",
       value: dashboardData.invoiceCount,
-      description: "Invoices extracted from imported XML documents.",
+      description: "Facturi extrase din documentele XML incarcate.",
       color: "#10b981",
     },
     {
-      stage: "Validated",
+      stage: "Validate",
       value: dashboardData.classifiedInvoiceCount,
-      description: "Invoices clearly associated with the current company.",
+      description: "Facturi asociate clar cu firma curenta.",
       color: "#8b5cf6",
     },
     {
-      stage: "Needs attention",
+      stage: "Necesita atentie",
       value: attentionCount,
-      description: "Items that may need profile, CUI or field-quality review.",
+      description:
+        "Elemente care pot necesita verificarea profilului, CUI-ului sau calitatii datelor.",
       color: "#f59e0b",
     },
   ];
@@ -1186,63 +1296,67 @@ function buildActionQueue({
   if (topCustomerShare > 50) {
     actions.push({
       priority: "High",
-      title: "High customer concentration",
-      explanation: "A large share of activity depends on one customer relationship.",
-      nextStep: "Open reports and review whether future revenue depends too much on this customer.",
+      title: "Concentrare ridicata pe un client",
+      explanation: "O parte mare din activitate depinde de o singura relatie comerciala.",
+      nextStep:
+        "Deschide rapoartele si verifica daca veniturile viitoare depind prea mult de acest client.",
     });
   }
 
   if (dashboardData.prediction.cashFlow30Days < 0) {
     actions.push({
       priority: "High",
-      title: "Negative cash-flow pressure",
-      explanation: "The 30-day cash-flow estimate is below zero.",
-      nextStep: "Review collections, essential payments and the AI forecast before committing new expenses.",
+      title: "Presiune negativa pe cash-flow",
+      explanation: "Estimarea cash-flow pentru urmatoarele 30 de zile este sub zero.",
+      nextStep: "Verifica incasarile, platile esentiale si analiza AI inainte de noi cheltuieli.",
     });
   }
 
   if (topSupplierShare > 50) {
     actions.push({
       priority: "Medium",
-      title: "Supplier dependency risk",
-      explanation: "Expenses are concentrated around a primary supplier.",
-      nextStep: "Check supplier terms and consider alternative suppliers for critical purchases.",
+      title: "Dependenta de furnizor",
+      explanation: "Cheltuielile sunt concentrate in jurul unui furnizor principal.",
+      nextStep:
+        "Verifica termenii furnizorului si ia in calcul alternative pentru achizitiile critice.",
     });
   }
 
   if (dashboardData.documentExtractionEvaluation.fieldCompletenessRate < 85) {
     actions.push({
       priority: "Medium",
-      title: "Low data quality",
-      explanation: "Some important invoice fields are missing from the latest extraction quality check.",
-      nextStep: "Review imported documents and re-import problematic XML files if needed.",
+      title: "Calitatea datelor trebuie imbunatatita",
+      explanation: "Unele campuri importante din facturi lipsesc din analiza curenta.",
+      nextStep:
+        "Verifica documentele incarcate si reincarca XML-urile problematice daca este necesar.",
     });
   }
 
   if (monthlyPointsCount < 3) {
     actions.push({
       priority: "Low",
-      title: "Insufficient monthly history",
-      explanation: "The overview has limited monthly activity to compare against.",
-      nextStep: "Import more historical e-Factura XML files to improve trend visibility.",
+      title: "Istoric lunar limitat",
+      explanation: "Privirea generala are putine luni de activitate disponibile pentru comparatie.",
+      nextStep:
+        "Importa mai multe e-Facturi XML istorice pentru o vizibilitate mai buna asupra trendurilor.",
     });
   }
 
   if (unclassifiedShare > 10) {
     actions.push({
       priority: "Medium",
-      title: "Invoices need company matching",
-      explanation: "Some invoices could not be clearly matched to the company profile.",
-      nextStep: "Verify the company CUI in company settings and re-check unmatched invoices.",
+      title: "Facturi de asociat cu firma",
+      explanation: "Unele facturi nu au putut fi asociate clar cu profilul companiei.",
+      nextStep: "Verifica CUI-ul in profilul companiei si revizuieste facturile neclasificate.",
     });
   }
 
   if (actions.length === 0) {
     actions.push({
       priority: "Low",
-      title: "Keep the workflow current",
-      explanation: "The overview does not show urgent operational pressure right now.",
-      nextStep: "Continue importing e-Factura XML files after each business cycle.",
+      title: "Mentine fluxul actualizat",
+      explanation: "Privirea generala nu indica presiuni operationale urgente in acest moment.",
+      nextStep: "Continua sa importi e-Facturi XML dupa fiecare ciclu de activitate.",
     });
   }
 
@@ -1278,7 +1392,12 @@ function getBusinessHealthScore({
   }[risk];
   const cashFlowAdjustment = cashFlow30Days >= 0 ? 8 : -10;
   const qualityAdjustment = qualityRate >= 90 ? 6 : qualityRate >= 75 ? 0 : -10;
-  const concentrationPenalty = Math.max(customerShare, supplierShare) > 60 ? 8 : Math.max(customerShare, supplierShare) > 40 ? 4 : 0;
+  const concentrationPenalty =
+    Math.max(customerShare, supplierShare) > 60
+      ? 8
+      : Math.max(customerShare, supplierShare) > 40
+        ? 4
+        : 0;
   const unclassifiedPenalty = unclassifiedShare > 10 ? 6 : 0;
 
   return Math.max(
@@ -1310,26 +1429,27 @@ function getBusinessStatus({
 }) {
   if (healthScore < 55 || risk === "Ridicat" || cashFlow30Days < 0) {
     return {
-      label: "Risk",
+      label: "Risc",
       tone: "rose" as const,
       description:
-        "The company needs attention because risk, cash-flow or data signals are under pressure.",
+        "Compania necesita atentie deoarece riscul, cash-flow-ul sau calitatea datelor sunt sub presiune.",
     };
   }
 
   if (healthScore < 75 || risk === "Mediu" || qualityRate < 85) {
     return {
-      label: "Attention",
+      label: "Atentie",
       tone: "amber" as const,
       description:
-        "The company is operating, but a few signals should be monitored before the next decisions.",
+        "Compania functioneaza, dar cateva semnale trebuie monitorizate inaintea urmatoarelor decizii.",
     };
   }
 
   return {
-    label: "Stable",
+    label: "Stabil",
     tone: "emerald" as const,
-    description: "The company looks stable based on current documents, activity and forecast signals.",
+    description:
+      "Compania arata stabil pe baza documentelor, activitatii si semnalelor financiare curente.",
   };
 }
 
@@ -1345,7 +1465,7 @@ function getActivityTrend(
   previous: MonthlyOverviewPoint | null,
 ) {
   if (!latest || !previous) {
-    return "New baseline";
+    return "Baza noua";
   }
 
   const currentActivity = latest.invoices + latest.documents;
@@ -1360,19 +1480,19 @@ function getActivityTrend(
     return `${change.toFixed(1)}%`;
   }
 
-  return "Stable";
+  return "Stabil";
 }
 
 function getConcentrationLabel(value: number) {
   if (value > 60) {
-    return "High";
+    return "Ridicata";
   }
 
   if (value > 40) {
-    return "Medium";
+    return "Medie";
   }
 
-  return "Balanced";
+  return "Echilibrata";
 }
 
 function getQualityTone(value: number): Tone {
@@ -1389,14 +1509,14 @@ function getQualityTone(value: number): Tone {
 
 function getPeriodLabel(period: PeriodFilter) {
   if (period === "30") {
-    return "Last 30 days";
+    return "Ultimele 30 zile";
   }
 
   if (period === "90") {
-    return "Last 90 days";
+    return "Ultimele 90 zile";
   }
 
-  return "All data";
+  return "Toate datele";
 }
 
 function normalizeStatus(status: string | null | undefined) {

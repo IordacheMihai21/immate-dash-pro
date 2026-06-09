@@ -12,25 +12,31 @@ export function ReportKpiCard({
   description,
   icon,
   tone = "blue",
+  badge,
 }: {
   title: string;
   value: string;
   description?: string;
   icon: ReactNode;
-  tone?: "blue" | "emerald" | "amber" | "rose" | "slate";
+  tone?: ReportTone;
+  badge?: string;
 }) {
-  const toneClass = {
-    blue: "bg-blue-50 text-blue-600",
-    emerald: "bg-emerald-50 text-emerald-600",
-    amber: "bg-amber-50 text-amber-600",
-    rose: "bg-rose-50 text-rose-600",
-    slate: "bg-slate-100 text-slate-600",
-  }[tone];
-
   return (
-    <Card className="h-full border-slate-200 bg-white shadow-sm">
+    <Card className="group h-full rounded-3xl border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md">
       <CardContent className="p-5">
-        <div className={cn("mb-5 inline-flex rounded-xl p-3", toneClass)}>{icon}</div>
+        <div className="mb-5 flex items-start justify-between gap-3">
+          <div className={cn("inline-flex rounded-2xl p-3", toneClasses[tone].icon)}>{icon}</div>
+          {badge && (
+            <span
+              className={cn(
+                "rounded-full px-2.5 py-1 text-xs font-semibold",
+                toneClasses[tone].badge,
+              )}
+            >
+              {badge}
+            </span>
+          )}
+        </div>
         <p className="text-sm font-medium text-slate-500">{title}</p>
         <p className="mt-2 break-words text-2xl font-semibold text-slate-900">{value}</p>
         {description && <p className="mt-1 text-xs leading-5 text-slate-500">{description}</p>}
@@ -42,6 +48,7 @@ export function ReportKpiCard({
 export function ReportPanel({
   title,
   description,
+  eyebrow,
   action,
   children,
   className,
@@ -49,22 +56,115 @@ export function ReportPanel({
 }: {
   title: string;
   description?: string;
+  eyebrow?: string;
   action?: ReactNode;
   children: ReactNode;
   className?: string;
   contentClassName?: string;
 }) {
   return (
-    <Card className={cn("border-slate-200 bg-white shadow-sm", className)}>
+    <Card className={cn("rounded-3xl border-slate-200 bg-white shadow-sm", className)}>
       <CardHeader className="flex flex-col gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <CardTitle className="text-base font-semibold text-slate-900">{title}</CardTitle>
+          {eyebrow && (
+            <p className="mb-1 text-xs font-semibold uppercase text-blue-600">{eyebrow}</p>
+          )}
+          <CardTitle className="text-base font-semibold text-slate-950">{title}</CardTitle>
           {description && <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>}
         </div>
         {action}
       </CardHeader>
       <CardContent className={cn("p-5", contentClassName)}>{children}</CardContent>
     </Card>
+  );
+}
+
+export function ReportHero({
+  title,
+  subtitle,
+  eyebrow = "Raport IMMapp",
+  badge,
+  icon,
+  actions,
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  eyebrow?: string;
+  badge?: string;
+  icon?: ReactNode;
+  actions?: ReactNode;
+  children?: ReactNode;
+}) {
+  return (
+    <section className="overflow-hidden rounded-3xl border border-slate-800 bg-[linear-gradient(135deg,#0f172a_0%,#134e4a_58%,#166534_100%)] p-6 text-white shadow-sm lg:p-7">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
+        <div>
+          <div className="mb-5 flex flex-wrap items-center gap-3">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-emerald-50">
+              {icon}
+              {eyebrow}
+            </span>
+            {badge && (
+              <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-slate-100">
+                {badge}
+              </span>
+            )}
+          </div>
+          <h1 className="text-3xl font-semibold tracking-normal text-white lg:text-4xl">{title}</h1>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-200">{subtitle}</p>
+          {children && <div className="mt-6">{children}</div>}
+        </div>
+        {actions && <div className="flex flex-wrap gap-3 xl:justify-end">{actions}</div>}
+      </div>
+    </section>
+  );
+}
+
+export function ReportInsightCard({
+  title,
+  description,
+  value,
+  icon,
+  tone = "blue",
+}: {
+  title: string;
+  description: string;
+  value?: string;
+  icon: ReactNode;
+  tone?: ReportTone;
+}) {
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className={cn("mb-4 inline-flex rounded-2xl p-3", toneClasses[tone].icon)}>{icon}</div>
+      <p className="text-sm font-semibold text-slate-950">{title}</p>
+      {value && <p className="mt-2 text-xl font-semibold text-slate-900">{value}</p>}
+      <p className="mt-2 text-sm leading-6 text-slate-500">{description}</p>
+    </div>
+  );
+}
+
+export function ReportActionCard({
+  priority,
+  title,
+  description,
+}: {
+  priority: "Ridicata" | "Medie" | "Scazuta";
+  title: string;
+  description: string;
+}) {
+  const tone = priority === "Ridicata" ? "rose" : priority === "Medie" ? "amber" : "emerald";
+
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5 transition hover:border-slate-300 hover:bg-white hover:shadow-sm">
+      <span
+        className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", toneClasses[tone].badge)}
+      >
+        Prioritate {priority.toLowerCase()}
+      </span>
+      <h3 className="mt-4 text-base font-semibold text-slate-950">{title}</h3>
+      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
+    </div>
   );
 }
 
@@ -116,7 +216,7 @@ export function SearchInput({
 
 export function ReportEmptyState() {
   return (
-    <Card className="border-slate-200 bg-white shadow-sm">
+    <Card className="rounded-3xl border-slate-200 bg-white shadow-sm">
       <CardContent className="flex min-h-[300px] flex-col items-center justify-center p-8 text-center">
         <div className="mb-4 rounded-full bg-blue-50 p-4 text-blue-600">
           <UploadCloud className="h-6 w-6" />
@@ -137,3 +237,32 @@ export function ReportEmptyState() {
     </Card>
   );
 }
+
+type ReportTone = "blue" | "emerald" | "amber" | "rose" | "slate" | "violet";
+
+const toneClasses: Record<ReportTone, { icon: string; badge: string }> = {
+  blue: {
+    icon: "bg-blue-50 text-blue-600",
+    badge: "bg-blue-50 text-blue-700",
+  },
+  emerald: {
+    icon: "bg-emerald-50 text-emerald-600",
+    badge: "bg-emerald-50 text-emerald-700",
+  },
+  amber: {
+    icon: "bg-amber-50 text-amber-600",
+    badge: "bg-amber-50 text-amber-700",
+  },
+  rose: {
+    icon: "bg-rose-50 text-rose-600",
+    badge: "bg-rose-50 text-rose-700",
+  },
+  slate: {
+    icon: "bg-slate-100 text-slate-600",
+    badge: "bg-slate-100 text-slate-700",
+  },
+  violet: {
+    icon: "bg-violet-50 text-violet-600",
+    badge: "bg-violet-50 text-violet-700",
+  },
+};

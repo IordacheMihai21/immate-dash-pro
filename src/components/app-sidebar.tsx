@@ -36,18 +36,14 @@ type SidebarGroup = {
 
 const menuGroups: SidebarGroup[] = [
   {
-    title: "Dashboard",
+    title: "Panou principal",
     icon: LayoutDashboard,
-    items: [
-      { label: "Overview", to: "/app", icon: Gauge, exact: true },
-    ],
+    items: [{ label: "Privire generala", to: "/app", icon: Gauge, exact: true }],
   },
   {
     title: "Documente",
     icon: FileText,
-    items: [
-      { label: "Documente financiare", to: "/app/documente", icon: FileText },
-    ],
+    items: [{ label: "Documente financiare", to: "/app/documente", icon: FileText }],
   },
   {
     title: "e-Facturi",
@@ -61,9 +57,7 @@ const menuGroups: SidebarGroup[] = [
   {
     title: "AI Forecast",
     icon: BrainCircuit,
-    items: [
-      { label: "Predictii pe date reale", to: "/app/ai-forecast", icon: BrainCircuit },
-    ],
+    items: [{ label: "Predictii pe date reale", to: "/app/ai-forecast", icon: BrainCircuit }],
   },
   {
     title: "Rapoarte",
@@ -118,7 +112,7 @@ export function AppSidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClo
 
             <div className="min-w-0 leading-tight">
               <p className="truncate text-sm font-semibold text-white">IMMapp</p>
-              <p className="text-[11px] uppercase text-slate-400">Financial OS</p>
+              <p className="text-[11px] uppercase text-slate-400">Sistem financiar</p>
             </div>
           </Link>
 
@@ -133,10 +127,10 @@ export function AppSidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClo
         </div>
 
         <nav className="hide-scrollbar flex-1 overflow-y-auto px-4 py-5">
-          <SidebarSection title="MENU" groups={menuGroups} pathname={pathname} onClose={onClose} />
+          <SidebarSection title="MENIU" groups={menuGroups} pathname={pathname} onClose={onClose} />
 
           <div className="mt-7">
-            <p className="mb-3 px-2 text-[11px] font-semibold uppercase text-slate-500">SUPPORT</p>
+            <p className="mb-3 px-2 text-[11px] font-semibold uppercase text-slate-500">SUPORT</p>
             <ul className="space-y-1">
               {supportItems.map((item) => (
                 <SidebarItem key={item.label} item={item} pathname={pathname} onClose={onClose} />

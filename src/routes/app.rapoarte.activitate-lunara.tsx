@@ -1,20 +1,36 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Activity, FileText, Loader2, ReceiptText, TrendingUp, Wallet } from "lucide-react";
 import {
-  Area,
-  AreaChart,
+  Activity,
+  Building2,
+  FileText,
+  Loader2,
+  ReceiptText,
+  TrendingUp,
+  UploadCloud,
+  Users,
+} from "lucide-react";
+import {
   Bar,
-  BarChart,
   CartesianGrid,
+  ComposedChart,
+  Legend,
+  Line,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
-import { ChartCard } from "@/components/chart-card";
-import { PageHeader } from "@/components/page-header";
-import { ImpactBadge, ReportEmptyState, ReportKpiCard, ReportPanel } from "@/components/report-ui";
+import {
+  ImpactBadge,
+  ReportActionCard,
+  ReportEmptyState,
+  ReportHero,
+  ReportInsightCard,
+  ReportKpiCard,
+  ReportPanel,
+} from "@/components/report-ui";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -26,7 +42,6 @@ import {
 } from "@/components/ui/table";
 import { getDashboardData } from "@/lib/dashboardService";
 import { getDocuments, getInvoices } from "@/lib/invoiceService";
-import { formatRON } from "@/lib/mock-data";
 import {
   buildMonthlyReportPoints,
   formatPercent,
@@ -41,8 +56,10 @@ export const Route = createFileRoute("/app/rapoarte/activitate-lunara")({
 });
 
 type ActivityTab = "6" | "12" | "all";
+type DashboardData = Awaited<ReturnType<typeof getDashboardData>>;
 
 function MonthlyActivityReportPage() {
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [invoices, setInvoices] = useState<ReportInvoice[]>([]);
   const [documents, setDocuments] = useState<ReportDocument[]>([]);
   const [activeTab, setActiveTab] = useState<ActivityTab>("6");
@@ -55,12 +72,10 @@ function MonthlyActivityReportPage() {
         setIsLoading(true);
         setErrorMessage("");
 
-        const [, invoiceData, documentData] = await Promise.all([
-          getDashboardData(),
-          getInvoices(),
-          getDocuments(),
-        ]);
+        const [dashboard, invoiceData] = await Promise.all([getDashboardData(), getInvoices()]);
+        const documentData = await getDocuments().catch(() => []);
 
+        setDashboardData(dashboard);
         setInvoices(invoiceData as unknown as ReportInvoice[]);
         setDocuments(documentData as unknown as ReportDocument[]);
       } catch {
@@ -88,9 +103,11 @@ function MonthlyActivityReportPage() {
     }, null);
     const latest = allRows.at(-1);
     const previous = allRows.at(-2);
+    const latestActivity = latest ? latest.documents + latest.invoices : 0;
+    const previousActivity = previous ? previous.documents + previous.invoices : 0;
     const evolution =
-      latest && previous && previous.value > 0
-        ? ((latest.value - previous.value) / previous.value) * 100
+      latest && previous && previousActivity > 0
+        ? ((latestActivity - previousActivity) / previousActivity) * 100
         : latest && !previous
           ? 100
           : 0;
@@ -98,28 +115,42 @@ function MonthlyActivityReportPage() {
     return {
       rows: visibleRows.map((row, index) => {
         const previousRow = visibleRows[index - 1];
+        const activityScore = row.documents + row.invoices;
+        const previousActivityScore = previousRow
+          ? previousRow.documents + previousRow.invoices
+          : 0;
         const rowEvolution =
-          previousRow && previousRow.value > 0
-            ? ((row.value - previousRow.value) / previousRow.value) * 100
+          previousActivityScore > 0
+            ? ((activityScore - previousActivityScore) / previousActivityScore) * 100
             : index === 0
               ? 0
-              : row.value > 0
+              : activityScore > 0
                 ? 100
                 : 0;
 
         return {
           ...row,
+          activityScore,
           evolution: rowEvolution,
           status: getMonthlyStatus(rowEvolution),
         };
       }),
       totalDocuments: documents.length,
       totalInvoices: invoices.length,
+      activeMonths: allRows.filter((row) => row.documents + row.invoices > 0).length,
+      customerCount: dashboardData?.customerCount ?? 0,
+      supplierCount: dashboardData?.supplierCount ?? 0,
       maxActivityMonth: maxActivity?.month ?? "-",
+      averageMonthlyRhythm:
+        allRows.length > 0
+          ? Math.round(
+              allRows.reduce((sum, row) => sum + row.documents + row.invoices, 0) / allRows.length,
+            )
+          : 0,
       evolution,
       activityTrend: getMonthlyStatus(evolution),
     };
-  }, [activeTab, documents, invoices]);
+  }, [activeTab, dashboardData, documents, invoices]);
 
   if (isLoading) {
     return (
@@ -132,9 +163,20 @@ function MonthlyActivityReportPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <ReportHero
         title="Activitate lunară"
-        description="Monitorizează evoluția lunară a documentelor, facturilor și valorilor financiare procesate."
+        subtitle="Urmareste ritmul lunar al documentelor si facturilor procesate, fara a amesteca analiza operationala cu veniturile sau profitul."
+        eyebrow="Raport operational"
+        badge="Ritm lunar"
+        icon={<Activity className="h-3.5 w-3.5" />}
+        actions={
+          <Button asChild className="rounded-full bg-white text-slate-950 hover:bg-slate-100">
+            <Link to="/app/documente">
+              <UploadCloud className="h-4 w-4" />
+              Importa documente
+            </Link>
+          </Button>
+        }
       />
 
       {errorMessage && (
@@ -147,7 +189,7 @@ function MonthlyActivityReportPage() {
         <ReportEmptyState />
       ) : (
         <>
-          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <ReportKpiCard
               title="Documente procesate"
               value={String(report.totalDocuments)}
@@ -156,11 +198,25 @@ function MonthlyActivityReportPage() {
               tone="blue"
             />
             <ReportKpiCard
-              title="Facturi procesate"
-              value={String(report.totalInvoices)}
-              description="Facturi extrase din e-Facturi XML"
-              icon={<ReceiptText className="h-5 w-5" />}
+              title="Luni active"
+              value={String(report.activeMonths)}
+              description="Luni cu documente sau facturi inregistrate"
+              icon={<Activity className="h-5 w-5" />}
+              tone="blue"
+            />
+            <ReportKpiCard
+              title="Clienti activi"
+              value={String(report.customerCount)}
+              description="Clienti identificati in facturile emise"
+              icon={<Users className="h-5 w-5" />}
               tone="emerald"
+            />
+            <ReportKpiCard
+              title="Furnizori activi"
+              value={String(report.supplierCount)}
+              description="Furnizori identificati in facturile primite"
+              icon={<Building2 className="h-5 w-5" />}
+              tone="slate"
             />
             <ReportKpiCard
               title="Luna cu activitate maximă"
@@ -170,9 +226,59 @@ function MonthlyActivityReportPage() {
               tone="amber"
             />
             <ReportKpiCard
-              title="Evoluție față de luna anterioară"
-              value={formatPercent(report.evolution)}
-              description={report.activityTrend}
+              title="Ritm mediu lunar"
+              value={String(report.averageMonthlyRhythm)}
+              description="Documente si facturi procesate in medie pe luna"
+              icon={<TrendingUp className="h-5 w-5" />}
+              tone="amber"
+            />
+          </section>
+
+          <ReportPanel
+            eyebrow="Volum operational"
+            title="Volum lunar de documente si facturi"
+            description="Compara documentele incarcate, facturile procesate si ritmul total lunar."
+          >
+            <ResponsiveContainer width="100%" height={360}>
+              <ComposedChart data={report.rows} margin={{ left: 4, right: 12, top: 12 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
+                <YAxis stroke="#64748b" fontSize={12} allowDecimals={false} />
+                <Tooltip />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: 12, paddingTop: 16 }} />
+                <Bar dataKey="documents" name="Documente" fill="#2563eb" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="invoices" name="Facturi" fill="#10b981" radius={[8, 8, 0, 0]} />
+                <Line
+                  type="monotone"
+                  dataKey="activityScore"
+                  name="Ritm total"
+                  stroke="#111827"
+                  strokeWidth={3}
+                  dot={{ r: 3 }}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </ReportPanel>
+
+          <section className="grid gap-4 lg:grid-cols-3">
+            <ReportInsightCard
+              title="Distributie activitate"
+              value={`${report.activeMonths} luni active`}
+              description="Arata cat de distribuita este activitatea in timp, pe baza documentelor si facturilor procesate."
+              icon={<Activity className="h-5 w-5" />}
+              tone="blue"
+            />
+            <ReportInsightCard
+              title="Balanta clienti / furnizori"
+              value={`${report.customerCount} / ${report.supplierCount}`}
+              description="Compara rapid baza de clienti si furnizori activi din documentele procesate."
+              icon={<Users className="h-5 w-5" />}
+              tone="violet"
+            />
+            <ReportInsightCard
+              title="Consistenta operationala"
+              value={report.activityTrend}
+              description={getActivityInterpretation(report.activityTrend, report.evolution)}
               icon={<TrendingUp className="h-5 w-5" />}
               tone={
                 report.activityTrend === "Creștere"
@@ -184,50 +290,33 @@ function MonthlyActivityReportPage() {
             />
           </section>
 
-          <div className="grid gap-4 xl:grid-cols-2">
-            <ChartCard
-              title="Documente procesate pe lună"
-              description="Volumul operațional al documentelor încărcate"
-              className="border-slate-200 bg-white shadow-sm"
-            >
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={report.rows}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
-                  <YAxis stroke="#64748b" fontSize={12} />
-                  <Tooltip />
-                  <Bar dataKey="documents" name="Documente" fill="#2563eb" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartCard>
-
-            <ChartCard
-              title="Valoare facturi pe lună"
-              description="Evoluția valorii totale procesate lunar"
-              className="border-slate-200 bg-white shadow-sm"
-            >
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={report.rows}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
-                  <YAxis stroke="#64748b" fontSize={12} />
-                  <Tooltip formatter={(value: number) => formatRON(Number(value))} />
-                  <Area
-                    type="monotone"
-                    dataKey="value"
-                    name="Valoare facturi"
-                    stroke="#10b981"
-                    fill="#d1fae5"
-                    strokeWidth={2.5}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </ChartCard>
-          </div>
+          <ReportPanel
+            eyebrow="Recomandari"
+            title="Actiuni pentru mentinerea ritmului operational"
+            description="Pasi simpli pentru ca raportarea lunara sa ramana relevanta."
+          >
+            <div className="grid gap-3 md:grid-cols-3">
+              <ReportActionCard
+                priority="Scazuta"
+                title="Importa documentele constant"
+                description="Un ritm regulat de import mentine rapoartele actualizate si reduce golurile lunare."
+              />
+              <ReportActionCard
+                priority={report.activeMonths < 3 ? "Medie" : "Scazuta"}
+                title="Completeaza istoricul"
+                description="Daca exista putine luni active, importa e-Facturi istorice pentru o analiza mai stabila."
+              />
+              <ReportActionCard
+                priority="Scazuta"
+                title="Verifica lunile atipice"
+                description="Lunile cu activitate foarte ridicata sau foarte scazuta pot explica schimbari operationale."
+              />
+            </div>
+          </ReportPanel>
 
           <ReportPanel
             title="Activitate lunară detaliată"
-            description="Compară documentele, facturile și valoarea financiară pe fiecare lună."
+            description="Compara documentele si facturile procesate pe fiecare luna."
             contentClassName="p-0"
           >
             <div className="border-b border-slate-100 p-5">
@@ -246,8 +335,6 @@ function MonthlyActivityReportPage() {
                     <TableHead>Luna</TableHead>
                     <TableHead className="text-right">Documente</TableHead>
                     <TableHead className="text-right">Facturi</TableHead>
-                    <TableHead className="text-right">Valoare totală</TableHead>
-                    <TableHead className="text-right">TVA lunară</TableHead>
                     <TableHead className="text-right">Evoluție</TableHead>
                     <TableHead>Status</TableHead>
                   </TableRow>
@@ -258,12 +345,6 @@ function MonthlyActivityReportPage() {
                       <TableCell className="font-medium text-slate-900">{row.month}</TableCell>
                       <TableCell className="text-right tabular-nums">{row.documents}</TableCell>
                       <TableCell className="text-right tabular-nums">{row.invoices}</TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {formatRON(row.value)}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {formatRON(row.vat)}
-                      </TableCell>
                       <TableCell className="text-right tabular-nums">
                         {formatPercent(row.evolution)}
                       </TableCell>

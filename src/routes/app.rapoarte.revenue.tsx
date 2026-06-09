@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Eye, Loader2, ReceiptText, TrendingUp, Users, Wallet } from "lucide-react";
+import { Eye, Loader2, ReceiptText, TrendingUp, UploadCloud, Users, Wallet } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -13,10 +13,12 @@ import {
   YAxis,
 } from "recharts";
 import { ChartCard } from "@/components/chart-card";
-import { PageHeader } from "@/components/page-header";
 import {
   ImpactBadge,
+  ReportActionCard,
   ReportEmptyState,
+  ReportHero,
+  ReportInsightCard,
   ReportKpiCard,
   ReportPanel,
   SearchInput,
@@ -88,7 +90,10 @@ function RevenueReportPage() {
     const revenueInvoices = dashboardData
       ? filterInvoicesByClassification(invoices, dashboardData.companyCui, ["revenue"])
       : [];
-    const totalRevenue = revenueInvoices.reduce((sum, invoice) => sum + getInvoiceTotal(invoice), 0);
+    const totalRevenue = revenueInvoices.reduce(
+      (sum, invoice) => sum + getInvoiceTotal(invoice),
+      0,
+    );
     const averageInvoice = revenueInvoices.length > 0 ? totalRevenue / revenueInvoices.length : 0;
     const newestTime = getNewestInvoiceTime(revenueInvoices);
     const monthly = dashboardData
@@ -112,6 +117,8 @@ function RevenueReportPage() {
     const topCustomers = Array.from(customerMap.values())
       .sort((a, b) => b.total - a.total)
       .slice(0, 8);
+    const topCustomerShare =
+      totalRevenue > 0 && topCustomers[0] ? (topCustomers[0].total / totalRevenue) * 100 : 0;
     const rows = revenueInvoices
       .map((invoice) => {
         const total = getInvoiceTotal(invoice);
@@ -159,7 +166,9 @@ function RevenueReportPage() {
         venituri: item.value,
         medie: averageMonthly,
       })),
+      revenueTrend: getRevenueTrend(monthly),
       topCustomers,
+      topCustomerShare,
       rows: filteredRows,
     };
   }, [activeTab, dashboardData, invoices, search]);
@@ -175,9 +184,20 @@ function RevenueReportPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Raport venituri"
-        description="Analizează evoluția veniturilor, clienții importanți și facturile cu valoare ridicată."
+      <ReportHero
+        title="Venituri"
+        subtitle="Analizeaza evolutia veniturilor, clientii importanti si concentrarea facturilor emise."
+        eyebrow="Raport comercial"
+        badge="Facturi emise"
+        icon={<TrendingUp className="h-3.5 w-3.5" />}
+        actions={
+          <Button asChild className="rounded-full bg-white text-slate-950 hover:bg-slate-100">
+            <Link to="/app/documente">
+              <UploadCloud className="h-4 w-4" />
+              Importa documente
+            </Link>
+          </Button>
+        }
       />
 
       {errorMessage && (
@@ -275,6 +295,54 @@ function RevenueReportPage() {
             </ChartCard>
           </div>
 
+          <section className="grid gap-4 lg:grid-cols-3">
+            <ReportInsightCard
+              title="Concentrare pe clientul principal"
+              value={formatPercent(report.topCustomerShare)}
+              description="Arata cat de mult depind veniturile de cel mai important client."
+              icon={<Users className="h-5 w-5" />}
+              tone={report.topCustomerShare > 50 ? "amber" : "emerald"}
+            />
+            <ReportInsightCard
+              title="Ritm venituri"
+              value={report.revenueTrend}
+              description="Semnal calculat din ultimele luni disponibile in facturile emise."
+              icon={<TrendingUp className="h-5 w-5" />}
+              tone="blue"
+            />
+            <ReportInsightCard
+              title="Facturi peste medie"
+              value={String(report.highRevenueInvoices)}
+              description="Facturi care pot influenta vizibil evolutia veniturilor."
+              icon={<ReceiptText className="h-5 w-5" />}
+              tone="amber"
+            />
+          </section>
+
+          <ReportPanel
+            eyebrow="Recomandari"
+            title="Semnale comerciale de urmarit"
+            description="Puncte utile pentru stabilitatea veniturilor."
+          >
+            <div className="grid gap-3 md:grid-cols-3">
+              <ReportActionCard
+                priority={report.topCustomerShare > 50 ? "Medie" : "Scazuta"}
+                title="Verifica dependenta de client"
+                description="Daca un client concentreaza o pondere mare, urmareste termenele si recurenta comenzilor."
+              />
+              <ReportActionCard
+                priority={report.highRevenueInvoices > 0 ? "Medie" : "Scazuta"}
+                title="Analizeaza facturile mari"
+                description="Facturile cu valoare ridicata pot explica variatii lunare importante."
+              />
+              <ReportActionCard
+                priority="Scazuta"
+                title="Pastreaza istoricul actualizat"
+                description="Importa e-Facturile noi pentru o imagine corecta asupra ritmului veniturilor."
+              />
+            </div>
+          </ReportPanel>
+
           <ReportPanel
             title="Facturi care influențează veniturile"
             description="Filtrează facturile cu impact ridicat asupra veniturilor."
@@ -352,4 +420,23 @@ function RevenueReportPage() {
       )}
     </div>
   );
+}
+
+function getRevenueTrend(monthly: { value: number }[]) {
+  if (monthly.length < 2) {
+    return "Istoric limitat";
+  }
+
+  const latest = monthly[monthly.length - 1];
+  const previous = monthly[monthly.length - 2];
+
+  if (latest.value > previous.value) {
+    return "In crestere";
+  }
+
+  if (latest.value < previous.value) {
+    return "In scadere";
+  }
+
+  return "Stabil";
 }
