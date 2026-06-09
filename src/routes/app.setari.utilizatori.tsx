@@ -26,29 +26,29 @@ type RoleFilter = "all" | "Administratori" | "Contabili" | "Viewers";
 
 const members = [
   {
-    name: "Andrei Popescu",
-    email: "andrei.popescu@immapp.ro",
+    name: "Administrator principal",
+    email: "administrator@companie.ro",
     role: "Administrator",
     status: "Activ",
     lastActivity: "Astazi, 09:45",
   },
   {
-    name: "Ioana Marinescu",
-    email: "ioana.marinescu@immapp.ro",
+    name: "Contabil companie",
+    email: "contabil@companie.ro",
     role: "Contabil",
     status: "Activ",
     lastActivity: "Ieri, 16:20",
   },
   {
-    name: "Mihai Iordache",
-    email: "mihai.iordache@immapp.ro",
+    name: "Manager financiar",
+    email: "financiar@companie.ro",
     role: "Administrator",
     status: "Activ",
     lastActivity: "Acum 2 zile",
   },
   {
-    name: "Cristina Stan",
-    email: "cristina.stan@immapp.ro",
+    name: "Utilizator vizualizare",
+    email: "vizualizare@companie.ro",
     role: "Viewer",
     status: "Invitat",
     lastActivity: "Invitatie trimisa",
@@ -85,11 +85,11 @@ function UsersSettingsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Utilizatori"
-        description="Gestioneaza membrii companiei, rolurile si accesul in platforma."
+        description="Sectiune pregatita pentru acces de echipa si configurarea rolurilor companiei."
         actions={
-          <Button>
+          <Button disabled title="Disponibil dupa activarea accesului de echipa">
             <UserPlus className="h-4 w-4" />
-            Invita utilizator
+            Acces echipa in pregatire
           </Button>
         }
       />
@@ -129,7 +129,7 @@ function UsersSettingsPage() {
                 Membrii companiei
               </CardTitle>
               <p className="mt-1 text-sm text-slate-500">
-                Cauta si filtreaza membrii dupa rolul lor in companie.
+                Vizualizeaza structura rolurilor pregatita pentru administrarea accesului.
               </p>
             </div>
             <div className="relative w-full lg:max-w-xs">
@@ -205,8 +205,8 @@ function UsersSettingsPage() {
             </div>
             <h2 className="text-base font-semibold text-slate-900">Controlul accesului</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Rolurile ajuta la separarea responsabilitatilor intre administratori, contabili si
-              utilizatori cu acces de vizualizare.
+              Rolurile vor ajuta la separarea responsabilitatilor intre administratori, contabili
+              si utilizatori cu acces de vizualizare.
             </p>
           </CardContent>
         </Card>

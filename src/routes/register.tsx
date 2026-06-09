@@ -3,9 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Building2, CheckCircle2 } from "lucide-react";
-import { useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Building2, CheckCircle2, Loader2 } from "lucide-react";
+import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
+import { ensureAppUser } from "@/lib/appUserService";
+import { upsertCompanyProfile } from "@/lib/companyService";
+import { supabase } from "@/lib/supabaseClient";
 
 export const Route = createFileRoute("/register")({
   head: () => ({ meta: [{ title: "Înregistrare — IMMapp" }] }),
@@ -15,6 +19,9 @@ export const Route = createFileRoute("/register")({
 function RegisterPage() {
   const navigate = useNavigate();
   const [cuiVerified, setCuiVerified] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
 
   // TODO: connect to backend API for ANAF CUI validation
   const verifyCui = () => {
@@ -22,10 +29,84 @@ function RegisterPage() {
     toast.success("CUI valid. Datele companiei au fost preluate.");
   };
 
-  // TODO: connect to backend API for registration
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    navigate({ to: "/app" });
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+    setErrorMessage("");
+    setStatusMessage("");
+
+    const formData = new FormData(event.currentTarget);
+    const firstName = String(formData.get("firstName") ?? "").trim();
+    const lastName = String(formData.get("lastName") ?? "").trim();
+    const email = String(formData.get("email") ?? "").trim();
+    const password = String(formData.get("password") ?? "");
+    const companyName = String(formData.get("companyName") ?? "").trim();
+    const cui = String(formData.get("cui") ?? "").trim();
+    const registrationNumber = String(formData.get("registrationNumber") ?? "").trim();
+    const address = String(formData.get("address") ?? "").trim();
+    const fullName = `${firstName} ${lastName}`.trim();
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            first_name: firstName,
+            last_name: lastName,
+            name: fullName,
+            company_name: companyName,
+            cui,
+            registration_number: registrationNumber,
+            address,
+          },
+        },
+      });
+
+      if (error) {
+        const message = "Contul nu a putut fi creat. Verifica datele si incearca din nou.";
+        setErrorMessage(message);
+        toast.error(message);
+        return;
+      }
+
+      if (!data.session) {
+        const message =
+          "Contul a fost creat, dar autentificarea automata nu a pornit. Incearca autentificarea cu emailul si parola.";
+        setStatusMessage(message);
+        toast.success(message);
+        return;
+      }
+
+      await ensureAppUser();
+
+      try {
+        await upsertCompanyProfile({
+          company_name: companyName,
+          cui,
+          registration_number: registrationNumber,
+          address,
+          city: "",
+          county: "",
+          email,
+          phone: "",
+          contact_person: fullName,
+        });
+      } catch (error) {
+        console.warn("Company profile sync failed after registration.", error);
+        toast.warning("Contul a fost creat, dar datele companiei nu au putut fi salvate.");
+      }
+
+      toast.success("Cont creat cu succes.");
+      await navigate({ to: "/app", replace: true });
+    } catch {
+      const message = "Contul nu a putut fi creat. Incearca din nou.";
+      setErrorMessage(message);
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -45,6 +126,18 @@ function RegisterPage() {
             </p>
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+              {errorMessage ? (
+                <Alert variant="destructive">
+                  <AlertDescription>{errorMessage}</AlertDescription>
+                </Alert>
+              ) : null}
+
+              {statusMessage ? (
+                <Alert className="border-blue-100 bg-blue-50 text-blue-900">
+                  <AlertDescription>{statusMessage}</AlertDescription>
+                </Alert>
+              ) : null}
+
               <div>
                 <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                   Date utilizator
@@ -52,19 +145,25 @@ function RegisterPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">Prenume</Label>
-                    <Input id="firstName" required />
+                    <Input id="firstName" name="firstName" disabled={isSubmitting} required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName">Nume</Label>
-                    <Input id="lastName" required />
+                    <Input id="lastName" name="lastName" disabled={isSubmitting} required />
                   </div>
                   <div className="space-y-2 sm:col-span-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" required />
+                    <Input id="email" name="email" type="email" disabled={isSubmitting} required />
                   </div>
                   <div className="space-y-2 sm:col-span-2">
                     <Label htmlFor="password">Parolă</Label>
-                    <Input id="password" type="password" required />
+                    <Input
+                      id="password"
+                      name="password"
+                      type="password"
+                      disabled={isSubmitting}
+                      required
+                    />
                   </div>
                 </div>
               </div>
@@ -77,8 +176,19 @@ function RegisterPage() {
                   <div className="space-y-2 sm:col-span-2">
                     <Label htmlFor="cui">CUI</Label>
                     <div className="flex gap-2">
-                      <Input id="cui" placeholder="RO12345678" required />
-                      <Button type="button" variant="outline" onClick={verifyCui}>
+                      <Input
+                        id="cui"
+                        name="cui"
+                        placeholder="RO12345678"
+                        disabled={isSubmitting}
+                        required
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={verifyCui}
+                        disabled={isSubmitting}
+                      >
                         Verifică CUI
                       </Button>
                     </div>
@@ -90,20 +200,34 @@ function RegisterPage() {
                   </div>
                   <div className="space-y-2 sm:col-span-2">
                     <Label htmlFor="companyName">Denumire firmă</Label>
-                    <Input id="companyName" required />
+                    <Input
+                      id="companyName"
+                      name="companyName"
+                      disabled={isSubmitting}
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="regCom">Nr. Registrul Comerțului</Label>
-                    <Input id="regCom" placeholder="J40/1234/2020" required />
+                    <Input
+                      id="regCom"
+                      name="registrationNumber"
+                      placeholder="J40/1234/2020"
+                      disabled={isSubmitting}
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="address">Adresă</Label>
-                    <Input id="address" required />
+                    <Input id="address" name="address" disabled={isSubmitting} required />
                   </div>
                 </div>
               </div>
 
-              <Button type="submit" className="w-full">Creează cont</Button>
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                Creează cont
+              </Button>
             </form>
 
             <p className="mt-6 text-center text-sm text-muted-foreground">

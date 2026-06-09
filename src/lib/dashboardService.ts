@@ -1,4 +1,5 @@
-import { DEMO_COMPANY_ID, supabase } from "./supabaseClient";
+import { getOrCreateCompanyProfile } from "./companyService";
+import { supabase } from "./supabaseClient";
 import {
   buildAiFinancialForecast,
   type MonthlyFinancialPoint,
@@ -31,8 +32,6 @@ type DocumentRelation =
     }[]
   | null
   | undefined;
-
-const DEMO_COMPANY_CUI = "RO12345678";
 
 function getRelationParty(party: RelationParty) {
   if (!party) {
@@ -96,6 +95,14 @@ function getMonthLabel(monthKey: string): string {
 }
 
 export async function getDashboardData() {
+  const companyProfile = await getOrCreateCompanyProfile();
+  const companyId = companyProfile.id;
+  const companyCui = normalizeCui(companyProfile.cui);
+
+  if (!companyId) {
+    throw new Error("Profilul companiei nu a putut fi pregatit pentru dashboard.");
+  }
+
   const { data: invoicesData, error: invoicesError } = await supabase
     .from("invoices")
     .select(`
@@ -123,7 +130,7 @@ export async function getDashboardData() {
         uploaded_at
       )
     `)
-    .eq("company_id", DEMO_COMPANY_ID)
+    .eq("company_id", companyId)
     .order("created_at", { ascending: false });
 
   if (invoicesError) {
@@ -135,7 +142,7 @@ export async function getDashboardData() {
   const { data: documentsData, error: documentsError } = await supabase
     .from("documents")
     .select("id, file_name, document_type, status, uploaded_at")
-    .eq("company_id", DEMO_COMPANY_ID)
+    .eq("company_id", companyId)
     .order("uploaded_at", { ascending: false });
 
   if (documentsError) {
@@ -251,9 +258,9 @@ export async function getDashboardData() {
     const value = toNumber(invoice.payable_amount);
     const vat = toNumber(invoice.tax_amount);
 
-    if (supplierCui === DEMO_COMPANY_CUI) {
+    if (companyCui && supplierCui === companyCui) {
       current.revenue += value;
-    } else if (customerCui === DEMO_COMPANY_CUI) {
+    } else if (companyCui && customerCui === companyCui) {
       current.expenses += value;
     } else {
       current.expenses += value;

@@ -3,7 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Building2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Building2, Loader2 } from "lucide-react";
+import { useState, type FormEvent } from "react";
+import { toast } from "sonner";
+import { ensureAppUser } from "@/lib/appUserService";
+import { supabase } from "@/lib/supabaseClient";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Autentificare — IMMapp" }] }),
@@ -12,10 +17,63 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
-  // TODO: connect to backend API for authentication
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    navigate({ to: "/app" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  function getLoginErrorMessage(message: string) {
+    const normalizedMessage = message.toLowerCase();
+
+    if (normalizedMessage.includes("email not confirmed")) {
+      return "Contul nu este activ pentru autentificare. Verifica setarile de confirmare email.";
+    }
+
+    if (
+      normalizedMessage.includes("invalid login credentials") ||
+      normalizedMessage.includes("invalid credentials")
+    ) {
+      return "Email sau parola incorecta.";
+    }
+
+    return "Autentificarea nu a reusit. Incearca din nou.";
+  }
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+    setErrorMessage("");
+
+    const formData = new FormData(event.currentTarget);
+    const email = String(formData.get("email") ?? "").trim();
+    const password = String(formData.get("password") ?? "");
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        const message = getLoginErrorMessage(error.message);
+        setErrorMessage(message);
+        toast.error(message);
+        return;
+      }
+
+      try {
+        await ensureAppUser();
+      } catch (error) {
+        console.warn("App user sync failed after login.", error);
+      }
+
+      toast.success("Autentificare reusita.");
+      await navigate({ to: "/app", replace: true });
+    } catch {
+      const message = "Autentificarea nu a reusit. Incearca din nou.";
+      setErrorMessage(message);
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -34,9 +92,22 @@ function LoginPage() {
               Conectează-te la contul IMMapp.
             </p>
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+              {errorMessage ? (
+                <Alert variant="destructive">
+                  <AlertDescription>{errorMessage}</AlertDescription>
+                </Alert>
+              ) : null}
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="nume@firma.ro" required />
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="nume@firma.ro"
+                  disabled={isSubmitting}
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -48,9 +119,18 @@ function LoginPage() {
                     Ai uitat parola?
                   </Link>
                 </div>
-                <Input id="password" type="password" required />
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  disabled={isSubmitting}
+                  required
+                />
               </div>
-              <Button type="submit" className="w-full">Autentificare</Button>
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                Autentificare
+              </Button>
             </form>
             <p className="mt-6 text-center text-sm text-muted-foreground">
               Nu ai cont?{" "}

@@ -1,5 +1,6 @@
-import { DEMO_COMPANY_ID, supabase } from "./supabaseClient";
+import { getActiveCompanyId } from "./companyService";
 import { ParsedInvoice, parseEFacturaXml } from "./efacturaParser";
+import { supabase } from "./supabaseClient";
 
 export type SavedInvoiceResult = {
   invoiceId: string;
@@ -10,7 +11,7 @@ function cleanCui(cui: string): string {
   return cui.trim().replace(/\s+/g, "").toUpperCase();
 }
 
-async function upsertSupplier(invoice: ParsedInvoice) {
+async function upsertSupplier(invoice: ParsedInvoice, companyId: string) {
   const supplierCui = cleanCui(
     invoice.supplier.cui || `UNKNOWN_SUPPLIER_${invoice.invoiceNumber}`,
   );
@@ -19,7 +20,7 @@ async function upsertSupplier(invoice: ParsedInvoice) {
     .from("suppliers")
     .upsert(
       {
-        company_id: DEMO_COMPANY_ID,
+        company_id: companyId,
         name: invoice.supplier.name || "Furnizor necunoscut",
         cui: supplierCui,
         address: invoice.supplier.address,
@@ -40,7 +41,7 @@ async function upsertSupplier(invoice: ParsedInvoice) {
   return data.id as string;
 }
 
-async function upsertCustomer(invoice: ParsedInvoice) {
+async function upsertCustomer(invoice: ParsedInvoice, companyId: string) {
   const customerCui = cleanCui(
     invoice.customer.cui || `UNKNOWN_CUSTOMER_${invoice.invoiceNumber}`,
   );
@@ -49,7 +50,7 @@ async function upsertCustomer(invoice: ParsedInvoice) {
     .from("customers")
     .upsert(
       {
-        company_id: DEMO_COMPANY_ID,
+        company_id: companyId,
         name: invoice.customer.name || "Client necunoscut",
         cui: customerCui,
         address: invoice.customer.address,
@@ -70,11 +71,11 @@ async function upsertCustomer(invoice: ParsedInvoice) {
   return data.id as string;
 }
 
-async function saveDocument(fileName: string, xmlText: string) {
+async function saveDocument(fileName: string, xmlText: string, companyId: string) {
   const { data, error } = await supabase
     .from("documents")
     .insert({
-      company_id: DEMO_COMPANY_ID,
+      company_id: companyId,
       file_name: fileName,
       file_type: "xml",
       document_type: "e-factura",
@@ -97,11 +98,12 @@ async function saveInvoice(
   documentId: string,
   supplierId: string,
   customerId: string,
+  companyId: string,
 ) {
   const { data: existingInvoice, error: existingError } = await supabase
     .from("invoices")
     .select("id")
-    .eq("company_id", DEMO_COMPANY_ID)
+    .eq("company_id", companyId)
     .eq("invoice_number", invoice.invoiceNumber)
     .maybeSingle();
 
@@ -116,7 +118,7 @@ async function saveInvoice(
   const { data, error } = await supabase
     .from("invoices")
     .insert({
-      company_id: DEMO_COMPANY_ID,
+      company_id: companyId,
       document_id: documentId,
       supplier_id: supplierId,
       customer_id: customerId,
@@ -238,13 +240,14 @@ async function saveEntityRelations(invoice: ParsedInvoice, documentId: string) {
 }
 
 export async function importEFacturaXml(file: File): Promise<SavedInvoiceResult> {
+  const companyId = await getActiveCompanyId();
   const xmlText = await file.text();
   const parsedInvoice = parseEFacturaXml(xmlText);
 
   const { data: existingInvoice, error: existingError } = await supabase
     .from("invoices")
     .select("id")
-    .eq("company_id", DEMO_COMPANY_ID)
+    .eq("company_id", companyId)
     .eq("invoice_number", parsedInvoice.invoiceNumber)
     .maybeSingle();
 
@@ -256,10 +259,16 @@ export async function importEFacturaXml(file: File): Promise<SavedInvoiceResult>
     throw new Error(`Factura ${parsedInvoice.invoiceNumber} exista deja in aplicatie.`);
   }
 
-  const documentId = await saveDocument(file.name, xmlText);
-  const supplierId = await upsertSupplier(parsedInvoice);
-  const customerId = await upsertCustomer(parsedInvoice);
-  const invoiceId = await saveInvoice(parsedInvoice, documentId, supplierId, customerId);
+  const documentId = await saveDocument(file.name, xmlText, companyId);
+  const supplierId = await upsertSupplier(parsedInvoice, companyId);
+  const customerId = await upsertCustomer(parsedInvoice, companyId);
+  const invoiceId = await saveInvoice(
+    parsedInvoice,
+    documentId,
+    supplierId,
+    customerId,
+    companyId,
+  );
 
   await saveInvoiceLines(parsedInvoice, invoiceId);
   await saveExtractedEntities(parsedInvoice, documentId, invoiceId);
@@ -272,6 +281,8 @@ export async function importEFacturaXml(file: File): Promise<SavedInvoiceResult>
 }
 
 export async function getInvoices() {
+  const companyId = await getActiveCompanyId();
+
   const { data, error } = await supabase
     .from("invoices")
     .select(`
@@ -294,7 +305,7 @@ export async function getInvoices() {
         cui
       )
     `)
-    .eq("company_id", DEMO_COMPANY_ID)
+    .eq("company_id", companyId)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -305,6 +316,8 @@ export async function getInvoices() {
 }
 
 export async function getInvoiceDetails(invoiceId: string) {
+  const companyId = await getActiveCompanyId();
+
   const { data: invoice, error: invoiceError } = await supabase
     .from("invoices")
     .select(`
@@ -343,6 +356,7 @@ export async function getInvoiceDetails(invoiceId: string) {
       )
     `)
     .eq("id", invoiceId)
+    .eq("company_id", companyId)
     .single();
 
   if (invoiceError) {
@@ -388,6 +402,8 @@ export async function getInvoiceDetails(invoiceId: string) {
 }
 
 export async function getDocuments() {
+  const companyId = await getActiveCompanyId();
+
   const { data, error } = await supabase
     .from("documents")
     .select(`
@@ -404,7 +420,7 @@ export async function getDocuments() {
         payable_amount
       )
     `)
-    .eq("company_id", DEMO_COMPANY_ID)
+    .eq("company_id", companyId)
     .order("uploaded_at", { ascending: false });
 
   if (error) {
@@ -415,6 +431,7 @@ export async function getDocuments() {
 }
 
 export async function deleteDocuments(documentIds: string[]) {
+  const companyId = await getActiveCompanyId();
   const ids = Array.from(new Set(documentIds)).filter(Boolean);
 
   if (ids.length === 0) {
@@ -427,7 +444,7 @@ export async function deleteDocuments(documentIds: string[]) {
   const { data: invoicesData, error: invoicesSelectError } = await supabase
     .from("invoices")
     .select("id")
-    .eq("company_id", DEMO_COMPANY_ID)
+    .eq("company_id", companyId)
     .in("document_id", ids);
 
   if (invoicesSelectError) {
@@ -473,7 +490,7 @@ export async function deleteDocuments(documentIds: string[]) {
     const { error: invoicesError } = await supabase
       .from("invoices")
       .delete()
-      .eq("company_id", DEMO_COMPANY_ID)
+      .eq("company_id", companyId)
       .in("id", invoiceIds);
 
     if (invoicesError) {
@@ -484,7 +501,7 @@ export async function deleteDocuments(documentIds: string[]) {
   const { error: deleteDocumentsError } = await supabase
     .from("documents")
     .delete()
-    .eq("company_id", DEMO_COMPANY_ID)
+    .eq("company_id", companyId)
     .in("id", ids);
 
   if (deleteDocumentsError) {

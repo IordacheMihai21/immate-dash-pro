@@ -37,6 +37,56 @@ function isLikelyEFacturaXml(xmlText: string) {
   );
 }
 
+function getFriendlyImportErrorMessage(error: unknown) {
+  const rawMessage =
+    error instanceof Error
+      ? error.message
+      : "Documentul nu a putut fi procesat.";
+  const normalizedMessage = rawMessage.toLowerCase();
+
+  if (normalizedMessage.includes("exista deja")) {
+    return rawMessage;
+  }
+
+  if (
+    normalizedMessage.includes("autentificat") ||
+    normalizedMessage.includes("contul curent")
+  ) {
+    return rawMessage;
+  }
+
+  if (
+    normalizedMessage.includes("permission") ||
+    normalizedMessage.includes("rls") ||
+    normalizedMessage.includes("policy") ||
+    normalizedMessage.includes("foreign key") ||
+    normalizedMessage.includes("row-level") ||
+    normalizedMessage.includes("violates row-level security")
+  ) {
+    return "Documentul nu a putut fi salvat pentru contul curent. Verifica profilul companiei sau incearca din nou.";
+  }
+
+  if (
+    normalizedMessage.includes("nu pare sa fie o e-factura valida") ||
+    normalizedMessage.includes("xml") ||
+    normalizedMessage.includes("parse")
+  ) {
+    return rawMessage.includes("nu pare sa fie o e-Factura valida")
+      ? rawMessage
+      : "Documentul nu a putut fi procesat. Verifica fisierul XML e-Factura.";
+  }
+
+  if (
+    normalizedMessage.includes("salvarea") ||
+    normalizedMessage.includes("company") ||
+    normalizedMessage.includes("profilul companiei")
+  ) {
+    return "Documentul nu a putut fi salvat pentru contul curent. Verifica profilul companiei sau incearca din nou.";
+  }
+
+  return "Documentul nu a putut fi procesat. Verifica fisierul XML e-Factura.";
+}
+
 type FailedImport = {
   fileName: string;
   error: string;
@@ -145,16 +195,8 @@ export function UploadModal({ trigger }: { trigger: ReactNode }) {
           successfulResults.push(result);
           successCount += 1;
         } catch (error) {
-          const rawMessage =
-            error instanceof Error
-              ? error.message
-              : "Documentul nu a putut fi procesat.";
-
-          const message = rawMessage.includes("exista deja")
-            ? rawMessage
-            : rawMessage.includes("nu pare sa fie o e-Factura valida")
-              ? rawMessage
-              : "Documentul nu a putut fi procesat. Verifica fisierul XML e-Factura.";
+          console.error("Eroare import XML:", error);
+          const message = getFriendlyImportErrorMessage(error);
 
           failures.push({
             fileName: file.name,

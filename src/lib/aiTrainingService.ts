@@ -1,7 +1,6 @@
-import { DEMO_COMPANY_ID, supabase } from "./supabaseClient";
+import { getActiveCompanyId, getOrCreateCompanyProfile } from "./companyService";
+import { supabase } from "./supabaseClient";
 import type { AiFinancialForecast } from "./predictionService";
-
-const DEMO_COMPANY_CUI = "RO12345678";
 
 export type AiTrainingRun = {
   id: string;
@@ -127,10 +126,12 @@ export async function saveAiTrainingRun({
   trainingData,
   trainingPoints,
 }: SaveAiTrainingInput) {
+  const companyId = await getActiveCompanyId();
+
   const { data: trainingRun, error: trainingError } = await supabase
     .from("ai_model_training_runs")
     .insert({
-      company_id: DEMO_COMPANY_ID,
+      company_id: companyId,
       model_version: "IMMAPP-AI-v1",
       target_metric: "financial_forecast",
       selected_model: prediction.selectedModel,
@@ -154,7 +155,7 @@ export async function saveAiTrainingRun({
   const { data: predictionResult, error: predictionError } = await supabase
     .from("prediction_results")
     .insert({
-      company_id: DEMO_COMPANY_ID,
+      company_id: companyId,
       model_training_run_id: trainingRun.id,
       prediction_type: "financial_forecast",
       predicted_period: prediction.predictedPeriod,
@@ -188,10 +189,12 @@ export async function saveAiTrainingRun({
 }
 
 export async function getAiTrainingRuns() {
+  const companyId = await getActiveCompanyId();
+
   const { data, error } = await supabase
     .from("ai_model_training_runs")
     .select("*")
-    .eq("company_id", DEMO_COMPANY_ID)
+    .eq("company_id", companyId)
     .order("trained_at", { ascending: false })
     .limit(10);
 
@@ -203,10 +206,12 @@ export async function getAiTrainingRuns() {
 }
 
 export async function getPredictionResults() {
+  const companyId = await getActiveCompanyId();
+
   const { data, error } = await supabase
     .from("prediction_results")
     .select("*")
-    .eq("company_id", DEMO_COMPANY_ID)
+    .eq("company_id", companyId)
     .order("created_at", { ascending: false })
     .limit(10);
 
@@ -230,10 +235,13 @@ export async function updatePredictionWithActuals({
   actualProfit: number;
   actualCashFlow: number;
 }) {
+  const companyId = await getActiveCompanyId();
+
   const { data: existingPrediction, error: readError } = await supabase
     .from("prediction_results")
     .select("predicted_profit")
     .eq("id", predictionId)
+    .eq("company_id", companyId)
     .single();
 
   if (readError) {
@@ -252,7 +260,8 @@ export async function updatePredictionWithActuals({
       actual_cash_flow: actualCashFlow,
       actual_error: actualError,
     })
-    .eq("id", predictionId);
+    .eq("id", predictionId)
+    .eq("company_id", companyId);
 
   if (updateError) {
     throw new Error(`Eroare la actualizarea predictiei: ${updateError.message}`);
@@ -260,6 +269,14 @@ export async function updatePredictionWithActuals({
 }
 
 async function getMonthlyActualsFromInvoices() {
+  const companyProfile = await getOrCreateCompanyProfile();
+  const companyId = companyProfile.id;
+  const companyCui = normalizeCui(companyProfile.cui);
+
+  if (!companyId) {
+    throw new Error("Profilul companiei nu a putut fi pregatit pentru evaluarea AI.");
+  }
+
   const { data: invoicesData, error } = await supabase
     .from("invoices")
     .select(`
@@ -277,7 +294,7 @@ async function getMonthlyActualsFromInvoices() {
         cui
       )
     `)
-    .eq("company_id", DEMO_COMPANY_ID);
+    .eq("company_id", companyId);
 
   if (error) {
     throw new Error(`Eroare la citirea facturilor reale: ${error.message}`);
@@ -306,9 +323,9 @@ async function getMonthlyActualsFromInvoices() {
     const value = toNumber(invoice.payable_amount);
     const vat = toNumber(invoice.tax_amount);
 
-    if (supplierCui === DEMO_COMPANY_CUI) {
+    if (companyCui && supplierCui === companyCui) {
       current.revenue += value;
-    } else if (customerCui === DEMO_COMPANY_CUI) {
+    } else if (companyCui && customerCui === companyCui) {
       current.expenses += value;
     } else {
       current.expenses += value;
@@ -324,12 +341,13 @@ async function getMonthlyActualsFromInvoices() {
 }
 
 export async function evaluateSavedPredictions() {
+  const companyId = await getActiveCompanyId();
   const actualsMap = await getMonthlyActualsFromInvoices();
 
   const { data: pendingPredictions, error: predictionsError } = await supabase
     .from("prediction_results")
     .select("*")
-    .eq("company_id", DEMO_COMPANY_ID)
+    .eq("company_id", companyId)
     .is("actual_error", null)
     .order("created_at", { ascending: true });
 
