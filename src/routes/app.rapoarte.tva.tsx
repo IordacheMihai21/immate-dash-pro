@@ -38,6 +38,7 @@ import { getInvoices } from "@/lib/invoiceService";
 import { formatRON } from "@/lib/mock-data";
 import {
   buildMonthlyReportPoints,
+  filterInvoicesByClassification,
   formatDate,
   formatPercent,
   getCustomerName,
@@ -91,22 +92,41 @@ function VatReportPage() {
   }, []);
 
   const report = useMemo(() => {
-    const totalVat = invoices.reduce((sum, invoice) => sum + toNumber(invoice.tax_amount), 0);
-    const totalWithVat = invoices.reduce((sum, invoice) => sum + getInvoiceTotal(invoice), 0);
-    const baseWithoutVat = invoices.reduce((sum, invoice) => sum + getInvoiceBase(invoice), 0);
-    const averageVat = invoices.length > 0 ? totalVat / invoices.length : 0;
+    const revenueInvoices = dashboardData
+      ? filterInvoicesByClassification(invoices, dashboardData.companyCui, ["revenue"])
+      : [];
+    const classifiedInvoices = dashboardData
+      ? filterInvoicesByClassification(invoices, dashboardData.companyCui, [
+          "revenue",
+          "expense",
+        ])
+      : [];
+    const totalVat = revenueInvoices.reduce((sum, invoice) => sum + toNumber(invoice.tax_amount), 0);
+    const totalWithVat = revenueInvoices.reduce((sum, invoice) => sum + getInvoiceTotal(invoice), 0);
+    const baseWithoutVat = revenueInvoices.reduce((sum, invoice) => sum + getInvoiceBase(invoice), 0);
+    const classifiedVat = classifiedInvoices.reduce(
+      (sum, invoice) => sum + toNumber(invoice.tax_amount),
+      0,
+    );
+    const averageVat =
+      classifiedInvoices.length > 0 ? classifiedVat / classifiedInvoices.length : 0;
     const vatShare = totalWithVat > 0 ? (totalVat / totalWithVat) * 100 : 0;
-    const newestTime = getNewestInvoiceTime(invoices);
-    const monthlyVat = buildMonthlyReportPoints(invoices).map((point) => ({
-      month: point.month,
-      tva: point.vat,
-    }));
+    const newestTime = getNewestInvoiceTime(classifiedInvoices);
+    const monthlyVat = dashboardData
+      ? buildMonthlyReportPoints(invoices, [], {
+          companyCui: dashboardData.companyCui,
+          classifications: ["revenue"],
+        }).map((point) => ({
+          month: point.month,
+          tva: point.vat,
+        }))
+      : [];
     const fiscalStructure = [
       { name: "Baza fără TVA", value: baseWithoutVat },
       { name: "TVA", value: totalVat },
     ];
 
-    const rows = invoices
+    const rows = classifiedInvoices
       .map((invoice) => {
         const total = getInvoiceTotal(invoice);
         const vat = toNumber(invoice.tax_amount);
@@ -162,7 +182,7 @@ function VatReportPage() {
       rows: filteredRows,
       highVatCount: rows.filter((row) => row.impact === "Ridicat").length,
     };
-  }, [activeTab, invoices, search]);
+  }, [activeTab, dashboardData, invoices, search]);
 
   if (isLoading) {
     return (

@@ -36,6 +36,7 @@ import { getInvoices } from "@/lib/invoiceService";
 import { formatRON } from "@/lib/mock-data";
 import {
   buildMonthlyReportPoints,
+  filterInvoicesByClassification,
   formatDate,
   formatPercent,
   getCustomerName,
@@ -84,15 +85,23 @@ function RevenueReportPage() {
   }, []);
 
   const report = useMemo(() => {
-    const totalRevenue = invoices.reduce((sum, invoice) => sum + getInvoiceTotal(invoice), 0);
-    const averageInvoice = invoices.length > 0 ? totalRevenue / invoices.length : 0;
-    const newestTime = getNewestInvoiceTime(invoices);
-    const monthly = buildMonthlyReportPoints(invoices);
+    const revenueInvoices = dashboardData
+      ? filterInvoicesByClassification(invoices, dashboardData.companyCui, ["revenue"])
+      : [];
+    const totalRevenue = revenueInvoices.reduce((sum, invoice) => sum + getInvoiceTotal(invoice), 0);
+    const averageInvoice = revenueInvoices.length > 0 ? totalRevenue / revenueInvoices.length : 0;
+    const newestTime = getNewestInvoiceTime(revenueInvoices);
+    const monthly = dashboardData
+      ? buildMonthlyReportPoints(invoices, [], {
+          companyCui: dashboardData.companyCui,
+          classifications: ["revenue"],
+        })
+      : [];
     const averageMonthly =
       monthly.length > 0 ? monthly.reduce((sum, item) => sum + item.value, 0) / monthly.length : 0;
     const customerMap = new Map<string, { name: string; total: number }>();
 
-    invoices.forEach((invoice) => {
+    revenueInvoices.forEach((invoice) => {
       const name = getCustomerName(invoice);
       const current = customerMap.get(name) ?? { name, total: 0 };
 
@@ -103,7 +112,7 @@ function RevenueReportPage() {
     const topCustomers = Array.from(customerMap.values())
       .sort((a, b) => b.total - a.total)
       .slice(0, 8);
-    const rows = invoices
+    const rows = revenueInvoices
       .map((invoice) => {
         const total = getInvoiceTotal(invoice);
         const impact =
@@ -153,7 +162,7 @@ function RevenueReportPage() {
       topCustomers,
       rows: filteredRows,
     };
-  }, [activeTab, invoices, search]);
+  }, [activeTab, dashboardData, invoices, search]);
 
   if (isLoading) {
     return (

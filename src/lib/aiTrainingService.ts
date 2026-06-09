@@ -1,4 +1,5 @@
 import { getActiveCompanyId, getOrCreateCompanyProfile } from "./companyService";
+import { classifyInvoiceForCompany, normalizeCui } from "./cuiUtils";
 import { supabase } from "./supabaseClient";
 import type { AiFinancialForecast } from "./predictionService";
 
@@ -51,46 +52,19 @@ type SaveAiTrainingInput = {
   trainingPoints: number;
 };
 
-type RelationParty =
-  | {
-      name: string | null;
-      cui: string | null;
-    }
-  | {
-      name: string | null;
-      cui: string | null;
-    }[]
-  | null
-  | undefined;
-
 type MonthlyActuals = {
   monthLabel: string;
   revenue: number;
   expenses: number;
   profit: number;
+  vat: number;
   cashFlow: number;
 };
-
-function getRelationParty(party: RelationParty) {
-  if (!party) {
-    return null;
-  }
-
-  if (Array.isArray(party)) {
-    return party[0] ?? null;
-  }
-
-  return party;
-}
 
 function toNumber(value: unknown): number {
   const parsed = Number(value ?? 0);
 
   return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function normalizeCui(cui: string | null | undefined): string {
-  return (cui ?? "").trim().replace(/\s+/g, "").toUpperCase();
 }
 
 function getMonthKey(dateValue: string | null | undefined): string {
@@ -305,34 +279,32 @@ async function getMonthlyActualsFromInvoices() {
   (invoicesData ?? []).forEach((invoice) => {
     const monthKey = getMonthKey(invoice.issue_date ?? invoice.created_at);
     const monthLabel = getMonthLabel(monthKey);
+    const value = toNumber(invoice.payable_amount);
+    const vat = toNumber(invoice.tax_amount);
+    const classification = classifyInvoiceForCompany(invoice, companyCui);
+
+    if (classification === "unclassified") {
+      return;
+    }
 
     const current = actualsMap.get(monthLabel) ?? {
       monthLabel,
       revenue: 0,
       expenses: 0,
       profit: 0,
+      vat: 0,
       cashFlow: 0,
     };
 
-    const supplier = getRelationParty(invoice.suppliers as RelationParty);
-    const customer = getRelationParty(invoice.customers as RelationParty);
-
-    const supplierCui = normalizeCui(supplier?.cui);
-    const customerCui = normalizeCui(customer?.cui);
-
-    const value = toNumber(invoice.payable_amount);
-    const vat = toNumber(invoice.tax_amount);
-
-    if (companyCui && supplierCui === companyCui) {
+    if (classification === "revenue") {
       current.revenue += value;
-    } else if (companyCui && customerCui === companyCui) {
-      current.expenses += value;
     } else {
       current.expenses += value;
     }
 
+    current.vat += vat;
     current.profit = current.revenue - current.expenses;
-    current.cashFlow = current.profit - vat;
+    current.cashFlow = current.profit - current.vat;
 
     actualsMap.set(monthLabel, current);
   });

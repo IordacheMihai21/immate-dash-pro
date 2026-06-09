@@ -4,6 +4,7 @@ import {
   buildAiFinancialForecast,
   type MonthlyFinancialPoint,
 } from "./predictionService";
+import { classifyInvoiceForCompany, normalizeCui } from "./cuiUtils";
 import { evaluateDocumentExtraction } from "./extractionEvaluationService";
 import { buildRiskClassification } from "./riskClassificationService";
 
@@ -61,10 +62,6 @@ function toNumber(value: unknown): number {
   const parsed = Number(value ?? 0);
 
   return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function normalizeCui(cui: string | null | undefined): string {
-  return (cui ?? "").trim().replace(/\s+/g, "").toUpperCase();
 }
 
 function getMonthKey(dateValue: string | null | undefined): string {
@@ -151,28 +148,72 @@ export async function getDashboardData() {
 
   const invoices = invoicesData ?? [];
   const documents = documentsData ?? [];
+  const classifiedInvoices = invoices.map((invoice) => {
+    const supplier = getRelationParty(invoice.suppliers as RelationParty);
+    const customer = getRelationParty(invoice.customers as RelationParty);
+
+    return {
+      invoice,
+      supplier,
+      customer,
+      classification: classifyInvoiceForCompany(invoice, companyCui),
+      value: toNumber(invoice.payable_amount),
+      vat: toNumber(invoice.tax_amount),
+    };
+  });
+  const revenueInvoices = classifiedInvoices.filter(
+    (item) => item.classification === "revenue",
+  );
+  const expenseInvoices = classifiedInvoices.filter(
+    (item) => item.classification === "expense",
+  );
+  const unclassifiedInvoices = classifiedInvoices.filter(
+    (item) => item.classification === "unclassified",
+  );
 
   const invoiceCount = invoices.length;
 
-  const totalValue = invoices.reduce(
-    (sum, invoice) => sum + toNumber(invoice.payable_amount),
+  const totalValue = classifiedInvoices.reduce((sum, item) => sum + item.value, 0);
+  const totalRevenue = revenueInvoices.reduce((sum, item) => sum + item.value, 0);
+  const totalExpenses = expenseInvoices.reduce((sum, item) => sum + item.value, 0);
+  const netProfit = totalRevenue - totalExpenses;
+  const classifiedInvoiceCount = revenueInvoices.length + expenseInvoices.length;
+  const classifiedInvoiceValue = totalRevenue + totalExpenses;
+  const unclassifiedInvoiceCount = unclassifiedInvoices.length;
+  const unclassifiedInvoiceValue = unclassifiedInvoices.reduce(
+    (sum, item) => sum + item.value,
     0,
   );
 
-  const totalVat = invoices.reduce(
-    (sum, invoice) => sum + toNumber(invoice.tax_amount),
+  const totalVat = [...revenueInvoices, ...expenseInvoices].reduce(
+    (sum, item) => sum + item.vat,
     0,
   );
 
   const supplierIds = new Set(
-    invoices.map((invoice) => invoice.supplier_id).filter(Boolean),
+    expenseInvoices.map(({ invoice }) => invoice.supplier_id).filter(Boolean),
   );
 
   const customerIds = new Set(
-    invoices.map((invoice) => invoice.customer_id).filter(Boolean),
+    revenueInvoices.map(({ invoice }) => invoice.customer_id).filter(Boolean),
   );
 
-  const monthlyTotals = new Map<
+  console.debug("Invoice classification summary", {
+    revenueCount: revenueInvoices.length,
+    expenseCount: expenseInvoices.length,
+    unclassifiedCount: unclassifiedInvoiceCount,
+    revenueTotal: totalRevenue,
+    expenseTotal: totalExpenses,
+  });
+
+  const monthlyRevenueTotals = new Map<
+    string,
+    {
+      value: number;
+      invoiceCount: number;
+    }
+  >();
+  const monthlyExpenseTotals = new Map<
     string,
     {
       value: number;
@@ -180,20 +221,42 @@ export async function getDashboardData() {
     }
   >();
 
-  invoices.forEach((invoice) => {
+  revenueInvoices.forEach(({ invoice, value }) => {
     const monthKey = getMonthKey(invoice.issue_date ?? invoice.created_at);
-    const previous = monthlyTotals.get(monthKey) ?? {
+    const previous = monthlyRevenueTotals.get(monthKey) ?? {
       value: 0,
       invoiceCount: 0,
     };
 
-    monthlyTotals.set(monthKey, {
-      value: previous.value + toNumber(invoice.payable_amount),
+    monthlyRevenueTotals.set(monthKey, {
+      value: previous.value + value,
       invoiceCount: previous.invoiceCount + 1,
     });
   });
 
-  const monthlyInvoiceValue = Array.from(monthlyTotals.entries())
+  expenseInvoices.forEach(({ invoice, value }) => {
+    const monthKey = getMonthKey(invoice.issue_date ?? invoice.created_at);
+    const previous = monthlyExpenseTotals.get(monthKey) ?? {
+      value: 0,
+      invoiceCount: 0,
+    };
+
+    monthlyExpenseTotals.set(monthKey, {
+      value: previous.value + value,
+      invoiceCount: previous.invoiceCount + 1,
+    });
+  });
+
+  const monthlyInvoiceValue = Array.from(monthlyRevenueTotals.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([monthKey, values]) => ({
+      month: getMonthLabel(monthKey),
+      monthKey,
+      value: values.value,
+      invoiceCount: values.invoiceCount,
+    }));
+
+  const monthlyExpenseValue = Array.from(monthlyExpenseTotals.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([monthKey, values]) => ({
       month: getMonthLabel(monthKey),
@@ -204,12 +267,11 @@ export async function getDashboardData() {
 
   const supplierTotals = new Map<string, number>();
 
-  invoices.forEach((invoice) => {
-    const supplier = getRelationParty(invoice.suppliers as RelationParty);
+  expenseInvoices.forEach(({ supplier, value }) => {
     const supplierName = supplier?.name ?? "Furnizor necunoscut";
     const previous = supplierTotals.get(supplierName) ?? 0;
 
-    supplierTotals.set(supplierName, previous + toNumber(invoice.payable_amount));
+    supplierTotals.set(supplierName, previous + value);
   });
 
   const topSuppliers = Array.from(supplierTotals.entries())
@@ -219,27 +281,30 @@ export async function getDashboardData() {
 
   const customerTotals = new Map<string, number>();
 
-  invoices.forEach((invoice) => {
-    const customer = getRelationParty(invoice.customers as RelationParty);
+  revenueInvoices.forEach(({ customer, value }) => {
     const customerName = customer?.name ?? "Client necunoscut";
     const previous = customerTotals.get(customerName) ?? 0;
 
-    customerTotals.set(customerName, previous + toNumber(invoice.payable_amount));
+    customerTotals.set(customerName, previous + value);
   });
 
   const topCustomers = Array.from(customerTotals.entries())
     .map(([name, value]) => ({
       name,
       value,
-      share: totalValue > 0 ? (value / totalValue) * 100 : 0,
+      share: totalRevenue > 0 ? (value / totalRevenue) * 100 : 0,
     }))
     .sort((a, b) => b.value - a.value)
     .slice(0, 6);
 
   const monthlyFinancialMap = new Map<string, MonthlyFinancialPoint>();
 
-  invoices.forEach((invoice) => {
+  classifiedInvoices.forEach(({ invoice, classification, value, vat }) => {
     const monthKey = getMonthKey(invoice.issue_date ?? invoice.created_at);
+
+    if (classification === "unclassified") {
+      return;
+    }
 
     const current = monthlyFinancialMap.get(monthKey) ?? {
       monthKey,
@@ -249,19 +314,8 @@ export async function getDashboardData() {
       invoiceCount: 0,
     };
 
-    const supplier = getRelationParty(invoice.suppliers as RelationParty);
-    const customer = getRelationParty(invoice.customers as RelationParty);
-
-    const supplierCui = normalizeCui(supplier?.cui);
-    const customerCui = normalizeCui(customer?.cui);
-
-    const value = toNumber(invoice.payable_amount);
-    const vat = toNumber(invoice.tax_amount);
-
-    if (companyCui && supplierCui === companyCui) {
+    if (classification === "revenue") {
       current.revenue += value;
-    } else if (companyCui && customerCui === companyCui) {
-      current.expenses += value;
     } else {
       current.expenses += value;
     }
@@ -335,18 +389,27 @@ export async function getDashboardData() {
     },
     {
       name: "Baza fara TVA",
-      value: Math.max(totalValue - totalVat, 0),
+      value: Math.max(classifiedInvoiceValue - totalVat, 0),
     },
   ];
 
   return {
+    companyCui,
     invoiceCount,
     totalValue,
+    totalRevenue,
+    totalExpenses,
+    netProfit,
     totalVat,
+    classifiedInvoiceCount,
+    classifiedInvoiceValue,
+    unclassifiedInvoiceCount,
+    unclassifiedInvoiceValue,
     supplierCount: supplierIds.size,
     customerCount: customerIds.size,
     documentsProcessed: documents.length,
     monthlyInvoiceValue,
+    monthlyExpenseValue,
     vatDistribution,
     topSuppliers,
     topCustomers,

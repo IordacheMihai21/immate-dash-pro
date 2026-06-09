@@ -36,7 +36,7 @@ import { getDashboardData } from "@/lib/dashboardService";
 import { getInvoices } from "@/lib/invoiceService";
 import { formatRON } from "@/lib/mock-data";
 import {
-  buildMonthlyReportPoints,
+  filterInvoicesByClassification,
   formatDate,
   getCustomerName,
   getInvoiceDate,
@@ -85,16 +85,26 @@ function CashFlowReportPage() {
   }, []);
 
   const report = useMemo(() => {
-    const invoiceTotal = invoices.reduce((sum, invoice) => sum + getInvoiceTotal(invoice), 0);
-    const averageInvoiceValue = invoices.length > 0 ? invoiceTotal / invoices.length : 0;
-    const newestTime = getNewestInvoiceTime(invoices);
-    const monthlyPoints = buildMonthlyReportPoints(invoices);
+    const classifiedInvoices = dashboardData
+      ? filterInvoicesByClassification(invoices, dashboardData.companyCui, [
+          "revenue",
+          "expense",
+        ])
+      : [];
+    const invoiceTotal = classifiedInvoices.reduce(
+      (sum, invoice) => sum + getInvoiceTotal(invoice),
+      0,
+    );
+    const averageInvoiceValue =
+      classifiedInvoices.length > 0 ? invoiceTotal / classifiedInvoices.length : 0;
+    const newestTime = getNewestInvoiceTime(classifiedInvoices);
+    const monthlyPoints = dashboardData?.monthlyInvoiceValue ?? [];
     const averageMonthlyRevenue =
       monthlyPoints.length > 0
         ? monthlyPoints.reduce((sum, point) => sum + point.value, 0) / monthlyPoints.length
         : 0;
 
-    const rows = invoices
+    const rows = classifiedInvoices
       .map((invoice) => {
         const total = getInvoiceTotal(invoice);
         const impact = getInvoiceImpact(total, averageInvoiceValue);

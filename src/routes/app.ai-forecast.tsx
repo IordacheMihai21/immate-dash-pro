@@ -181,6 +181,13 @@ function AiForecastPage() {
           </InfoBanner>
         )}
 
+        {dashboardData.unclassifiedInvoiceCount > 0 && (
+          <InfoBanner tone="amber" icon={<AlertTriangle className="h-4 w-4" />}>
+            Unele facturi nu au putut fi asociate clar cu firma curenta. Verifica CUI-ul din Profil
+            companie.
+          </InfoBanner>
+        )}
+
         {!hasOfficialForecast ? (
           <OfficialForecastEmptyState />
         ) : (

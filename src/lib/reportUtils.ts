@@ -1,3 +1,8 @@
+import {
+  classifyInvoiceForCompany,
+  type InvoiceClassification,
+} from "./cuiUtils";
+
 export type RelationParty =
   | {
       name: string | null;
@@ -89,6 +94,23 @@ export function getInvoiceDate(invoice: ReportInvoice) {
   return invoice.issue_date ?? invoice.created_at;
 }
 
+export function getInvoiceClassification(
+  invoice: ReportInvoice,
+  companyCui: string | null | undefined,
+): InvoiceClassification {
+  return classifyInvoiceForCompany(invoice, companyCui);
+}
+
+export function filterInvoicesByClassification(
+  invoices: ReportInvoice[],
+  companyCui: string | null | undefined,
+  classifications: InvoiceClassification[],
+) {
+  return invoices.filter((invoice) =>
+    classifications.includes(getInvoiceClassification(invoice, companyCui)),
+  );
+}
+
 export function getDateMs(dateValue: string | null | undefined) {
   if (!dateValue) {
     return null;
@@ -170,6 +192,10 @@ export function isRecentInvoice(invoice: ReportInvoice, newestTime: number | nul
 export function buildMonthlyReportPoints(
   invoices: ReportInvoice[],
   documents: ReportDocument[] = [],
+  options: {
+    companyCui?: string | null;
+    classifications?: InvoiceClassification[];
+  } = {},
 ): MonthlyReportPoint[] {
   const monthlyMap = new Map<string, MonthlyReportPoint>();
 
@@ -196,6 +222,15 @@ export function buildMonthlyReportPoints(
   }
 
   invoices.forEach((invoice) => {
+    if (
+      options.classifications &&
+      !options.classifications.includes(
+        getInvoiceClassification(invoice, options.companyCui),
+      )
+    ) {
+      return;
+    }
+
     const month = ensureMonth(getMonthKey(getInvoiceDate(invoice)));
 
     month.invoices += 1;

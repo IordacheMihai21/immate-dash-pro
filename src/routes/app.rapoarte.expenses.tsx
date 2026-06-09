@@ -36,6 +36,7 @@ import { getInvoices } from "@/lib/invoiceService";
 import { formatRON } from "@/lib/mock-data";
 import {
   buildMonthlyReportPoints,
+  filterInvoicesByClassification,
   formatDate,
   formatPercent,
   getInvoiceDate,
@@ -84,12 +85,15 @@ function ExpensesReportPage() {
   }, []);
 
   const report = useMemo(() => {
-    const totalExpenses = invoices.reduce((sum, invoice) => sum + getInvoiceTotal(invoice), 0);
-    const averageInvoice = invoices.length > 0 ? totalExpenses / invoices.length : 0;
-    const newestTime = getNewestInvoiceTime(invoices);
+    const expenseInvoices = dashboardData
+      ? filterInvoicesByClassification(invoices, dashboardData.companyCui, ["expense"])
+      : [];
+    const totalExpenses = expenseInvoices.reduce((sum, invoice) => sum + getInvoiceTotal(invoice), 0);
+    const averageInvoice = expenseInvoices.length > 0 ? totalExpenses / expenseInvoices.length : 0;
+    const newestTime = getNewestInvoiceTime(expenseInvoices);
     const supplierMap = new Map<string, { name: string; total: number; count: number }>();
 
-    invoices.forEach((invoice) => {
+    expenseInvoices.forEach((invoice) => {
       const name = getSupplierName(invoice);
       const current = supplierMap.get(name) ?? { name, total: 0, count: 0 };
 
@@ -100,11 +104,16 @@ function ExpensesReportPage() {
 
     const suppliers = Array.from(supplierMap.values()).sort((a, b) => b.total - a.total);
     const topSupplier = suppliers[0];
-    const monthlyChart = buildMonthlyReportPoints(invoices).map((item) => ({
-      month: item.month,
-      cheltuieli: item.value,
-    }));
-    const rows = invoices
+    const monthlyChart = dashboardData
+      ? buildMonthlyReportPoints(invoices, [], {
+          companyCui: dashboardData.companyCui,
+          classifications: ["expense"],
+        }).map((item) => ({
+          month: item.month,
+          cheltuieli: item.value,
+        }))
+      : [];
+    const rows = expenseInvoices
       .map((invoice) => {
         const total = getInvoiceTotal(invoice);
         const impact =
@@ -156,7 +165,7 @@ function ExpensesReportPage() {
       monthlyChart,
       rows: filteredRows,
     };
-  }, [activeTab, invoices, search]);
+  }, [activeTab, dashboardData, invoices, search]);
 
   if (isLoading) {
     return (

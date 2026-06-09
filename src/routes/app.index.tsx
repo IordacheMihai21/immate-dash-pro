@@ -201,22 +201,22 @@ function Dashboard() {
         <div className="grid gap-4 sm:grid-cols-2 xl:col-span-2">
           <StatCard
             title="Venit total"
-            value={formatRON(dashboardData.totalValue)}
-            description="Suma facturilor procesate din fluxul e-Factura XML."
+            value={formatRON(dashboardData.totalRevenue)}
+            description="Suma facturilor emise de companie."
             trend={`${formatPercent(revenueTrendPercent)} lunar`}
             icon={<Wallet className="h-5 w-5" />}
             tone="blue"
             onClick={() =>
               setFocusedKpi({
                 title: "Venit total",
-                value: formatRON(dashboardData.totalValue),
+                value: formatRON(dashboardData.totalRevenue),
                 icon: <Wallet className="h-6 w-6" />,
                 explanation:
-                  "Venitul total reprezinta valoarea cumulata a facturilor procesate in IMMapp.",
+                  "Venitul total reprezinta valoarea cumulata a facturilor in care compania ta este furnizorul.",
                 formula:
-                  "Venit total = suma valorilor totale ale facturilor e-Factura importate.",
+                  "Venit total = suma facturilor unde CUI-ul companiei apare la furnizor.",
                 businessMeaning:
-                  "Indicatorul arata volumul financiar procesat si ajuta la evaluarea dimensiunii activitatii curente.",
+                  "Indicatorul separa incasarile de facturile primite, astfel incat cheltuielile sa nu fie interpretate ca venit.",
               })
             }
           />
@@ -934,6 +934,7 @@ function buildMonthlyDashboardData(dashboardData: DashboardData) {
       monthKey: string;
       month: string;
       venituri: number;
+      cheltuieli: number;
       facturi: number;
       documente: number;
       valoareMedieFactura: number;
@@ -951,6 +952,7 @@ function buildMonthlyDashboardData(dashboardData: DashboardData) {
       monthKey,
       month,
       venituri: 0,
+      cheltuieli: 0,
       facturi: 0,
       documente: 0,
       valoareMedieFactura: 0,
@@ -965,8 +967,14 @@ function buildMonthlyDashboardData(dashboardData: DashboardData) {
     const month = ensureMonth(item.monthKey, item.month);
 
     month.venituri = item.value;
-    month.facturi = item.invoiceCount;
-    month.valoareMedieFactura = item.invoiceCount > 0 ? item.value / item.invoiceCount : 0;
+    month.facturi += item.invoiceCount;
+  });
+
+  dashboardData.monthlyExpenseValue.forEach((item) => {
+    const month = ensureMonth(item.monthKey, item.month);
+
+    month.cheltuieli = item.value;
+    month.facturi += item.invoiceCount;
   });
 
   dashboardData.docsPerMonth.forEach((item) => {
@@ -975,13 +983,19 @@ function buildMonthlyDashboardData(dashboardData: DashboardData) {
     month.documente = item.docs;
   });
 
-  return Array.from(monthMap.values()).sort((a, b) => a.monthKey.localeCompare(b.monthKey));
+  return Array.from(monthMap.values())
+    .map((month) => ({
+      ...month,
+      valoareMedieFactura:
+        month.facturi > 0 ? (month.venituri + month.cheltuieli) / month.facturi : 0,
+    }))
+    .sort((a, b) => a.monthKey.localeCompare(b.monthKey));
 }
 
 function buildBusinessParameterData(dashboardData: DashboardData) {
   const prediction = dashboardData.prediction;
   const maxValue = Math.max(
-    dashboardData.totalValue,
+    dashboardData.totalRevenue,
     dashboardData.totalVat,
     Math.abs(prediction.cashFlow30Days),
     1,
@@ -991,7 +1005,7 @@ function buildBusinessParameterData(dashboardData: DashboardData) {
   return [
     {
       parameter: "Activitate financiara",
-      value: normalizeToScore(dashboardData.totalValue, maxValue),
+      value: normalizeToScore(dashboardData.totalRevenue, maxValue),
       description: "Veniturile au un impact {level} in profilul companiei.",
     },
     {
