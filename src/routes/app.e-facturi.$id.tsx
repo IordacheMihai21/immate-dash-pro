@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -58,6 +58,7 @@ type DocumentRelation =
   | undefined;
 
 type InvoiceDetailsData = Awaited<ReturnType<typeof getInvoiceDetails>>;
+type StatusBadgeValue = Parameters<typeof StatusBadge>[0]["status"];
 
 function getParty(party: PartyRelation) {
   if (!party) {
@@ -83,20 +84,20 @@ function getDocument(document: DocumentRelation) {
   return document;
 }
 
-function normalizeStatus(status: string | null | undefined) {
+function normalizeStatus(status: string | null | undefined): StatusBadgeValue {
   if (!status) {
-    return "Activ" as any;
+    return "Activ";
   }
 
   if (status === "procesata" || status === "procesat" || status === "Procesat") {
-    return "Activ" as any;
+    return "Activ";
   }
 
   if (status === "eroare" || status === "Eroare") {
-    return "Inactiv" as any;
+    return "Inactiv";
   }
 
-  return "Activ" as any;
+  return "Activ";
 }
 
 function InvoiceDetail() {
@@ -106,7 +107,7 @@ function InvoiceDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
-  async function loadInvoiceDetails() {
+  const loadInvoiceDetails = useCallback(async () => {
     try {
       setIsLoading(true);
       setErrorMessage("");
@@ -123,11 +124,11 @@ function InvoiceDetail() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [id]);
 
   useEffect(() => {
     loadInvoiceDetails();
-  }, [id]);
+  }, [loadInvoiceDetails]);
 
   if (isLoading) {
     return (
@@ -158,6 +159,7 @@ function InvoiceDetail() {
   const supplier = getParty(invoice.suppliers as PartyRelation);
   const customer = getParty(invoice.customers as PartyRelation);
   const document = getDocument(invoice.documents as DocumentRelation);
+  const isDocumentAiDocument = document?.document_type === "document-ai";
 
   return (
     <div>
@@ -176,8 +178,8 @@ function InvoiceDetail() {
       <div className="mb-4 flex items-start gap-2 rounded-md border border-info/30 bg-info/10 p-3 text-sm">
         <Info className="mt-0.5 h-4 w-4 shrink-0 text-info" />
         <p>
-          Aceasta pagina afiseaza datele extrase automat din XML, liniile facturii,
-          entitatile identificate si relatiile dintre acestea.
+          Aceasta pagina afiseaza datele extrase automat din document, liniile facturii, entitatile
+          identificate si relatiile dintre acestea.
         </p>
       </div>
 
@@ -235,10 +237,7 @@ function InvoiceDetail() {
               value={formatRON(Number(invoice.tax_exclusive_amount ?? 0))}
             />
 
-            <Metric
-              label="TVA"
-              value={formatRON(Number(invoice.tax_amount ?? 0))}
-            />
+            <Metric label="TVA" value={formatRON(Number(invoice.tax_amount ?? 0))} />
 
             <Metric
               label="Valoare cu TVA"
@@ -282,9 +281,7 @@ function InvoiceDetail() {
                   data.lines.map((line) => (
                     <TableRow key={line.id}>
                       <TableCell>{line.line_number ?? "-"}</TableCell>
-                      <TableCell className="font-medium">
-                        {line.description ?? "-"}
-                      </TableCell>
+                      <TableCell className="font-medium">{line.description ?? "-"}</TableCell>
                       <TableCell className="text-right tabular-nums">
                         {Number(line.quantity ?? 0)}
                       </TableCell>
@@ -329,9 +326,7 @@ function InvoiceDetail() {
                 ) : (
                   data.entities.map((entity) => (
                     <TableRow key={entity.id}>
-                      <TableCell className="font-medium">
-                        {entity.entity_type}
-                      </TableCell>
+                      <TableCell className="font-medium">{entity.entity_type}</TableCell>
                       <TableCell>{entity.entity_value ?? "-"}</TableCell>
                       <TableCell>{formatExtractionMethod(entity.extraction_method)}</TableCell>
                       <TableCell className="text-right tabular-nums">
@@ -370,9 +365,7 @@ function InvoiceDetail() {
                 ) : (
                   data.relations.map((relation) => (
                     <TableRow key={relation.id}>
-                      <TableCell className="font-medium">
-                        {relation.source_entity}
-                      </TableCell>
+                      <TableCell className="font-medium">{relation.source_entity}</TableCell>
                       <TableCell>{formatRelationType(relation.relation_type)}</TableCell>
                       <TableCell>{relation.target_entity}</TableCell>
                     </TableRow>
@@ -387,7 +380,7 @@ function InvoiceDetail() {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm">
               <FileCode2 className="h-4 w-4" />
-              XML original al facturii
+              {isDocumentAiDocument ? "Text extras din document" : "XML original al facturii"}
             </CardTitle>
           </CardHeader>
 
@@ -402,7 +395,10 @@ function InvoiceDetail() {
             </div>
 
             <pre className="max-h-96 overflow-auto rounded-md border border-border bg-secondary/30 p-4 text-xs">
-              {document?.original_content ?? "XML-ul original nu este disponibil."}
+              {document?.original_content ??
+                (isDocumentAiDocument
+                  ? "Textul extras nu este disponibil."
+                  : "XML-ul original nu este disponibil.")}
             </pre>
           </CardContent>
         </Card>
@@ -434,42 +430,20 @@ function formatRelationType(value: string | null | undefined) {
   return labels[value] ?? value.replace(/_/g, " ");
 }
 
-function Row({
-  label,
-  value,
-  mono,
-}: {
-  label: string;
-  value: string;
-  mono?: boolean;
-}) {
+function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
     <div className="flex justify-between gap-2">
       <span className="text-muted-foreground">{label}</span>
-      <span className={mono ? "break-all font-mono text-xs" : "font-medium"}>
-        {value}
-      </span>
+      <span className={mono ? "break-all font-mono text-xs" : "font-medium"}>{value}</span>
     </div>
   );
 }
 
-function Metric({
-  label,
-  value,
-  primary,
-}: {
-  label: string;
-  value: string;
-  primary?: boolean;
-}) {
+function Metric({ label, value, primary }: { label: string; value: string; primary?: boolean }) {
   return (
     <div className="rounded-md border border-border bg-secondary/30 p-4">
-      <p className="text-xs uppercase tracking-wider text-muted-foreground">
-        {label}
-      </p>
-      <p className={`mt-1 text-2xl font-semibold ${primary ? "text-primary" : ""}`}>
-        {value}
-      </p>
+      <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className={`mt-1 text-2xl font-semibold ${primary ? "text-primary" : ""}`}>{value}</p>
     </div>
   );
 }

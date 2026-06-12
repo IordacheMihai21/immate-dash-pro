@@ -1,11 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Eye, Loader2, ShieldCheck, Trash2, UploadCloud } from "lucide-react";
+import { BrainCircuit, Eye, Loader2, ShieldCheck, Trash2, UploadCloud } from "lucide-react";
 import { AdminPanel, EmptyState, InfoBanner } from "@/components/admin-ui";
+import { DocumentAiUpload } from "@/components/document-ai-upload";
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
 import { UploadModal } from "@/components/upload-modal";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -14,11 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  deleteDocument,
-  deleteDocuments,
-  getDocuments,
-} from "@/lib/invoiceService";
+import { deleteDocument, deleteDocuments, getDocuments } from "@/lib/invoiceService";
 import { formatRON } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -35,6 +33,7 @@ type InvoiceItem = {
 };
 
 type InvoiceRelation = InvoiceItem | InvoiceItem[] | null | undefined;
+type StatusBadgeValue = Parameters<typeof StatusBadge>[0]["status"];
 
 type DocumentRow = {
   id: string;
@@ -144,7 +143,9 @@ function DocumentsPage() {
       setSelectedDocumentIds([]);
       markFinancialDataChanged();
 
-      toast.success("Documentele selectate au fost sterse. Indicatorii financiari au fost actualizati.");
+      toast.success(
+        "Documentele selectate au fost sterse. Indicatorii financiari au fost actualizati.",
+      );
     } catch {
       toast.error("Documentele selectate nu au putut fi sterse. Incearca din nou.");
     } finally {
@@ -170,7 +171,7 @@ function DocumentsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Documente financiare"
-        description="Incarca si gestioneaza fisierele XML e-Factura folosite pentru analiza financiara."
+        description="Incarca documente XML e-Factura sau analizeaza facturi PDF si imagini cu Document AI."
         actions={
           <UploadModal
             trigger={
@@ -183,161 +184,184 @@ function DocumentsPage() {
         }
       />
 
-      <InfoBanner icon={<ShieldCheck className="h-4 w-4" />}>
-        Aceasta sectiune accepta doar fisiere XML e-Factura. Pentru Excel sau CSV,
-        foloseste AI Forecast → Simulare.
-      </InfoBanner>
+      <Tabs defaultValue="xml" className="space-y-6">
+        <TabsList className="h-auto flex-wrap justify-start rounded-2xl bg-slate-100 p-1">
+          <TabsTrigger value="xml" className="gap-2 rounded-xl px-4 py-2">
+            <UploadCloud className="h-4 w-4" />
+            e-Factura XML
+          </TabsTrigger>
+          <TabsTrigger value="document-ai" className="gap-2 rounded-xl px-4 py-2">
+            <BrainCircuit className="h-4 w-4" />
+            PDF / Imagine factura
+          </TabsTrigger>
+        </TabsList>
 
-      {errorMessage && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-          {errorMessage}
-        </div>
-      )}
+        <TabsContent value="xml" className="space-y-6">
+          <InfoBanner icon={<ShieldCheck className="h-4 w-4" />}>
+            Fluxul XML e-Factura ramane sursa structurata principala pentru dashboard, rapoarte si
+            predictiile AI.
+          </InfoBanner>
 
-      <AdminPanel
-        title="Documente incarcate"
-        description="Selecteaza, verifica si gestioneaza documentele oficiale procesate."
-        action={
-          selectedCount > 0 ? (
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
-                {selectedCount} selectate
-              </span>
-              <Button
-                variant="destructive"
-                onClick={handleDeleteSelectedDocuments}
-                disabled={isDeletingSelected}
-              >
-                {isDeletingSelected ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Trash2 className="h-4 w-4" />
-                )}
-                Sterge selectate
-              </Button>
+          {errorMessage && (
+            <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+              {errorMessage}
             </div>
-          ) : null
-        }
-        contentClassName="p-0"
-      >
-        {isLoading ? (
-          <div className="flex min-h-[280px] items-center justify-center gap-2 text-slate-500">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Se incarca documentele...
-          </div>
-        ) : documents.length === 0 ? (
-          <EmptyState
-            title="Nu exista documente incarcate"
-            description="Incarca primul XML e-Factura pentru a alimenta dashboard-ul si predictiile financiare."
-            icon={<UploadCloud className="h-6 w-6" />}
-          />
-        ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[48px]">
-                    <input
-                      type="checkbox"
-                      checked={allVisibleDocumentsSelected}
-                      onChange={toggleAllDocuments}
-                      className="h-4 w-4 rounded border-slate-300"
-                      aria-label="Selecteaza toate documentele"
-                    />
-                  </TableHead>
-                  <TableHead>Document</TableHead>
-                  <TableHead>Tip</TableHead>
-                  <TableHead>Numar factura</TableHead>
-                  <TableHead>Upload</TableHead>
-                  <TableHead>Procesat</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Valoare</TableHead>
-                  <TableHead className="text-right">Actiuni</TableHead>
-                </TableRow>
-              </TableHeader>
+          )}
 
-              <TableBody>
-                {documents.map((document) => {
-                  const invoice = getInvoice(document.invoices);
-                  const isSelected = selectedDocumentIds.includes(document.id);
-                  const isDeletingThisDocument = deletingDocumentId === document.id;
-
-                  return (
-                    <TableRow
-                      key={document.id}
-                      className={cn(isSelected && "bg-blue-50/60")}
-                    >
-                      <TableCell>
+          <AdminPanel
+            title="Documente incarcate"
+            description="Selecteaza, verifica si gestioneaza documentele financiare procesate."
+            action={
+              selectedCount > 0 ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
+                    {selectedCount} selectate
+                  </span>
+                  <Button
+                    variant="destructive"
+                    onClick={handleDeleteSelectedDocuments}
+                    disabled={isDeletingSelected}
+                  >
+                    {isDeletingSelected ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                    Sterge selectate
+                  </Button>
+                </div>
+              ) : null
+            }
+            contentClassName="p-0"
+          >
+            {isLoading ? (
+              <div className="flex min-h-[280px] items-center justify-center gap-2 text-slate-500">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Se incarca documentele...
+              </div>
+            ) : documents.length === 0 ? (
+              <EmptyState
+                title="Nu exista documente incarcate"
+                description="Incarca primul XML e-Factura sau analizeaza o factura PDF/imagine pentru a alimenta istoricul financiar."
+                icon={<UploadCloud className="h-6 w-6" />}
+              />
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[48px]">
                         <input
                           type="checkbox"
-                          checked={isSelected}
-                          onChange={() => toggleDocumentSelection(document.id)}
+                          checked={allVisibleDocumentsSelected}
+                          onChange={toggleAllDocuments}
                           className="h-4 w-4 rounded border-slate-300"
-                          aria-label={`Selecteaza documentul ${document.file_name}`}
+                          aria-label="Selecteaza toate documentele"
                         />
-                      </TableCell>
-
-                      <TableCell>
-                        <div className="font-medium text-slate-900">{document.file_name}</div>
-                        <div className="text-xs text-slate-500">XML e-Factura</div>
-                      </TableCell>
-                      <TableCell>{document.file_type?.toUpperCase() ?? "XML"}</TableCell>
-                      <TableCell>{invoice?.invoice_number ?? "-"}</TableCell>
-                      <TableCell>{formatDate(document.uploaded_at)}</TableCell>
-                      <TableCell>{formatDate(document.processed_at)}</TableCell>
-                      <TableCell>
-                        <StatusBadge status={normalizeStatus(document.status)} />
-                      </TableCell>
-                      <TableCell className="text-right font-medium tabular-nums">
-                        {invoice?.payable_amount
-                          ? formatRON(Number(invoice.payable_amount))
-                          : "-"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            title="Vezi factura"
-                            aria-label={`Vezi factura pentru ${document.file_name}`}
-                            disabled={!invoice?.id}
-                            asChild={Boolean(invoice?.id)}
-                          >
-                            {invoice?.id ? (
-                              <Link to="/app/e-facturi/$id" params={{ id: invoice.id }}>
-                                <Eye className="h-4 w-4" />
-                              </Link>
-                            ) : (
-                              <Eye className="h-4 w-4" />
-                            )}
-                          </Button>
-
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            title="Sterge documentul"
-                            aria-label={`Sterge documentul ${document.file_name}`}
-                            onClick={() =>
-                              handleDeleteSingleDocument(document.id, document.file_name)
-                            }
-                            disabled={isDeletingThisDocument || isDeletingSelected}
-                          >
-                            {isDeletingThisDocument ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
-                      </TableCell>
+                      </TableHead>
+                      <TableHead>Document</TableHead>
+                      <TableHead>Tip</TableHead>
+                      <TableHead>Numar factura</TableHead>
+                      <TableHead>Upload</TableHead>
+                      <TableHead>Procesat</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Valoare</TableHead>
+                      <TableHead className="text-right">Actiuni</TableHead>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </AdminPanel>
+                  </TableHeader>
+
+                  <TableBody>
+                    {documents.map((document) => {
+                      const invoice = getInvoice(document.invoices);
+                      const isSelected = selectedDocumentIds.includes(document.id);
+                      const isDeletingThisDocument = deletingDocumentId === document.id;
+
+                      return (
+                        <TableRow key={document.id} className={cn(isSelected && "bg-blue-50/60")}>
+                          <TableCell>
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleDocumentSelection(document.id)}
+                              className="h-4 w-4 rounded border-slate-300"
+                              aria-label={`Selecteaza documentul ${document.file_name}`}
+                            />
+                          </TableCell>
+
+                          <TableCell>
+                            <div className="font-medium text-slate-900">{document.file_name}</div>
+                            <div className="text-xs text-slate-500">
+                              {getDocumentKindLabel(document)}
+                            </div>
+                          </TableCell>
+                          <TableCell>{document.file_type?.toUpperCase() ?? "XML"}</TableCell>
+                          <TableCell>{invoice?.invoice_number ?? "-"}</TableCell>
+                          <TableCell>{formatDate(document.uploaded_at)}</TableCell>
+                          <TableCell>{formatDate(document.processed_at)}</TableCell>
+                          <TableCell>
+                            <StatusBadge status={normalizeStatus(document.status)} />
+                          </TableCell>
+                          <TableCell className="text-right font-medium tabular-nums">
+                            {invoice?.payable_amount
+                              ? formatRON(Number(invoice.payable_amount))
+                              : "-"}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                title="Vezi factura"
+                                aria-label={`Vezi factura pentru ${document.file_name}`}
+                                disabled={!invoice?.id}
+                                asChild={Boolean(invoice?.id)}
+                              >
+                                {invoice?.id ? (
+                                  <Link to="/app/e-facturi/$id" params={{ id: invoice.id }}>
+                                    <Eye className="h-4 w-4" />
+                                  </Link>
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                              </Button>
+
+                              <Button
+                                variant="destructive"
+                                size="icon"
+                                title="Sterge documentul"
+                                aria-label={`Sterge documentul ${document.file_name}`}
+                                onClick={() =>
+                                  handleDeleteSingleDocument(document.id, document.file_name)
+                                }
+                                disabled={isDeletingThisDocument || isDeletingSelected}
+                              >
+                                {isDeletingThisDocument ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Trash2 className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </AdminPanel>
+        </TabsContent>
+
+        <TabsContent value="document-ai" className="space-y-6">
+          <InfoBanner icon={<BrainCircuit className="h-4 w-4" />} tone="emerald">
+            Document AI este separat de importul XML si este folosit pentru facturi PDF sau imagini
+            care necesita extragere din text ne-structurat.
+          </InfoBanner>
+
+          <DocumentAiUpload onInvoiceSaved={loadDocuments} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
@@ -354,20 +378,20 @@ function getInvoice(invoice: InvoiceRelation): InvoiceItem | null {
   return invoice;
 }
 
-function normalizeStatus(status: string | null | undefined) {
+function normalizeStatus(status: string | null | undefined): StatusBadgeValue {
   if (!status) {
-    return "Activ" as any;
+    return "Activ";
   }
 
   if (status === "procesata" || status === "procesat" || status === "Procesat") {
-    return "Activ" as any;
+    return "Activ";
   }
 
   if (status === "eroare" || status === "Eroare") {
-    return "Inactiv" as any;
+    return "Inactiv";
   }
 
-  return "Activ" as any;
+  return "Activ";
 }
 
 function formatDate(dateValue: string | null | undefined) {
@@ -386,6 +410,14 @@ function formatDate(dateValue: string | null | undefined) {
     month: "short",
     year: "numeric",
   });
+}
+
+function getDocumentKindLabel(document: DocumentRow) {
+  if (document.document_type === "document-ai") {
+    return "Document AI";
+  }
+
+  return "XML e-Factura";
 }
 
 function markFinancialDataChanged() {

@@ -7,14 +7,30 @@ export type SavedInvoiceResult = {
   documentId: string;
 };
 
+export type DocumentAiInvoiceInput = {
+  fileName: string;
+  fileType: string;
+  extractedText: string;
+  invoiceNumber: string;
+  issueDate: string | null;
+  currency: string;
+  supplierName: string;
+  supplierCui: string;
+  customerName: string;
+  customerCui: string;
+  taxExclusiveAmount: number;
+  taxAmount: number;
+  taxInclusiveAmount: number;
+  payableAmount: number;
+  confidenceByField?: Record<string, number>;
+};
+
 function cleanCui(cui: string): string {
   return cui.trim().replace(/\s+/g, "").toUpperCase();
 }
 
 async function upsertSupplier(invoice: ParsedInvoice, companyId: string) {
-  const supplierCui = cleanCui(
-    invoice.supplier.cui || `UNKNOWN_SUPPLIER_${invoice.invoiceNumber}`,
-  );
+  const supplierCui = cleanCui(invoice.supplier.cui || `UNKNOWN_SUPPLIER_${invoice.invoiceNumber}`);
 
   const { data, error } = await supabase
     .from("suppliers")
@@ -42,9 +58,7 @@ async function upsertSupplier(invoice: ParsedInvoice, companyId: string) {
 }
 
 async function upsertCustomer(invoice: ParsedInvoice, companyId: string) {
-  const customerCui = cleanCui(
-    invoice.customer.cui || `UNKNOWN_CUSTOMER_${invoice.invoiceNumber}`,
-  );
+  const customerCui = cleanCui(invoice.customer.cui || `UNKNOWN_CUSTOMER_${invoice.invoiceNumber}`);
 
   const { data, error } = await supabase
     .from("customers")
@@ -71,16 +85,28 @@ async function upsertCustomer(invoice: ParsedInvoice, companyId: string) {
   return data.id as string;
 }
 
-async function saveDocument(fileName: string, xmlText: string, companyId: string) {
+async function saveDocument({
+  fileName,
+  originalContent,
+  companyId,
+  fileType,
+  documentType,
+}: {
+  fileName: string;
+  originalContent: string;
+  companyId: string;
+  fileType: string;
+  documentType: string;
+}) {
   const { data, error } = await supabase
     .from("documents")
     .insert({
       company_id: companyId,
       file_name: fileName,
-      file_type: "xml",
-      document_type: "e-factura",
+      file_type: fileType,
+      document_type: documentType,
       status: "procesat",
-      original_content: xmlText,
+      original_content: originalContent,
       processed_at: new Date().toISOString(),
     })
     .select("id")
@@ -168,7 +194,13 @@ async function saveExtractedEntities(
   invoice: ParsedInvoice,
   documentId: string,
   invoiceId: string,
+  options?: {
+    confidenceByField?: Record<string, number>;
+    extractionMethod?: string;
+  },
 ) {
+  const confidenceByField = options?.confidenceByField ?? {};
+  const extractionMethod = options?.extractionMethod ?? "xml_parser";
   const entities = [
     ["invoice_number", invoice.invoiceNumber],
     ["issue_date", invoice.issueDate ?? ""],
@@ -189,8 +221,8 @@ async function saveExtractedEntities(
       invoice_id: invoiceId,
       entity_type,
       entity_value,
-      confidence: 1,
-      extraction_method: "xml_parser",
+      confidence: confidenceByField[entity_type] ?? 1,
+      extraction_method: extractionMethod,
     }));
 
   if (entities.length === 0) {
@@ -259,19 +291,91 @@ export async function importEFacturaXml(file: File): Promise<SavedInvoiceResult>
     throw new Error(`Factura ${parsedInvoice.invoiceNumber} exista deja in aplicatie.`);
   }
 
-  const documentId = await saveDocument(file.name, xmlText, companyId);
+  const documentId = await saveDocument({
+    fileName: file.name,
+    originalContent: xmlText,
+    companyId,
+    fileType: "xml",
+    documentType: "e-factura",
+  });
   const supplierId = await upsertSupplier(parsedInvoice, companyId);
   const customerId = await upsertCustomer(parsedInvoice, companyId);
-  const invoiceId = await saveInvoice(
-    parsedInvoice,
-    documentId,
-    supplierId,
-    customerId,
-    companyId,
-  );
+  const invoiceId = await saveInvoice(parsedInvoice, documentId, supplierId, customerId, companyId);
 
   await saveInvoiceLines(parsedInvoice, invoiceId);
   await saveExtractedEntities(parsedInvoice, documentId, invoiceId);
+  await saveEntityRelations(parsedInvoice, documentId);
+
+  return {
+    invoiceId,
+    documentId,
+  };
+}
+
+export async function saveDocumentAiInvoice(
+  input: DocumentAiInvoiceInput,
+): Promise<SavedInvoiceResult> {
+  const companyId = await getActiveCompanyId();
+  const parsedInvoice: ParsedInvoice = {
+    invoiceNumber: input.invoiceNumber.trim(),
+    issueDate: input.issueDate,
+    dueDate: null,
+    currency: input.currency || "RON",
+    supplier: {
+      name: input.supplierName || "Furnizor necunoscut",
+      cui: input.supplierCui,
+      address: "",
+      city: "",
+      country: "RO",
+    },
+    customer: {
+      name: input.customerName || "Client necunoscut",
+      cui: input.customerCui,
+      address: "",
+      city: "",
+      country: "RO",
+    },
+    taxExclusiveAmount: input.taxExclusiveAmount,
+    taxAmount: input.taxAmount,
+    taxInclusiveAmount: input.taxInclusiveAmount,
+    payableAmount: input.payableAmount,
+    lines: [],
+  };
+
+  if (!parsedInvoice.invoiceNumber) {
+    throw new Error("Numarul facturii este necesar pentru salvare.");
+  }
+
+  const { data: existingInvoice, error: existingError } = await supabase
+    .from("invoices")
+    .select("id")
+    .eq("company_id", companyId)
+    .eq("invoice_number", parsedInvoice.invoiceNumber)
+    .maybeSingle();
+
+  if (existingError) {
+    throw new Error(`Eroare la verificarea facturii existente: ${existingError.message}`);
+  }
+
+  if (existingInvoice) {
+    throw new Error(`Factura ${parsedInvoice.invoiceNumber} exista deja in aplicatie.`);
+  }
+
+  const documentId = await saveDocument({
+    fileName: input.fileName,
+    originalContent: input.extractedText,
+    companyId,
+    fileType: input.fileType,
+    documentType: "document-ai",
+  });
+  const supplierId = await upsertSupplier(parsedInvoice, companyId);
+  const customerId = await upsertCustomer(parsedInvoice, companyId);
+  const invoiceId = await saveInvoice(parsedInvoice, documentId, supplierId, customerId, companyId);
+
+  await saveExtractedEntities(parsedInvoice, documentId, invoiceId, {
+    confidenceByField: input.confidenceByField,
+    extractionMethod: "document_ai",
+  });
   await saveEntityRelations(parsedInvoice, documentId);
 
   return {
@@ -285,7 +389,8 @@ export async function getInvoices() {
 
   const { data, error } = await supabase
     .from("invoices")
-    .select(`
+    .select(
+      `
       id,
       invoice_number,
       issue_date,
@@ -304,7 +409,8 @@ export async function getInvoices() {
         name,
         cui
       )
-    `)
+    `,
+    )
     .eq("company_id", companyId)
     .order("created_at", { ascending: false });
 
@@ -320,7 +426,8 @@ export async function getInvoiceDetails(invoiceId: string) {
 
   const { data: invoice, error: invoiceError } = await supabase
     .from("invoices")
-    .select(`
+    .select(
+      `
       id,
       invoice_number,
       issue_date,
@@ -354,7 +461,8 @@ export async function getInvoiceDetails(invoiceId: string) {
         city,
         country
       )
-    `)
+    `,
+    )
     .eq("id", invoiceId)
     .eq("company_id", companyId)
     .single();
@@ -406,7 +514,8 @@ export async function getDocuments() {
 
   const { data, error } = await supabase
     .from("documents")
-    .select(`
+    .select(
+      `
       id,
       file_name,
       file_type,
@@ -419,7 +528,8 @@ export async function getDocuments() {
         invoice_number,
         payable_amount
       )
-    `)
+    `,
+    )
     .eq("company_id", companyId)
     .order("uploaded_at", { ascending: false });
 
@@ -448,14 +558,10 @@ export async function deleteDocuments(documentIds: string[]) {
     .in("document_id", ids);
 
   if (invoicesSelectError) {
-    throw new Error(
-      `Eroare la identificarea facturilor asociate: ${invoicesSelectError.message}`,
-    );
+    throw new Error(`Eroare la identificarea facturilor asociate: ${invoicesSelectError.message}`);
   }
 
-  const invoiceIds = (invoicesData ?? [])
-    .map((invoice) => invoice.id)
-    .filter(Boolean) as string[];
+  const invoiceIds = (invoicesData ?? []).map((invoice) => invoice.id).filter(Boolean) as string[];
 
   if (invoiceIds.length > 0) {
     const { error: linesError } = await supabase
