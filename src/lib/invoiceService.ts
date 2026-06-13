@@ -23,6 +23,7 @@ export type DocumentAiInvoiceInput = {
   taxInclusiveAmount: number;
   payableAmount: number;
   confidenceByField?: Record<string, number>;
+  classification?: "revenue" | "expense" | "unclassified";
 };
 
 function cleanCui(cui: string): string {
@@ -236,31 +237,54 @@ async function saveExtractedEntities(
   }
 }
 
-async function saveEntityRelations(invoice: ParsedInvoice, documentId: string) {
+async function saveEntityRelations(
+  invoice: ParsedInvoice,
+  documentId: string,
+  options?: {
+    classification?: "revenue" | "expense" | "unclassified";
+  },
+) {
+  const classification = options?.classification ?? "unclassified";
+  const roleRelation = {
+    revenue: "este_furnizor",
+    expense: "este_client",
+    unclassified: "necesita_asociere",
+  }[classification];
+  const roleTarget = {
+    revenue: "Venit",
+    expense: "Cheltuiala",
+    unclassified: "Neclasificat",
+  }[classification];
   const relations = [
     {
       document_id: documentId,
-      source_entity: `Factura ${invoice.invoiceNumber}`,
-      relation_type: "are_furnizor",
-      target_entity: invoice.supplier.name || invoice.supplier.cui || "Furnizor necunoscut",
+      source_entity: invoice.supplier.name || invoice.supplier.cui || "Furnizor necunoscut",
+      relation_type: "emite",
+      target_entity: `Factura ${invoice.invoiceNumber}`,
+    },
+    {
+      document_id: documentId,
+      source_entity: invoice.customer.name || invoice.customer.cui || "Client necunoscut",
+      relation_type: "primeste",
+      target_entity: `Factura ${invoice.invoiceNumber}`,
     },
     {
       document_id: documentId,
       source_entity: `Factura ${invoice.invoiceNumber}`,
-      relation_type: "are_client",
-      target_entity: invoice.customer.name || invoice.customer.cui || "Client necunoscut",
+      relation_type: "contine_linii_factura",
+      target_entity: "Linii factura",
     },
     {
       document_id: documentId,
       source_entity: `Factura ${invoice.invoiceNumber}`,
-      relation_type: "are_total_de_plata",
-      target_entity: String(invoice.payableAmount),
-    },
-    {
-      document_id: documentId,
-      source_entity: `Factura ${invoice.invoiceNumber}`,
-      relation_type: "are_tva",
+      relation_type: "include_tva",
       target_entity: String(invoice.taxAmount),
+    },
+    {
+      document_id: documentId,
+      source_entity: "Companie curenta",
+      relation_type: roleRelation,
+      target_entity: roleTarget,
     },
   ];
 
@@ -376,7 +400,9 @@ export async function saveDocumentAiInvoice(
     confidenceByField: input.confidenceByField,
     extractionMethod: "document_ai",
   });
-  await saveEntityRelations(parsedInvoice, documentId);
+  await saveEntityRelations(parsedInvoice, documentId, {
+    classification: input.classification,
+  });
 
   return {
     invoiceId,

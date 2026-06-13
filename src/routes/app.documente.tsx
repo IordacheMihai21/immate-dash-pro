@@ -1,8 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { BrainCircuit, Eye, Loader2, ShieldCheck, Trash2, UploadCloud } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  BarChart3,
+  BrainCircuit,
+  Eye,
+  Loader2,
+  Network,
+  ShieldCheck,
+  Trash2,
+  UploadCloud,
+} from "lucide-react";
 import { AdminPanel, EmptyState, InfoBanner } from "@/components/admin-ui";
-import { DocumentAiUpload } from "@/components/document-ai-upload";
+import { DocumentAiEvaluation } from "@/components/document-ai-evaluation";
+import {
+  DocumentAiUpload,
+  toDocumentAiEditableFields,
+  type DocumentAiEditableFields,
+} from "@/components/document-ai-upload";
+import { LayoutAiAnalysis } from "@/components/layout-ai-analysis";
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
 import { UploadModal } from "@/components/upload-modal";
@@ -17,6 +32,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { deleteDocument, deleteDocuments, getDocuments } from "@/lib/invoiceService";
+import type { DocumentAiAnalysis, DocumentAiFieldKey } from "@/lib/documentAiService";
+import {
+  hasEvaluationFields,
+  parseFaturaAnnotationToExpected,
+  type BatchEvaluationResult,
+  type DocumentAiEvaluationFields,
+} from "@/lib/documentAiEvaluationService";
 import { formatRON } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -46,6 +68,15 @@ type DocumentRow = {
   invoices?: InvoiceRelation;
 };
 
+const DOCUMENT_AI_ANALYSIS_KEY = "immapp:document-ai:last-analysis";
+const DOCUMENT_AI_FILE_NAME_KEY = "immapp:document-ai:last-file-name";
+const DOCUMENT_AI_FIELDS_KEY = "immapp:document-ai:last-fields";
+const DOCUMENT_AI_VERIFIED_FIELDS_KEY = "immapp:document-ai:last-verified-fields";
+const DOCUMENT_AI_PREDICTED_TEXT_KEY = "immapp:document-ai:last-predicted-text";
+const FATURA_ANNOTATION_KEY = "immapp:document-ai:last-fatura-annotation";
+const FATURA_EXPECTED_KEY = "immapp:document-ai:last-fatura-expected";
+const EVALUATION_KEY = "immapp:document-ai:last-evaluation";
+
 function DocumentsPage() {
   const [documents, setDocuments] = useState<DocumentRow[]>([]);
   const [selectedDocumentIds, setSelectedDocumentIds] = useState<string[]>([]);
@@ -53,6 +84,19 @@ function DocumentsPage() {
   const [isDeletingSelected, setIsDeletingSelected] = useState(false);
   const [deletingDocumentId, setDeletingDocumentId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [latestDocumentAiAnalysis, setLatestDocumentAiAnalysis] =
+    useState<DocumentAiAnalysis | null>(null);
+  const [latestDocumentAiFields, setLatestDocumentAiFields] =
+    useState<DocumentAiEditableFields | null>(null);
+  const [latestDocumentAiVerifiedFields, setLatestDocumentAiVerifiedFields] = useState<
+    DocumentAiFieldKey[]
+  >([]);
+  const [latestEvaluationPredictedText, setLatestEvaluationPredictedText] = useState("");
+  const [latestFaturaAnnotationRaw, setLatestFaturaAnnotationRaw] = useState("");
+  const [latestFaturaExpectedFields, setLatestFaturaExpectedFields] =
+    useState<DocumentAiEvaluationFields | null>(null);
+  const [latestEvaluationResults, setLatestEvaluationResults] =
+    useState<BatchEvaluationResult | null>(null);
 
   const selectedCount = selectedDocumentIds.length;
   const allVisibleDocumentsSelected = useMemo(() => {
@@ -153,6 +197,103 @@ function DocumentsPage() {
     }
   }
 
+  const handleDocumentAiAnalysisChange = useCallback((analysis: DocumentAiAnalysis | null) => {
+    setLatestDocumentAiAnalysis(analysis);
+
+    if (!analysis) {
+      removeStorageKeys([DOCUMENT_AI_ANALYSIS_KEY, DOCUMENT_AI_FILE_NAME_KEY]);
+      return;
+    }
+
+    const predictedText = JSON.stringify(analysis.fields, null, 2);
+    setLatestEvaluationPredictedText(predictedText);
+    writeStoredJson(DOCUMENT_AI_ANALYSIS_KEY, analysis);
+    writeStoredText(DOCUMENT_AI_FILE_NAME_KEY, analysis.fileName);
+    writeStoredText(DOCUMENT_AI_PREDICTED_TEXT_KEY, predictedText);
+  }, []);
+
+  const handleDocumentAiFieldsChange = useCallback((fields: DocumentAiEditableFields | null) => {
+    setLatestDocumentAiFields(fields);
+
+    if (!fields) {
+      removeStorageKeys([DOCUMENT_AI_FIELDS_KEY]);
+      return;
+    }
+
+    const predictedText = JSON.stringify(fields, null, 2);
+    setLatestEvaluationPredictedText(predictedText);
+    writeStoredJson(DOCUMENT_AI_FIELDS_KEY, fields);
+    writeStoredText(DOCUMENT_AI_PREDICTED_TEXT_KEY, predictedText);
+  }, []);
+
+  const handleDocumentAiVerifiedFieldsChange = useCallback((fields: DocumentAiFieldKey[]) => {
+    const uniqueFields = Array.from(new Set(fields));
+    setLatestDocumentAiVerifiedFields(uniqueFields);
+    writeStoredJson(DOCUMENT_AI_VERIFIED_FIELDS_KEY, uniqueFields);
+  }, []);
+
+  const clearDocumentAiAnalysis = useCallback(() => {
+    setLatestDocumentAiAnalysis(null);
+    setLatestDocumentAiFields(null);
+    setLatestDocumentAiVerifiedFields([]);
+    setLatestEvaluationPredictedText("");
+    removeStorageKeys([
+      DOCUMENT_AI_ANALYSIS_KEY,
+      DOCUMENT_AI_FILE_NAME_KEY,
+      DOCUMENT_AI_FIELDS_KEY,
+      DOCUMENT_AI_VERIFIED_FIELDS_KEY,
+      DOCUMENT_AI_PREDICTED_TEXT_KEY,
+    ]);
+  }, []);
+
+  const handleEvaluationPredictedTextChange = useCallback((value: string) => {
+    setLatestEvaluationPredictedText(value);
+    writeStoredText(DOCUMENT_AI_PREDICTED_TEXT_KEY, value);
+  }, []);
+
+  const handleFaturaAnnotationChange = useCallback((value: string) => {
+    setLatestFaturaAnnotationRaw(value);
+
+    if (!value.trim()) {
+      removeStorageKeys([FATURA_ANNOTATION_KEY]);
+      return;
+    }
+
+    writeStoredText(FATURA_ANNOTATION_KEY, value);
+  }, []);
+
+  const handleFaturaExpectedFieldsChange = useCallback(
+    (fields: DocumentAiEvaluationFields | null) => {
+      setLatestFaturaExpectedFields(fields);
+
+      if (!fields) {
+        removeStorageKeys([FATURA_EXPECTED_KEY]);
+        return;
+      }
+
+      writeStoredJson(FATURA_EXPECTED_KEY, fields);
+    },
+    [],
+  );
+
+  const handleEvaluationResultsChange = useCallback((result: BatchEvaluationResult | null) => {
+    setLatestEvaluationResults(result);
+
+    if (!result) {
+      removeStorageKeys([EVALUATION_KEY]);
+      return;
+    }
+
+    writeStoredJson(EVALUATION_KEY, result);
+  }, []);
+
+  const clearFaturaAnnotation = useCallback(() => {
+    setLatestFaturaAnnotationRaw("");
+    setLatestFaturaExpectedFields(null);
+    setLatestEvaluationResults(null);
+    removeStorageKeys([FATURA_ANNOTATION_KEY, FATURA_EXPECTED_KEY, EVALUATION_KEY]);
+  }, []);
+
   useEffect(() => {
     loadDocuments();
 
@@ -165,6 +306,52 @@ function DocumentsPage() {
     return () => {
       window.removeEventListener("immapp:invoice-imported", handleInvoiceImported);
     };
+  }, []);
+
+  useEffect(() => {
+    const storedAnalysis = readStoredJson<DocumentAiAnalysis>(DOCUMENT_AI_ANALYSIS_KEY);
+    const storedFields = readStoredJson<DocumentAiEditableFields>(DOCUMENT_AI_FIELDS_KEY);
+    const storedVerifiedFields = readStoredJson<DocumentAiFieldKey[]>(
+      DOCUMENT_AI_VERIFIED_FIELDS_KEY,
+    );
+    const storedPredictedText = readStoredText(DOCUMENT_AI_PREDICTED_TEXT_KEY);
+    const storedAnnotation = readStoredText(FATURA_ANNOTATION_KEY);
+    const storedExpected = readStoredJson<DocumentAiEvaluationFields>(FATURA_EXPECTED_KEY);
+    const storedEvaluation = readStoredJson<BatchEvaluationResult>(EVALUATION_KEY);
+
+    if (storedAnalysis) {
+      setLatestDocumentAiAnalysis(storedAnalysis);
+      setLatestDocumentAiFields(storedFields ?? toDocumentAiEditableFields(storedAnalysis.fields));
+    } else if (storedFields) {
+      setLatestDocumentAiFields(storedFields);
+    }
+
+    if (Array.isArray(storedVerifiedFields)) {
+      setLatestDocumentAiVerifiedFields(storedVerifiedFields);
+    }
+
+    if (storedPredictedText) {
+      setLatestEvaluationPredictedText(storedPredictedText);
+    }
+
+    if (storedAnnotation) {
+      setLatestFaturaAnnotationRaw(storedAnnotation);
+    }
+
+    if (storedExpected && hasEvaluationFields(storedExpected)) {
+      setLatestFaturaExpectedFields(storedExpected);
+    } else if (storedAnnotation) {
+      const parsed = parseStoredFaturaExpectedFields(storedAnnotation);
+
+      if (parsed) {
+        setLatestFaturaExpectedFields(parsed);
+        writeStoredJson(FATURA_EXPECTED_KEY, parsed);
+      }
+    }
+
+    if (storedEvaluation) {
+      setLatestEvaluationResults(storedEvaluation);
+    }
   }, []);
 
   return (
@@ -192,7 +379,15 @@ function DocumentsPage() {
           </TabsTrigger>
           <TabsTrigger value="document-ai" className="gap-2 rounded-xl px-4 py-2">
             <BrainCircuit className="h-4 w-4" />
-            PDF / Imagine factura
+            Document AI
+          </TabsTrigger>
+          <TabsTrigger value="evaluare-ai" className="gap-2 rounded-xl px-4 py-2">
+            <BarChart3 className="h-4 w-4" />
+            Evaluare AI
+          </TabsTrigger>
+          <TabsTrigger value="layout-ai" className="gap-2 rounded-xl px-4 py-2">
+            <Network className="h-4 w-4" />
+            Layout AI
           </TabsTrigger>
         </TabsList>
 
@@ -359,7 +554,35 @@ function DocumentsPage() {
             care necesita extragere din text ne-structurat.
           </InfoBanner>
 
-          <DocumentAiUpload onInvoiceSaved={loadDocuments} />
+          <DocumentAiUpload
+            analysis={latestDocumentAiAnalysis}
+            editableFields={latestDocumentAiFields}
+            verifiedFields={latestDocumentAiVerifiedFields}
+            onInvoiceSaved={loadDocuments}
+            onAnalysisChange={handleDocumentAiAnalysisChange}
+            onEditableFieldsChange={handleDocumentAiFieldsChange}
+            onVerifiedFieldsChange={handleDocumentAiVerifiedFieldsChange}
+            onClearAnalysis={clearDocumentAiAnalysis}
+          />
+        </TabsContent>
+
+        <TabsContent value="evaluare-ai" className="space-y-6">
+          <DocumentAiEvaluation
+            analysis={latestDocumentAiAnalysis}
+            predictedText={latestEvaluationPredictedText}
+            expectedText={latestFaturaAnnotationRaw}
+            expectedFields={latestFaturaExpectedFields}
+            result={latestEvaluationResults}
+            onPredictedTextChange={handleEvaluationPredictedTextChange}
+            onExpectedTextChange={handleFaturaAnnotationChange}
+            onExpectedFieldsChange={handleFaturaExpectedFieldsChange}
+            onResultChange={handleEvaluationResultsChange}
+            onClearAnnotation={clearFaturaAnnotation}
+          />
+        </TabsContent>
+
+        <TabsContent value="layout-ai" className="space-y-6">
+          <LayoutAiAnalysis />
         </TabsContent>
       </Tabs>
     </div>
@@ -424,4 +647,72 @@ function markFinancialDataChanged() {
   localStorage.setItem("immapp:ai-forecast-status", "outdated");
   window.dispatchEvent(new Event("immapp:invoice-deleted"));
   window.dispatchEvent(new Event("immapp:ai-forecast-outdated"));
+}
+
+function readStoredText(key: string) {
+  if (typeof window === "undefined") {
+    return "";
+  }
+
+  try {
+    return localStorage.getItem(key) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function writeStoredText(key: string, value: string) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    if (value) {
+      localStorage.setItem(key, value);
+    } else {
+      localStorage.removeItem(key);
+    }
+  } catch {
+    // Browser storage can be unavailable in private or restricted contexts.
+  }
+}
+
+function readStoredJson<T>(key: string): T | null {
+  const value = readStoredText(key);
+
+  if (!value) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredJson(key: string, value: unknown) {
+  writeStoredText(key, JSON.stringify(value));
+}
+
+function removeStorageKeys(keys: string[]) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    keys.forEach((key) => localStorage.removeItem(key));
+  } catch {
+    // Browser storage can be unavailable in private or restricted contexts.
+  }
+}
+
+function parseStoredFaturaExpectedFields(value: string): DocumentAiEvaluationFields | null {
+  try {
+    const parsed = parseFaturaAnnotationToExpected(JSON.parse(value));
+
+    return hasEvaluationFields(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
 }

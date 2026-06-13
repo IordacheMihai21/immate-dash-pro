@@ -421,6 +421,13 @@ function formatRelationType(value: string | null | undefined) {
     are_client: "Client",
     are_total_de_plata: "Total de plata",
     are_tva: "TVA",
+    emite: "Emite",
+    primeste: "Primeste",
+    contine_linii_factura: "Contine linii factura",
+    include_tva: "Include TVA",
+    este_furnizor: "Este furnizor",
+    este_client: "Este client",
+    necesita_asociere: "Necesita asociere",
   };
 
   if (!value) {

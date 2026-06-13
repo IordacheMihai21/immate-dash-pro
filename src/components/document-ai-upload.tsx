@@ -1,4 +1,4 @@
-import { useMemo, useState, type ChangeEvent, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import {
   AlertTriangle,
   BadgeCheck,
@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   FileImage,
   Loader2,
+  Network,
   Save,
   ScanText,
   Sparkles,
@@ -22,6 +23,7 @@ import {
   analyzeInvoiceDocument,
   isSupportedDocumentAiFile,
   type DocumentAiAnalysis,
+  type DocumentAiExtractionMethod,
   type DocumentAiExtractedFields,
   type DocumentAiFieldKey,
 } from "@/lib/documentAiService";
@@ -29,7 +31,8 @@ import { saveDocumentAiInvoice } from "@/lib/invoiceService";
 import { classifyInvoiceByCui, type InvoiceClassification } from "@/lib/cuiUtils";
 import { cn } from "@/lib/utils";
 
-type EditableFields = Record<DocumentAiFieldKey, string>;
+export type DocumentAiEditableFields = Record<DocumentAiFieldKey, string>;
+type PipelineStatus = "finalizat" | "necesită verificare" | "incomplet";
 
 const fieldLabels: Record<DocumentAiFieldKey, string> = {
   invoiceNumber: "Numar factura",
@@ -59,15 +62,33 @@ const fieldOrder: DocumentAiFieldKey[] = [
 
 const numericFields = new Set<DocumentAiFieldKey>(["subtotal", "vatAmount", "totalAmount"]);
 
-export function DocumentAiUpload({ onInvoiceSaved }: { onInvoiceSaved?: () => void }) {
+export function DocumentAiUpload({
+  analysis,
+  editableFields,
+  verifiedFields,
+  onInvoiceSaved,
+  onAnalysisChange,
+  onEditableFieldsChange,
+  onVerifiedFieldsChange,
+  onClearAnalysis,
+}: {
+  analysis: DocumentAiAnalysis | null;
+  editableFields: DocumentAiEditableFields | null;
+  verifiedFields: DocumentAiFieldKey[];
+  onInvoiceSaved?: () => void;
+  onAnalysisChange: (analysis: DocumentAiAnalysis | null) => void;
+  onEditableFieldsChange: (fields: DocumentAiEditableFields | null) => void;
+  onVerifiedFieldsChange: (fields: DocumentAiFieldKey[]) => void;
+  onClearAnalysis: () => void;
+}) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [analysis, setAnalysis] = useState<DocumentAiAnalysis | null>(null);
-  const [editableFields, setEditableFields] = useState<EditableFields | null>(null);
   const [progress, setProgress] = useState(0);
   const [progressLabel, setProgressLabel] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const verifiedFieldSet = useMemo(() => new Set(verifiedFields), [verifiedFields]);
 
   const currentClassification = useMemo(() => {
     if (!analysis || !editableFields) {
@@ -88,15 +109,12 @@ export function DocumentAiUpload({ onInvoiceSaved }: { onInvoiceSaved?: () => vo
     !isProcessing &&
     !isSaving,
   );
+  const readyForSave = Boolean(
+    analysis && editableFields?.invoiceNumber.trim() && toNumber(editableFields?.totalAmount) > 0,
+  );
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] ?? null;
-
-    setAnalysis(null);
-    setEditableFields(null);
-    setIsSaved(false);
-    setProgress(0);
-    setProgressLabel("");
 
     if (!file) {
       setSelectedFile(null);
@@ -110,6 +128,10 @@ export function DocumentAiUpload({ onInvoiceSaved }: { onInvoiceSaved?: () => vo
       return;
     }
 
+    onClearAnalysis();
+    setIsSaved(false);
+    setProgress(0);
+    setProgressLabel("");
     setSelectedFile(file);
   }
 
@@ -130,8 +152,9 @@ export function DocumentAiUpload({ onInvoiceSaved }: { onInvoiceSaved?: () => vo
         setProgressLabel(nextProgress.status);
       });
 
-      setAnalysis(result);
-      setEditableFields(toEditableFields(result.fields));
+      onAnalysisChange(result);
+      onEditableFieldsChange(toDocumentAiEditableFields(result.fields));
+      onVerifiedFieldsChange([]);
       setProgress(100);
       setProgressLabel("Analiza finalizata");
 
@@ -181,7 +204,8 @@ export function DocumentAiUpload({ onInvoiceSaved }: { onInvoiceSaved?: () => vo
         taxAmount: toNumber(editableFields.vatAmount),
         taxInclusiveAmount: toNumber(editableFields.subtotal) + toNumber(editableFields.vatAmount),
         payableAmount: toNumber(editableFields.totalAmount),
-        confidenceByField: toEntityConfidenceMap(analysis),
+        confidenceByField: toEntityConfidenceMap(analysis, verifiedFieldSet),
+        classification: currentClassification,
       });
 
       localStorage.setItem("immapp:ai-forecast-status", "outdated");
@@ -203,16 +227,30 @@ export function DocumentAiUpload({ onInvoiceSaved }: { onInvoiceSaved?: () => vo
   }
 
   function updateField(field: DocumentAiFieldKey, value: string) {
-    setEditableFields((current) => {
-      if (!current) {
-        return current;
-      }
+    if (!editableFields) {
+      return;
+    }
 
-      return {
-        ...current,
-        [field]: value,
-      };
+    onEditableFieldsChange({
+      ...editableFields,
+      [field]: value,
     });
+
+    if (!verifiedFieldSet.has(field)) {
+      onVerifiedFieldsChange([...verifiedFields, field]);
+    }
+  }
+
+  function handleClearAnalysis() {
+    setSelectedFile(null);
+    setIsSaved(false);
+    setProgress(0);
+    setProgressLabel("");
+    onClearAnalysis();
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   }
 
   return (
@@ -230,24 +268,20 @@ export function DocumentAiUpload({ onInvoiceSaved }: { onInvoiceSaved?: () => vo
                 </div>
                 <div>
                   <h3 className="font-semibold text-slate-950">
-                    OCR → Entitati → Validare → Structurare
+                    OCR → Layout → Entități → Validare → Structurare
                   </h3>
                   <p className="mt-1 text-sm text-slate-500">
-                    Incarca o factura ne-structurata si verifica rezultatul inainte de salvare.
+                    Incarca o factura ne-structurata, urmareste fiecare etapa si confirma datele
+                    inainte de salvare.
                   </p>
                 </div>
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <PipelineBadge active={Boolean(analysis?.extractedText)} label="Text extras" />
-                <PipelineBadge active={Boolean(analysis)} label="Campuri detectate" />
-                <PipelineBadge
-                  active={Boolean(analysis && analysis.warnings.length > 0)}
-                  label="Necesita verificare"
-                  tone="amber"
-                />
-                <PipelineBadge active={isSaved} label="Gata de salvare" tone="emerald" />
-              </div>
+              <PipelineStatusGrid
+                analysis={analysis}
+                fields={editableFields}
+                readyForSave={readyForSave}
+              />
             </div>
 
             <div className="space-y-2">
@@ -267,6 +301,7 @@ export function DocumentAiUpload({ onInvoiceSaved }: { onInvoiceSaved?: () => vo
                   </div>
 
                   <Input
+                    ref={fileInputRef}
                     id="document-ai-file"
                     type="file"
                     accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
@@ -276,10 +311,12 @@ export function DocumentAiUpload({ onInvoiceSaved }: { onInvoiceSaved?: () => vo
                   />
                 </div>
 
-                {selectedFile && (
+                {(selectedFile || analysis) && (
                   <div className="mt-4 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-600">
-                    Fisier selectat:{" "}
-                    <span className="font-medium text-slate-950">{selectedFile.name}</span>
+                    {selectedFile ? "Fisier selectat" : "Ultima analiza"}:{" "}
+                    <span className="font-medium text-slate-950">
+                      {selectedFile?.name ?? analysis?.fileName}
+                    </span>
                   </div>
                 )}
               </div>
@@ -322,6 +359,17 @@ export function DocumentAiUpload({ onInvoiceSaved }: { onInvoiceSaved?: () => vo
                 )}
                 Salveaza factura verificata
               </Button>
+
+              {(analysis || selectedFile) && (
+                <Button
+                  variant="ghost"
+                  onClick={handleClearAnalysis}
+                  disabled={isProcessing || isSaving}
+                  className="gap-2 text-slate-600"
+                >
+                  Șterge analiza curentă
+                </Button>
+              )}
             </div>
           </div>
 
@@ -346,6 +394,8 @@ export function DocumentAiUpload({ onInvoiceSaved }: { onInvoiceSaved?: () => vo
                   />
                 </div>
 
+                <LayoutSummaryCard analysis={analysis} />
+
                 {analysis.warnings.length > 0 && (
                   <InfoBanner tone="amber" icon={<AlertTriangle className="h-4 w-4" />}>
                     <div className="space-y-1">
@@ -359,7 +409,21 @@ export function DocumentAiUpload({ onInvoiceSaved }: { onInvoiceSaved?: () => vo
                 <StructuredPreview
                   analysis={analysis}
                   fields={editableFields}
+                  verifiedFields={verifiedFieldSet}
                   onUpdate={updateField}
+                />
+
+                <DetectedRelationshipsCard
+                  analysis={analysis}
+                  fields={editableFields}
+                  classification={currentClassification}
+                />
+
+                <GeneratedStructureCard
+                  analysis={analysis}
+                  fields={editableFields}
+                  classification={currentClassification}
+                  verifiedFields={verifiedFieldSet}
                 />
               </>
             ) : (
@@ -392,33 +456,115 @@ export function DocumentAiUpload({ onInvoiceSaved }: { onInvoiceSaved?: () => vo
   );
 }
 
-function PipelineBadge({
-  active,
-  label,
-  tone = "blue",
+function PipelineStatusGrid({
+  analysis,
+  fields,
+  readyForSave,
 }: {
-  active: boolean;
-  label: string;
-  tone?: "blue" | "amber" | "emerald";
+  analysis: DocumentAiAnalysis | null;
+  fields: DocumentAiEditableFields | null;
+  readyForSave: boolean;
 }) {
-  const styles = {
-    blue: active
-      ? "border-blue-200 bg-blue-50 text-blue-700"
-      : "border-slate-200 bg-white text-slate-500",
-    amber: active
-      ? "border-amber-200 bg-amber-50 text-amber-700"
-      : "border-slate-200 bg-white text-slate-500",
-    emerald: active
-      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-      : "border-slate-200 bg-white text-slate-500",
-  }[tone];
+  const detectedFields = analysis
+    ? Object.values(analysis.fields).filter((value) => value !== null && value !== "").length
+    : 0;
+  const cuiFieldsPresent = Boolean(fields?.supplierCui.trim() && fields.customerCui.trim());
+  const pipelineSteps: {
+    title: string;
+    status: PipelineStatus;
+    description: string;
+  }[] = [
+    {
+      title: "OCR finalizat",
+      status: getPipelineStatus(Boolean(analysis?.extractedText), Boolean(analysis)),
+      description: "Textul facturii este extras din PDF sau imagine.",
+    },
+    {
+      title: "Layout analizat",
+      status: !analysis
+        ? "incomplet"
+        : analysis.layout.hasLayoutData
+          ? "finalizat"
+          : analysis.extractedText.trim()
+            ? "necesită verificare"
+            : "incomplet",
+      description: "Cuvintele, liniile si pozitiile sunt folosite pentru campurile sensibile.",
+    },
+    {
+      title: "Entități detectate",
+      status: !analysis
+        ? "incomplet"
+        : detectedFields >= 8
+          ? "finalizat"
+          : detectedFields > 0
+            ? "necesită verificare"
+            : "incomplet",
+      description: "Numar, data, CUI-uri, TVA si valori financiare.",
+    },
+    {
+      title: "CUI validat",
+      status: !analysis
+        ? "incomplet"
+        : cuiFieldsPresent && analysis.companyCui
+          ? "finalizat"
+          : cuiFieldsPresent
+            ? "necesită verificare"
+            : "incomplet",
+      description: "CUI-ul companiei este comparat cu furnizorul si clientul.",
+    },
+    {
+      title: "Date structurate",
+      status: !analysis ? "incomplet" : readyForSave ? "finalizat" : "necesită verificare",
+      description: "Campurile obligatorii sunt pregatite pentru salvare.",
+    },
+  ];
 
   return (
-    <div className={cn("rounded-xl border px-3 py-2 text-xs font-semibold", styles)}>
-      {active && <CheckCircle2 className="mr-1 inline h-3.5 w-3.5" />}
-      {label}
+    <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      {pipelineSteps.map((step) => (
+        <PipelineStatusCard key={step.title} {...step} />
+      ))}
     </div>
   );
+}
+
+function PipelineStatusCard({
+  title,
+  status,
+  description,
+}: {
+  title: string;
+  status: PipelineStatus;
+  description: string;
+}) {
+  const styles: Record<PipelineStatus, string> = {
+    finalizat: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    "necesită verificare": "border-amber-200 bg-amber-50 text-amber-700",
+    incomplet: "border-slate-200 bg-white text-slate-500",
+  };
+
+  return (
+    <div className={cn("rounded-2xl border p-3", styles[status])}>
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-sm font-semibold text-slate-950">{title}</p>
+        {status === "finalizat" ? (
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+        ) : status === "necesită verificare" ? (
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+        ) : null}
+      </div>
+      <p className="mt-2 text-xs leading-5 text-slate-600">{description}</p>
+      <p className="mt-3 text-xs font-semibold uppercase tracking-wide">{status}</p>
+    </div>
+  );
+}
+
+function getPipelineStatus(done: boolean, started: boolean): PipelineStatus {
+  if (done) {
+    return "finalizat";
+  }
+
+  return started ? "necesită verificare" : "incomplet";
 }
 
 function ScoreCard({ label, value, icon }: { label: string; value: string; icon: ReactNode }) {
@@ -433,13 +579,65 @@ function ScoreCard({ label, value, icon }: { label: string; value: string; icon:
   );
 }
 
+function LayoutSummaryCard({ analysis }: { analysis: DocumentAiAnalysis }) {
+  const positionedPercent =
+    analysis.layout.wordCount > 0
+      ? Math.round((analysis.layout.wordsWithPosition / analysis.layout.wordCount) * 100)
+      : 0;
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <h3 className="font-semibold text-slate-950">Analiza layout</h3>
+          <p className="mt-1 text-sm text-slate-500">
+            Rezumat al cuvintelor si pozitiilor folosite in extragere.
+          </p>
+        </div>
+        <Badge
+          variant="outline"
+          className={cn(
+            "rounded-full",
+            analysis.layout.hasLayoutData
+              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+              : "border-amber-200 bg-amber-50 text-amber-700",
+          )}
+        >
+          {analysis.layout.hasLayoutData ? "Layout disponibil" : "Verificare vizuala"}
+        </Badge>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-4">
+        <LayoutMetric label="Cuvinte OCR" value={String(analysis.layout.wordCount)} />
+        <LayoutMetric label="Cu pozitii" value={`${positionedPercent}%`} />
+        <LayoutMetric label="Linii detectate" value={String(analysis.layout.detectedLines)} />
+        <LayoutMetric
+          label="Incredere cuvinte"
+          value={`${Math.round(analysis.layout.averageWordConfidence * 100)}%`}
+        />
+      </div>
+    </div>
+  );
+}
+
+function LayoutMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl bg-slate-50 p-3">
+      <p className="text-xs text-slate-500">{label}</p>
+      <p className="mt-1 text-base font-semibold text-slate-950">{value}</p>
+    </div>
+  );
+}
+
 function StructuredPreview({
   analysis,
   fields,
+  verifiedFields,
   onUpdate,
 }: {
   analysis: DocumentAiAnalysis;
-  fields: EditableFields | null;
+  fields: DocumentAiEditableFields | null;
+  verifiedFields: Set<DocumentAiFieldKey>;
   onUpdate: (field: DocumentAiFieldKey, value: string) => void;
 }) {
   if (!fields) {
@@ -461,25 +659,148 @@ function StructuredPreview({
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        {fieldOrder.map((field) => (
-          <div key={field} className="space-y-1.5 rounded-xl bg-slate-50 p-3">
-            <div className="flex items-center justify-between gap-2">
-              <Label htmlFor={`document-ai-${field}`} className="text-xs text-slate-500">
-                {fieldLabels[field]}
-              </Label>
-              <span className="text-xs font-medium text-slate-400">
-                {formatConfidence(analysis.confidences[field])}
+        {fieldOrder.map((field) => {
+          const isVerified = verifiedFields.has(field);
+          const fieldDetail = analysis.fieldDetails[field];
+          const displayMethod = isVerified ? "User verified" : fieldDetail.method;
+          const missing = !fields[field]?.trim();
+          const lowConfidence = !missing && fieldDetail.confidence < 0.55;
+
+          return (
+            <div
+              key={field}
+              className={cn(
+                "space-y-2 rounded-xl border bg-slate-50 p-3",
+                missing
+                  ? "border-rose-200 bg-rose-50/70"
+                  : lowConfidence
+                    ? "border-amber-200 bg-amber-50/70"
+                    : "border-slate-100",
+              )}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <Label htmlFor={`document-ai-${field}`} className="text-xs text-slate-500">
+                  {fieldLabels[field]}
+                </Label>
+                <span
+                  className={cn(
+                    "rounded-full px-2 py-0.5 text-xs font-semibold",
+                    getConfidenceTone(isVerified ? 1 : fieldDetail.confidence),
+                  )}
+                >
+                  {formatConfidence(isVerified ? 1 : fieldDetail.confidence)}
+                </span>
+              </div>
+
+              <Input
+                id={`document-ai-${field}`}
+                value={fields[field]}
+                inputMode={numericFields.has(field) ? "decimal" : "text"}
+                onChange={(event) => onUpdate(field, event.target.value)}
+                placeholder="Nedetectat"
+                className="bg-white"
+              />
+
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <Badge variant="outline" className="rounded-full bg-white">
+                  {formatExtractionMethod(displayMethod)}
+                </Badge>
+                {(missing || lowConfidence || fieldDetail.warning) && (
+                  <span className={missing ? "text-rose-600" : "text-amber-700"}>
+                    {missing ? "Camp lipsa" : (fieldDetail.warning ?? "Necesită verificare")}
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function GeneratedStructureCard({
+  analysis,
+  fields,
+  classification,
+  verifiedFields,
+}: {
+  analysis: DocumentAiAnalysis;
+  fields: DocumentAiEditableFields | null;
+  classification: InvoiceClassification;
+  verifiedFields: Set<DocumentAiFieldKey>;
+}) {
+  const generatedStructure = buildGeneratedStructure(
+    analysis,
+    fields,
+    classification,
+    verifiedFields,
+  );
+
+  return (
+    <details className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <summary className="cursor-pointer select-none text-sm font-semibold text-slate-950">
+        Structură generată
+      </summary>
+      <p className="mt-2 text-sm text-slate-500">
+        Previzualizare a datelor structurate rezultate din pipeline.
+      </p>
+      <pre className="mt-4 max-h-80 overflow-auto rounded-xl bg-slate-950 p-4 text-xs leading-5 text-slate-100">
+        {JSON.stringify(generatedStructure, null, 2)}
+      </pre>
+    </details>
+  );
+}
+
+function DetectedRelationshipsCard({
+  analysis,
+  fields,
+  classification,
+}: {
+  analysis: DocumentAiAnalysis;
+  fields: DocumentAiEditableFields | null;
+  classification: InvoiceClassification;
+}) {
+  const relationships = buildDetectedRelationships(analysis, fields, classification);
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="font-semibold text-slate-950">Relații detectate</h3>
+          <p className="mt-1 text-sm text-slate-500">
+            Model semantic intre entitatile extrase si rolul companiei in factura.
+          </p>
+        </div>
+        <Badge variant="outline" className="rounded-full bg-blue-50 text-blue-700">
+          <Network className="mr-1 h-3.5 w-3.5" />
+          {relationships.length} relatii
+        </Badge>
+      </div>
+
+      <div className="grid gap-3">
+        {relationships.map((relationship) => (
+          <div
+            key={`${relationship.source}-${relationship.relation}-${relationship.target}`}
+            className="grid gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-3 sm:grid-cols-[1fr_auto_1fr_auto]"
+          >
+            <RelationshipNode label="Sursa" value={relationship.source} />
+            <div className="flex items-center justify-center">
+              <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm">
+                {relationship.relation}
               </span>
             </div>
-
-            <Input
-              id={`document-ai-${field}`}
-              value={fields[field]}
-              inputMode={numericFields.has(field) ? "decimal" : "text"}
-              onChange={(event) => onUpdate(field, event.target.value)}
-              placeholder="Nedetectat"
-              className="bg-white"
-            />
+            <RelationshipNode label="Tinta" value={relationship.target} />
+            <div className="flex items-center justify-end">
+              <span
+                className={cn(
+                  "rounded-full px-2.5 py-1 text-xs font-semibold",
+                  getConfidenceTone(relationship.confidence),
+                )}
+              >
+                {formatConfidence(relationship.confidence)}
+              </span>
+            </div>
           </div>
         ))}
       </div>
@@ -487,31 +808,164 @@ function StructuredPreview({
   );
 }
 
-function toEditableFields(fields: DocumentAiExtractedFields): EditableFields {
+function RelationshipNode({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-slate-950">{value}</p>
+    </div>
+  );
+}
+
+export function toDocumentAiEditableFields(
+  fields: DocumentAiExtractedFields,
+): DocumentAiEditableFields {
   return fieldOrder.reduce((acc, key) => {
     const value = fields[key];
 
     acc[key] =
-      typeof value === "number" ? value.toFixed(2) : typeof value === "string" ? value : "";
+      typeof value === "number"
+        ? value.toFixed(2).replace(".", ",")
+        : typeof value === "string"
+          ? value
+          : "";
 
     return acc;
-  }, {} as EditableFields);
+  }, {} as DocumentAiEditableFields);
 }
 
-function toEntityConfidenceMap(analysis: DocumentAiAnalysis) {
+function toEntityConfidenceMap(
+  analysis: DocumentAiAnalysis,
+  verifiedFields: Set<DocumentAiFieldKey>,
+) {
+  const confidenceFor = (field: DocumentAiFieldKey) =>
+    verifiedFields.has(field) ? 1 : analysis.confidences[field];
+
   return {
-    invoice_number: analysis.confidences.invoiceNumber,
-    issue_date: analysis.confidences.invoiceDate,
-    supplier_name: analysis.confidences.supplierName,
-    supplier_cui: analysis.confidences.supplierCui,
-    customer_name: analysis.confidences.customerName,
-    customer_cui: analysis.confidences.customerCui,
-    tax_exclusive_amount: analysis.confidences.subtotal,
-    tax_amount: analysis.confidences.vatAmount,
-    tax_inclusive_amount: analysis.confidences.totalAmount,
-    payable_amount: analysis.confidences.totalAmount,
-    currency: analysis.confidences.currency,
+    invoice_number: confidenceFor("invoiceNumber"),
+    issue_date: confidenceFor("invoiceDate"),
+    supplier_name: confidenceFor("supplierName"),
+    supplier_cui: confidenceFor("supplierCui"),
+    customer_name: confidenceFor("customerName"),
+    customer_cui: confidenceFor("customerCui"),
+    tax_exclusive_amount: confidenceFor("subtotal"),
+    tax_amount: confidenceFor("vatAmount"),
+    tax_inclusive_amount: confidenceFor("totalAmount"),
+    payable_amount: confidenceFor("totalAmount"),
+    currency: confidenceFor("currency"),
   };
+}
+
+function buildGeneratedStructure(
+  analysis: DocumentAiAnalysis,
+  fields: DocumentAiEditableFields | null,
+  classification: InvoiceClassification,
+  verifiedFields: Set<DocumentAiFieldKey>,
+) {
+  const extractedFields = fieldOrder.reduce(
+    (acc, field) => {
+      const verified = verifiedFields.has(field);
+      const detail = analysis.fieldDetails[field];
+
+      return {
+        ...acc,
+        [field]: {
+          value: fields?.[field] ?? detail.value,
+          confidence: verified ? 1 : detail.confidence,
+          method: verified ? "User verified" : detail.method,
+          warning: verified ? undefined : detail.warning,
+        },
+      };
+    },
+    {} as Record<
+      DocumentAiFieldKey,
+      {
+        value: string | number | null;
+        confidence: number;
+        method: DocumentAiExtractionMethod;
+        warning?: string;
+      }
+    >,
+  );
+
+  return {
+    document_type: "document-ai",
+    extraction_method: "document_ai",
+    classification,
+    confidence: analysis.overallConfidence,
+    layout: {
+      word_count: analysis.layout.wordCount,
+      words_with_position: analysis.layout.wordsWithPosition,
+      detected_lines: analysis.layout.detectedLines,
+      has_layout_data: analysis.layout.hasLayoutData,
+    },
+    extracted_fields: extractedFields,
+    relationships: buildDetectedRelationships(analysis, fields, classification),
+    warnings: analysis.warnings,
+  };
+}
+
+function buildDetectedRelationships(
+  analysis: DocumentAiAnalysis,
+  fields: DocumentAiEditableFields | null,
+  classification: InvoiceClassification,
+) {
+  const invoiceLabel = fields?.invoiceNumber?.trim()
+    ? `Factura ${fields.invoiceNumber.trim()}`
+    : "Factura";
+  const supplierLabel = fields?.supplierName?.trim() || fields?.supplierCui?.trim() || "Furnizor";
+  const customerLabel = fields?.customerName?.trim() || fields?.customerCui?.trim() || "Client";
+  const totalConfidence = Math.max(
+    analysis.confidences.totalAmount,
+    analysis.confidences.vatAmount,
+  );
+  const partyConfidence = Math.max(
+    analysis.confidences.supplierCui,
+    analysis.confidences.customerCui,
+  );
+  const companyTarget: Record<InvoiceClassification, string> = {
+    revenue: "Venit",
+    expense: "Cheltuială",
+    unclassified: "Neclasificat",
+  };
+  const companyRelation: Record<InvoiceClassification, string> = {
+    revenue: "este furnizor",
+    expense: "este client",
+    unclassified: "necesită asociere",
+  };
+
+  return [
+    {
+      source: supplierLabel,
+      relation: "emite",
+      target: invoiceLabel,
+      confidence: Math.max(analysis.confidences.supplierName, analysis.confidences.supplierCui),
+    },
+    {
+      source: customerLabel,
+      relation: "primește",
+      target: invoiceLabel,
+      confidence: Math.max(analysis.confidences.customerName, analysis.confidences.customerCui),
+    },
+    {
+      source: invoiceLabel,
+      relation: "conține",
+      target: "Linii factură",
+      confidence: Math.max(0.45, analysis.overallConfidence / 100 - 0.1),
+    },
+    {
+      source: invoiceLabel,
+      relation: "include",
+      target: "TVA",
+      confidence: totalConfidence,
+    },
+    {
+      source: "Companie curentă",
+      relation: companyRelation[classification],
+      target: companyTarget[classification],
+      confidence: classification === "unclassified" ? 0.35 : Math.max(0.65, partyConfidence),
+    },
+  ];
 }
 
 function toNumber(value: string | null | undefined) {
@@ -531,6 +985,29 @@ function formatConfidence(value: number) {
   }
 
   return `${Math.round(value * 100)}%`;
+}
+
+function getConfidenceTone(value: number) {
+  if (value >= 0.75) {
+    return "bg-emerald-50 text-emerald-700";
+  }
+
+  if (value >= 0.55) {
+    return "bg-amber-50 text-amber-700";
+  }
+
+  return "bg-rose-50 text-rose-700";
+}
+
+function formatExtractionMethod(value: DocumentAiExtractionMethod | "User verified") {
+  const labels: Record<string, string> = {
+    OCR: "OCR",
+    Regex: "Regex",
+    "Layout heuristic": "Layout heuristic",
+    "User verified": "User verified",
+  };
+
+  return labels[value] ?? value;
 }
 
 function getClassificationLabel(value: InvoiceClassification) {
