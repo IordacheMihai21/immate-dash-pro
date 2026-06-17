@@ -50,6 +50,30 @@ export type DocumentAiLayoutInfo = {
   hasLayoutData: boolean;
 };
 
+export type DocumentAiOcrAttempt = {
+  variant: string;
+  label: string;
+  confidence: number;
+  wordCount: number;
+  usefulWordCount: number;
+  invoiceKeywordCount: number;
+  score: number;
+  selected?: boolean;
+  error?: string;
+};
+
+export type DocumentAiOcrDetails = {
+  selectedVariant: string;
+  selectedLabel: string;
+  confidence: number;
+  wordCount: number;
+  usefulWordCount: number;
+  invoiceKeywordCount: number;
+  score: number;
+  preprocessingApplied: boolean;
+  attempts: DocumentAiOcrAttempt[];
+};
+
 export type DocumentAiAnalysis = {
   fileName: string;
   fileType: string;
@@ -61,6 +85,7 @@ export type DocumentAiAnalysis = {
   fieldDetails: DocumentAiFieldDetails;
   ocrWords: OcrWord[];
   layout: DocumentAiLayoutInfo;
+  ocrDetails?: DocumentAiOcrDetails;
   warnings: string[];
   classification: InvoiceClassification;
   companyCui: string;
@@ -137,6 +162,45 @@ type PdfJsModule = {
   }) => PdfLoadingTask;
 };
 
+type TextExtractionResult = {
+  text: string;
+  confidence: number;
+  words: OcrWord[];
+  ocrDetails?: DocumentAiOcrDetails;
+};
+
+type TesseractRecognizeResult = {
+  data: {
+    text?: string;
+    confidence?: number | null;
+  } & Record<string, unknown>;
+};
+
+type TesseractLike = {
+  recognize: (
+    image: unknown,
+    language: string,
+    options?: {
+      logger?: (message: { status?: string; progress?: number }) => void;
+    },
+  ) => Promise<TesseractRecognizeResult>;
+};
+
+type OcrImageVariant = {
+  variant: string;
+  label: string;
+  input: File | Blob;
+  preprocessingApplied: boolean;
+};
+
+type OcrVariantResult = TextExtractionResult & {
+  variant: string;
+  label: string;
+  usefulWordCount: number;
+  invoiceKeywordCount: number;
+  score: number;
+};
+
 const EMPTY_FIELDS: DocumentAiExtractedFields = {
   invoiceNumber: null,
   invoiceDate: null,
@@ -175,6 +239,25 @@ const fieldLabels: Record<DocumentAiFieldKey, string> = {
   totalAmount: "Total de plata",
   currency: "Moneda",
 };
+
+const OCR_KEYWORDS = [
+  "invoice",
+  "date",
+  "total",
+  "tax",
+  "vat",
+  "gst",
+  "subtotal",
+  "buyer",
+  "seller",
+  "address",
+  "cui",
+  "cif",
+  "tva",
+  "factura",
+];
+
+const MAX_OCR_IMAGE_DIMENSION = 3200;
 
 export function isSupportedDocumentAiFile(file: File) {
   const extension = file.name.split(".").pop()?.toLowerCase();
@@ -228,6 +311,7 @@ export async function analyzeInvoiceDocument(
     fieldDetails,
     ocrWords: extraction.words,
     layout,
+    ocrDetails: extraction.ocrDetails,
     warnings,
     classification,
     companyCui,
@@ -237,45 +321,131 @@ export async function analyzeInvoiceDocument(
 async function extractText(
   file: File,
   onProgress?: (progress: OcrProgress) => void,
-): Promise<{ text: string; confidence: number; words: OcrWord[] }> {
+): Promise<TextExtractionResult> {
   if (isPdfFile(file)) {
     onProgress?.({ status: "Se extrage textul din PDF", progress: 0.2 });
     const pdfText = await extractSelectablePdfText(file, onProgress);
 
     if (pdfText.trim().length >= 40) {
       onProgress?.({ status: "Text extras din PDF", progress: 1 });
+      const ocrDetails = buildOcrDetailsFromText("pdf-text", "Text PDF selectabil", pdfText, 0.72, []);
 
       return {
         text: pdfText,
         confidence: 0.72,
         words: [],
+        ocrDetails,
       };
     }
 
     onProgress?.({ status: "PDF-ul necesita verificare", progress: 1 });
+    const ocrDetails = buildOcrDetailsFromText("pdf-text", "Text PDF verificat", pdfText, 0.2, []);
 
     return {
       text: pdfText,
       confidence: 0.2,
       words: [],
+      ocrDetails,
     };
   }
 
-  onProgress?.({ status: "Se porneste OCR", progress: 0.05 });
+  onProgress?.({ status: "Se pregateste preprocesarea imaginii", progress: 0.05 });
 
   const tesseractModule = await import("tesseract.js");
-  const tesseract = tesseractModule.default;
-  const logger = (message: { status?: string; progress?: number }) => {
-    if (typeof message.progress === "number") {
-      onProgress?.({
-        status: translateOcrStatus(message.status),
-        progress: Math.max(0.05, Math.min(message.progress, 1)),
+  const tesseract = tesseractModule.default as TesseractLike;
+  const variants = await createImageOcrVariants(file);
+  const results: OcrVariantResult[] = [];
+  const failedAttempts: DocumentAiOcrAttempt[] = [];
+
+  for (const [index, variant] of variants.entries()) {
+    const baseProgress = 0.08 + (index / variants.length) * 0.84;
+    const progressSpan = 0.84 / variants.length;
+    const logger = (message: { status?: string; progress?: number }) => {
+      if (typeof message.progress === "number") {
+        onProgress?.({
+          status: `OCR ${index + 1}/${variants.length}: ${variant.label}`,
+          progress: Math.max(
+            0.08,
+            Math.min(baseProgress + message.progress * progressSpan, 0.95),
+          ),
+        });
+      } else if (message.status) {
+        onProgress?.({
+          status: translateOcrStatus(message.status),
+          progress: Math.max(0.08, Math.min(baseProgress, 0.95)),
+        });
+      }
+    };
+
+    try {
+      const extraction = await recognizeImageVariant(tesseract, variant.input, logger);
+      const score = scoreOcrResult(extraction.text, extraction.confidence, extraction.words);
+
+      results.push({
+        ...extraction,
+        variant: variant.variant,
+        label: variant.label,
+        usefulWordCount: score.usefulWordCount,
+        invoiceKeywordCount: score.invoiceKeywordCount,
+        score: score.score,
+      });
+    } catch (error) {
+      failedAttempts.push({
+        variant: variant.variant,
+        label: variant.label,
+        confidence: 0,
+        wordCount: 0,
+        usefulWordCount: 0,
+        invoiceKeywordCount: 0,
+        score: 0,
+        error:
+          error instanceof Error
+            ? error.message
+            : "OCR-ul nu a putut procesa aceasta varianta.",
       });
     }
-  };
+  }
 
+  const bestResult = results.sort((a, b) => b.score - a.score)[0];
+
+  if (!bestResult) {
+    onProgress?.({ status: "OCR-ul necesita verificare", progress: 1 });
+
+    return {
+      text: "",
+      confidence: 0,
+      words: [],
+      ocrDetails: {
+        selectedVariant: "none",
+        selectedLabel: "Nicio varianta selectata",
+        confidence: 0,
+        wordCount: 0,
+        usefulWordCount: 0,
+        invoiceKeywordCount: 0,
+        score: 0,
+        preprocessingApplied: true,
+        attempts: failedAttempts,
+      },
+    };
+  }
+
+  onProgress?.({ status: `OCR selectat: ${bestResult.label}`, progress: 1 });
+
+  return {
+    text: bestResult.text,
+    confidence: bestResult.confidence,
+    words: bestResult.words,
+    ocrDetails: buildOcrDetailsFromVariant(bestResult, variants, results, failedAttempts),
+  };
+}
+
+async function recognizeImageVariant(
+  tesseract: TesseractLike,
+  input: File | Blob,
+  logger: (message: { status?: string; progress?: number }) => void,
+): Promise<TextExtractionResult> {
   try {
-    const result = await tesseract.recognize(file, "ron+eng", { logger });
+    const result = await tesseract.recognize(input, "ron+eng", { logger });
 
     return {
       text: result.data.text ?? "",
@@ -283,7 +453,7 @@ async function extractText(
       words: extractOcrWords(result.data),
     };
   } catch {
-    const result = await tesseract.recognize(file, "eng", { logger });
+    const result = await tesseract.recognize(input, "eng", { logger });
 
     return {
       text: result.data.text ?? "",
@@ -291,6 +461,290 @@ async function extractText(
       words: extractOcrWords(result.data),
     };
   }
+}
+
+async function createImageOcrVariants(file: File): Promise<OcrImageVariant[]> {
+  const image = await loadImageElement(file);
+
+  try {
+    const variants: OcrImageVariant[] = [
+      {
+        variant: "original",
+        label: "Original",
+        input: file,
+        preprocessingApplied: false,
+      },
+    ];
+    const preprocessingModes: Array<{
+      variant: OcrImageVariant["variant"];
+      label: string;
+      mode: Parameters<typeof createProcessedImageBlob>[1];
+    }> = [
+      { variant: "grayscale", label: "Tonuri de gri", mode: "grayscale" },
+      { variant: "contrast", label: "Contrast imbunatatit", mode: "contrast" },
+      { variant: "resized-2x", label: "Redimensionat 2x", mode: "resized-2x" },
+      { variant: "threshold", label: "Binarizat", mode: "threshold" },
+      { variant: "sharpened", label: "Claritate imbunatatita", mode: "sharpened" },
+    ];
+
+    for (const mode of preprocessingModes) {
+      try {
+        variants.push({
+          variant: mode.variant,
+          label: mode.label,
+          input: await createProcessedImageBlob(image, mode.mode),
+          preprocessingApplied: true,
+        });
+      } catch (error) {
+        console.debug("Document AI OCR preprocessing skipped", {
+          variant: mode.variant,
+          error: error instanceof Error ? error.message : "Preprocesare indisponibila",
+        });
+      }
+    }
+
+    return variants;
+  } finally {
+    if (image.src.startsWith("blob:")) {
+      URL.revokeObjectURL(image.src);
+    }
+  }
+}
+
+function loadImageElement(file: File): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+
+    image.onload = () => resolve(image);
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Imaginea nu a putut fi incarcata pentru preprocesare."));
+    };
+    image.src = url;
+  });
+}
+
+async function createProcessedImageBlob(
+  image: HTMLImageElement,
+  mode: "grayscale" | "contrast" | "resized-2x" | "threshold" | "sharpened",
+) {
+  const scale = getImageScale(image, mode === "resized-2x" ? 2 : 1);
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+
+  if (!context) {
+    throw new Error("Canvas-ul nu este disponibil pentru preprocesarea imaginii.");
+  }
+
+  canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+  canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+  if (mode !== "resized-2x") {
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+
+    if (mode === "grayscale") {
+      applyGrayscale(imageData);
+    }
+
+    if (mode === "contrast") {
+      applyContrast(imageData, 1.55);
+    }
+
+    if (mode === "threshold") {
+      applyThreshold(imageData, 156);
+    }
+
+    if (mode === "sharpened") {
+      applyContrast(imageData, 1.2);
+      applySharpen(imageData);
+    }
+
+    context.putImageData(imageData, 0, 0);
+  }
+
+  return canvasToBlob(canvas);
+}
+
+function getImageScale(image: HTMLImageElement, requestedScale: number) {
+  const maxDimension = Math.max(image.naturalWidth, image.naturalHeight);
+
+  if (maxDimension <= 0) {
+    return 1;
+  }
+
+  return Math.min(requestedScale, MAX_OCR_IMAGE_DIMENSION / maxDimension);
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) {
+        resolve(blob);
+        return;
+      }
+
+      reject(new Error("Varianta OCR nu a putut fi generata."));
+    }, "image/png");
+  });
+}
+
+function applyGrayscale(imageData: ImageData) {
+  const { data } = imageData;
+
+  for (let index = 0; index < data.length; index += 4) {
+    const gray = Math.round(data[index] * 0.299 + data[index + 1] * 0.587 + data[index + 2] * 0.114);
+
+    data[index] = gray;
+    data[index + 1] = gray;
+    data[index + 2] = gray;
+  }
+}
+
+function applyContrast(imageData: ImageData, factor: number) {
+  const { data } = imageData;
+
+  for (let index = 0; index < data.length; index += 4) {
+    const gray = data[index] * 0.299 + data[index + 1] * 0.587 + data[index + 2] * 0.114;
+    const contrasted = clampByte((gray - 128) * factor + 128);
+
+    data[index] = contrasted;
+    data[index + 1] = contrasted;
+    data[index + 2] = contrasted;
+  }
+}
+
+function applyThreshold(imageData: ImageData, threshold: number) {
+  const { data } = imageData;
+
+  for (let index = 0; index < data.length; index += 4) {
+    const gray = data[index] * 0.299 + data[index + 1] * 0.587 + data[index + 2] * 0.114;
+    const value = gray >= threshold ? 255 : 0;
+
+    data[index] = value;
+    data[index + 1] = value;
+    data[index + 2] = value;
+  }
+}
+
+function applySharpen(imageData: ImageData) {
+  const { width, height, data } = imageData;
+  const source = new Uint8ClampedArray(data);
+  const kernel = [0, -1, 0, -1, 5, -1, 0, -1, 0];
+
+  for (let y = 1; y < height - 1; y += 1) {
+    for (let x = 1; x < width - 1; x += 1) {
+      for (let channel = 0; channel < 3; channel += 1) {
+        let value = 0;
+
+        for (let ky = -1; ky <= 1; ky += 1) {
+          for (let kx = -1; kx <= 1; kx += 1) {
+            const pixelIndex = ((y + ky) * width + (x + kx)) * 4 + channel;
+            const kernelIndex = (ky + 1) * 3 + (kx + 1);
+
+            value += source[pixelIndex] * kernel[kernelIndex];
+          }
+        }
+
+        data[(y * width + x) * 4 + channel] = clampByte(value);
+      }
+    }
+  }
+}
+
+function clampByte(value: number) {
+  return Math.max(0, Math.min(255, Math.round(value)));
+}
+
+function scoreOcrResult(text: string, confidence: number, words: OcrWord[]) {
+  const wordCount = words.length > 0 ? words.length : countWords(text);
+  const usefulWordCount = countUsefulWords(text);
+  const invoiceKeywordCount = countInvoiceKeywords(text);
+  const usefulWordFactor = Math.min(usefulWordCount / 250, 1);
+  const keywordFactor = Math.min(invoiceKeywordCount / 8, 1);
+  const shortTextPenalty = text.trim().length < 80 || wordCount < 10 ? 0.15 : 0;
+  const score = Math.max(
+    0,
+    Math.min(1, confidence * 0.5 + usefulWordFactor * 0.25 + keywordFactor * 0.25 - shortTextPenalty),
+  );
+
+  return {
+    score,
+    wordCount,
+    usefulWordCount,
+    invoiceKeywordCount,
+  };
+}
+
+function buildOcrDetailsFromVariant(
+  bestResult: OcrVariantResult,
+  variants: OcrImageVariant[],
+  results: OcrVariantResult[],
+  failedAttempts: DocumentAiOcrAttempt[],
+): DocumentAiOcrDetails {
+  const attempts: DocumentAiOcrAttempt[] = [
+    ...results.map((result) => ({
+      variant: result.variant,
+      label: result.label,
+      confidence: result.confidence,
+      wordCount: result.words.length > 0 ? result.words.length : countWords(result.text),
+      usefulWordCount: result.usefulWordCount,
+      invoiceKeywordCount: result.invoiceKeywordCount,
+      score: result.score,
+      selected: result.variant === bestResult.variant,
+    })),
+    ...failedAttempts,
+  ].sort((a, b) => b.score - a.score);
+
+  const selectedVariant = variants.find((variant) => variant.variant === bestResult.variant);
+
+  return {
+    selectedVariant: bestResult.variant,
+    selectedLabel: bestResult.label,
+    confidence: bestResult.confidence,
+    wordCount: bestResult.words.length > 0 ? bestResult.words.length : countWords(bestResult.text),
+    usefulWordCount: bestResult.usefulWordCount,
+    invoiceKeywordCount: bestResult.invoiceKeywordCount,
+    score: bestResult.score,
+    preprocessingApplied: Boolean(selectedVariant?.preprocessingApplied),
+    attempts,
+  };
+}
+
+function buildOcrDetailsFromText(
+  variant: string,
+  label: string,
+  text: string,
+  confidence: number,
+  words: OcrWord[],
+): DocumentAiOcrDetails {
+  const score = scoreOcrResult(text, confidence, words);
+
+  return {
+    selectedVariant: variant,
+    selectedLabel: label,
+    confidence,
+    wordCount: score.wordCount,
+    usefulWordCount: score.usefulWordCount,
+    invoiceKeywordCount: score.invoiceKeywordCount,
+    score: score.score,
+    preprocessingApplied: false,
+    attempts: [
+      {
+        variant,
+        label,
+        confidence,
+        wordCount: score.wordCount,
+        usefulWordCount: score.usefulWordCount,
+        invoiceKeywordCount: score.invoiceKeywordCount,
+        score: score.score,
+        selected: true,
+      },
+    ],
+  };
 }
 
 async function extractSelectablePdfText(
@@ -1814,6 +2268,28 @@ function translateOcrStatus(status: string | undefined) {
   }
 
   return "Se proceseaza documentul";
+}
+
+function countWords(text: string) {
+  return text.split(/\s+/).filter(Boolean).length;
+}
+
+function countUsefulWords(text: string) {
+  return text
+    .split(/\s+/)
+    .map((word) => word.replace(/[^\p{L}\p{N}]/gu, ""))
+    .filter((word) => word.length >= 2 && /[\p{L}\p{N}]/u.test(word)).length;
+}
+
+function countInvoiceKeywords(text: string) {
+  const normalizedText = removeDiacritics(text).toLowerCase();
+
+  return OCR_KEYWORDS.filter((keyword) => {
+    const normalizedKeyword = removeDiacritics(keyword).toLowerCase();
+    const pattern = new RegExp(`\\b${escapeRegExp(normalizedKeyword)}\\b`, "i");
+
+    return pattern.test(normalizedText);
+  }).length;
 }
 
 function getFileExtension(fileName: string) {

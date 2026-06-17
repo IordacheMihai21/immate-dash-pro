@@ -584,6 +584,7 @@ function LayoutSummaryCard({ analysis }: { analysis: DocumentAiAnalysis }) {
     analysis.layout.wordCount > 0
       ? Math.round((analysis.layout.wordsWithPosition / analysis.layout.wordCount) * 100)
       : 0;
+  const ocrDetails = analysis.ocrDetails;
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -616,6 +617,8 @@ function LayoutSummaryCard({ analysis }: { analysis: DocumentAiAnalysis }) {
           value={`${Math.round(analysis.layout.averageWordConfidence * 100)}%`}
         />
       </div>
+
+      {ocrDetails && <OcrDetailsPanel details={ocrDetails} extractedText={analysis.extractedText} />}
     </div>
   );
 }
@@ -625,6 +628,71 @@ function LayoutMetric({ label, value }: { label: string; value: string }) {
     <div className="rounded-xl bg-slate-50 p-3">
       <p className="text-xs text-slate-500">{label}</p>
       <p className="mt-1 text-base font-semibold text-slate-950">{value}</p>
+    </div>
+  );
+}
+
+function OcrDetailsPanel({
+  details,
+  extractedText,
+}: {
+  details: NonNullable<DocumentAiAnalysis["ocrDetails"]>;
+  extractedText: string;
+}) {
+  return (
+    <div className="mt-4 rounded-2xl border border-blue-100 bg-blue-50/60 p-4">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h4 className="font-semibold text-slate-950">Preprocesare imagine</h4>
+          <p className="mt-1 text-sm text-slate-600">
+            IMMapp compara mai multe variante OCR si pastreaza rezultatul cu cel mai bun scor.
+          </p>
+        </div>
+        <Badge variant="outline" className="rounded-full bg-white text-blue-700">
+          {details.preprocessingApplied ? "Preprocesare aplicata" : "Text extras direct"}
+        </Badge>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <LayoutMetric label="Variantă OCR selectată" value={details.selectedLabel} />
+        <LayoutMetric label="Încredere OCR" value={formatConfidence(details.confidence)} />
+        <LayoutMetric label="Număr cuvinte" value={String(details.wordCount)} />
+        <LayoutMetric label="Cuvinte relevante" value={String(details.usefulWordCount)} />
+        <LayoutMetric label="Cuvinte-cheie detectate" value={String(details.invoiceKeywordCount)} />
+        <LayoutMetric label="Încercări OCR" value={String(details.attempts.length)} />
+        <LayoutMetric label="Scor OCR" value={formatConfidence(details.score)} />
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        {details.attempts.map((attempt) => (
+          <span
+            key={attempt.variant}
+            className={cn(
+              "rounded-full border px-3 py-1 text-xs font-semibold",
+              attempt.selected
+                ? "border-blue-200 bg-white text-blue-700"
+                : "border-slate-200 bg-white/70 text-slate-600",
+            )}
+          >
+            {attempt.label}: {formatConfidence(attempt.score)}
+          </span>
+        ))}
+      </div>
+
+      <details className="mt-4 rounded-xl border border-blue-100 bg-white p-3">
+        <summary className="cursor-pointer select-none text-sm font-semibold text-slate-950">
+          Detalii OCR
+        </summary>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <LayoutMetric label="Variantă selectată" value={details.selectedLabel} />
+          <LayoutMetric label="Încredere OCR" value={formatConfidence(details.confidence)} />
+          <LayoutMetric label="Scor OCR" value={formatConfidence(details.score)} />
+          <LayoutMetric label="Cuvinte-cheie detectate" value={String(details.invoiceKeywordCount)} />
+        </div>
+        <pre className="mt-3 max-h-56 overflow-auto rounded-xl bg-slate-950 p-4 text-xs leading-5 text-slate-100">
+          {(extractedText.trim() || "Nu exista text OCR selectat.").slice(0, 1000)}
+        </pre>
+      </details>
     </div>
   );
 }
@@ -899,6 +967,21 @@ function buildGeneratedStructure(
       detected_lines: analysis.layout.detectedLines,
       has_layout_data: analysis.layout.hasLayoutData,
     },
+    ocr: analysis.ocrDetails
+      ? {
+          selected_variant: analysis.ocrDetails.selectedLabel,
+          confidence: analysis.ocrDetails.confidence,
+          score: analysis.ocrDetails.score,
+          word_count: analysis.ocrDetails.wordCount,
+          relevant_words: analysis.ocrDetails.usefulWordCount,
+          detected_keywords: analysis.ocrDetails.invoiceKeywordCount,
+          attempts: analysis.ocrDetails.attempts.map((attempt) => ({
+            variant: attempt.label,
+            score: attempt.score,
+            selected: Boolean(attempt.selected),
+          })),
+        }
+      : undefined,
     extracted_fields: extractedFields,
     relationships: buildDetectedRelationships(analysis, fields, classification),
     warnings: analysis.warnings,

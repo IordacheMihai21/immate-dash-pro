@@ -16,6 +16,37 @@ dist-ssr
 .nitro
 *.local
 
+# Environment files
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Python virtual environments
+.venv/
+venv/
+env/
+document-ai-backend/.venv/
+document-ai-backend/venv/
+document-ai-backend/env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ML/model/cache files
+.cache/
+huggingface/
+.huggingface/
+models/
+*.bin
+*.safetensors
+*.pt
+*.pth
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
@@ -23,6 +54,7 @@ dist-ssr
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+.vscode/
 .idea
 .DS_Store
 *.suo

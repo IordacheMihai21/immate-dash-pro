@@ -39,6 +39,7 @@ import {
   type BatchEvaluationResult,
   type DocumentAiEvaluationFields,
 } from "@/lib/documentAiEvaluationService";
+import type { LayoutAiFields } from "@/lib/layoutAiService";
 import { formatRON } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -76,6 +77,18 @@ const DOCUMENT_AI_PREDICTED_TEXT_KEY = "immapp:document-ai:last-predicted-text";
 const FATURA_ANNOTATION_KEY = "immapp:document-ai:last-fatura-annotation";
 const FATURA_EXPECTED_KEY = "immapp:document-ai:last-fatura-expected";
 const EVALUATION_KEY = "immapp:document-ai:last-evaluation";
+const DOCUMENT_AI_FIELD_KEYS: DocumentAiFieldKey[] = [
+  "invoiceNumber",
+  "invoiceDate",
+  "supplierName",
+  "supplierCui",
+  "customerName",
+  "customerCui",
+  "subtotal",
+  "vatAmount",
+  "totalAmount",
+  "currency",
+];
 
 function DocumentsPage() {
   const [documents, setDocuments] = useState<DocumentRow[]>([]);
@@ -293,6 +306,37 @@ function DocumentsPage() {
     setLatestEvaluationResults(null);
     removeStorageKeys([FATURA_ANNOTATION_KEY, FATURA_EXPECTED_KEY, EVALUATION_KEY]);
   }, []);
+
+  const handleApplyLayoutAiFields = useCallback(
+    (fields: LayoutAiFields) => {
+      const currentFields =
+        latestDocumentAiFields ??
+        (latestDocumentAiAnalysis
+          ? toDocumentAiEditableFields(latestDocumentAiAnalysis.fields)
+          : createEmptyDocumentAiFields());
+      const verifiedSet = new Set(latestDocumentAiVerifiedFields);
+      const nextFields = DOCUMENT_AI_FIELD_KEYS.reduce(
+        (acc, field) => {
+          const proposedValue = fields[field]?.trim();
+
+          if (proposedValue && !verifiedSet.has(field)) {
+            acc[field] = proposedValue;
+          }
+
+          return acc;
+        },
+        { ...currentFields },
+      );
+
+      handleDocumentAiFieldsChange(nextFields);
+    },
+    [
+      handleDocumentAiFieldsChange,
+      latestDocumentAiAnalysis,
+      latestDocumentAiFields,
+      latestDocumentAiVerifiedFields,
+    ],
+  );
 
   useEffect(() => {
     loadDocuments();
@@ -582,7 +626,12 @@ function DocumentsPage() {
         </TabsContent>
 
         <TabsContent value="layout-ai" className="space-y-6">
-          <LayoutAiAnalysis />
+          <LayoutAiAnalysis
+            analysis={latestDocumentAiAnalysis}
+            documentAiFields={latestDocumentAiFields}
+            verifiedFields={latestDocumentAiVerifiedFields}
+            onApplyFields={handleApplyLayoutAiFields}
+          />
         </TabsContent>
       </Tabs>
     </div>
@@ -647,6 +696,16 @@ function markFinancialDataChanged() {
   localStorage.setItem("immapp:ai-forecast-status", "outdated");
   window.dispatchEvent(new Event("immapp:invoice-deleted"));
   window.dispatchEvent(new Event("immapp:ai-forecast-outdated"));
+}
+
+function createEmptyDocumentAiFields(): DocumentAiEditableFields {
+  return DOCUMENT_AI_FIELD_KEYS.reduce(
+    (acc, field) => ({
+      ...acc,
+      [field]: "",
+    }),
+    {} as DocumentAiEditableFields,
+  );
 }
 
 function readStoredText(key: string) {
