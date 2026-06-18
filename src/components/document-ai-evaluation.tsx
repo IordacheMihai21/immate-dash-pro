@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useRef, type ChangeEvent } from "react";
-import { AlertTriangle, BarChart3, FileJson, Trash2, UploadCloud } from "lucide-react";
+import {
+  BarChart3,
+  CheckCircle2,
+  CircleDashed,
+  FileJson,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { AdminPanel, InfoBanner } from "@/components/admin-ui";
 import { Badge } from "@/components/ui/badge";
@@ -142,37 +149,54 @@ export function DocumentAiEvaluation({
 
   return (
     <div className="space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-blue-100 bg-gradient-to-br from-slate-950 via-blue-950 to-blue-900 p-6 text-white shadow-lg shadow-blue-950/10 sm:p-8">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-blue-50 backdrop-blur">
+              <Sparkles className="h-3.5 w-3.5" />
+              Evaluare AI activă
+            </div>
+            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              Validare automată pe dataset FATURA
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-blue-100 sm:text-base">
+              Compară datele extrase de IMMapp cu adnotările de referință și calculează metrici
+              precum Precizie, Reamintire, Scor F1 și Acuratețe pe câmpuri.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <EvaluationHeroStatus label="Dataset FATURA" active />
+            <EvaluationHeroStatus
+              label={result ? "F1 calculat" : "Metrici automate"}
+              active={Boolean(result)}
+            />
+            <EvaluationHeroStatus
+              label={result ? "Neconcordanțe afișate" : "Comparație câmpuri"}
+              active={Boolean(result || expectedFields)}
+              className="col-span-2 sm:col-span-1"
+            />
+          </div>
+        </div>
+      </section>
+
       <InfoBanner icon={<BarChart3 className="h-4 w-4" />}>
-        Evaluarea Document AI compara campurile extrase automat cu date adnotate si calculeaza
-        metrici academice pentru validarea pipeline-ului.
+        Evaluarea compară câmpurile extrase automat cu adnotările de referință din datasetul
+        FATURA.
       </InfoBanner>
 
-      <div className="grid gap-3 md:grid-cols-5">
-        {["Precizie", "Reamintire", "Scor F1", "Potrivire exactă", "Acuratețe pe câmpuri"].map(
-          (metric) => (
-            <div
-              key={metric}
-              className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
-            >
-              <p className="text-sm font-semibold text-slate-950">{metric}</p>
-              <p className="mt-2 text-xs leading-5 text-slate-500">
-                Calculat dupa incarcarea adnotarilor.
-              </p>
-            </div>
-          ),
-        )}
-      </div>
+      <EvaluationMetricOverview result={result} />
 
       <AdminPanel
-        title="Evaluare Document AI"
-        description="Incarca sau lipeste JSON-ul adnotat si compara rezultatul cu extractia curenta."
+        title="Pregătire evaluare"
+        description="Încarcă adnotarea de referință și compară cu extracția curentă."
+        className="overflow-hidden rounded-3xl shadow-sm"
       >
-        <div className="grid gap-5 xl:grid-cols-2">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between gap-3">
-              <Label htmlFor="predicted-json">Date extrase</Label>
-              <Badge variant="outline" className="rounded-full">
-                Predictie
+        <div className="grid items-stretch gap-5 lg:grid-cols-2">
+          <div className="flex h-full flex-col rounded-2xl border border-slate-200 bg-slate-50/60 p-4 sm:p-5">
+            <div className="flex min-h-10 items-start justify-between gap-3">
+              <Label htmlFor="predicted-json">Date extrase automat</Label>
+              <Badge variant="outline" className="rounded-full bg-white">
+                Predicție
               </Badge>
             </div>
             <Textarea
@@ -180,30 +204,38 @@ export function DocumentAiEvaluation({
               value={predictedText}
               onChange={(event) => onPredictedTextChange(event.target.value)}
               placeholder='{"invoiceNumber":"INV-001","totalAmount":1200}'
-              className="min-h-72 bg-slate-50 font-mono text-xs"
+              className="mt-3 min-h-72 flex-1 bg-white font-mono text-xs"
             />
+            <p className="mt-3 flex min-h-10 items-center text-xs leading-5 text-slate-500">
+              Datele sunt preluate automat din ultima analiză Document AI și pot fi revizuite.
+            </p>
           </div>
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between gap-3">
-              <Label htmlFor="expected-json">Date adnotate</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  ref={expectedFileInputRef}
-                  type="file"
-                  accept=".json,application/json"
-                  className="max-w-56"
-                  onChange={handleExpectedFileChange}
-                />
-              </div>
+          <div className="flex h-full flex-col rounded-2xl border border-slate-200 bg-slate-50/60 p-4 sm:p-5">
+            <div className="flex min-h-10 items-start justify-between gap-3">
+              <Label htmlFor="expected-json">Adnotare de referință</Label>
+              <Badge variant="outline" className="rounded-full bg-white">
+                Referință
+              </Badge>
             </div>
             <Textarea
               id="expected-json"
               value={expectedText}
               onChange={(event) => updateExpectedAnnotation(event.target.value)}
               placeholder='{"invoiceNumber":"INV-001","totalAmount":1200}'
-              className="min-h-72 bg-slate-50 font-mono text-xs"
+              className="mt-3 min-h-72 flex-1 bg-white font-mono text-xs"
             />
+            <div className="mt-3 flex min-h-10 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <span className="text-xs text-slate-500">Încarcă fișierul JSON de referință</span>
+              <Input
+                ref={expectedFileInputRef}
+                type="file"
+                accept=".json,application/json"
+                aria-label="Încarcă adnotarea de referință"
+                className="w-full bg-white sm:max-w-72"
+                onChange={handleExpectedFileChange}
+              />
+            </div>
           </div>
         </div>
 
@@ -212,7 +244,7 @@ export function DocumentAiEvaluation({
         <div className="mt-5 flex flex-wrap items-center gap-3">
           <Button onClick={handleEvaluate} className="gap-2">
             <FileJson className="h-4 w-4" />
-            Calculeaza evaluarea
+            Calculează evaluarea
           </Button>
           {(expectedText || result) && (
             <Button variant="outline" onClick={handleClearAnnotation} className="gap-2">
@@ -228,8 +260,6 @@ export function DocumentAiEvaluation({
         </div>
       </AdminPanel>
 
-      <DatasetValidationCard />
-
       {result && <EvaluationResults result={result} />}
     </div>
   );
@@ -238,33 +268,26 @@ export function DocumentAiEvaluation({
 function EvaluationResults({ result }: { result: BatchEvaluationResult }) {
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
-        <MetricCard label="Precizie" value={formatPercent(result.precision)} />
-        <MetricCard label="Reamintire" value={formatPercent(result.recall)} />
-        <MetricCard label="Scor F1" value={formatPercent(result.f1Score)} />
-        <MetricCard label="Potrivire exactă" value={formatPercent(result.exactMatchRate)} />
-        <MetricCard label="Acuratețe pe câmpuri" value={formatPercent(result.fieldAccuracy)} />
-        <MetricCard label="Documente evaluate" value={String(result.documentsEvaluated)} />
-      </div>
-
       <AdminPanel
-        title="Metrici pe campuri"
-        description="Acuratete si erori calculate pentru fiecare camp extras."
+        title="Performanță pe câmpuri"
+        description="Acuratețe și erori calculate pentru fiecare câmp extras."
+        className="overflow-hidden rounded-3xl shadow-sm"
         contentClassName="p-0"
       >
+        <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Camp</TableHead>
-              <TableHead className="text-right">Acuratete</TableHead>
-              <TableHead className="text-right">Campuri corecte</TableHead>
-              <TableHead className="text-right">Campuri lipsa</TableHead>
-              <TableHead className="text-right">Campuri incorecte</TableHead>
+              <TableHead>Câmp</TableHead>
+              <TableHead className="text-right">Acuratețe</TableHead>
+              <TableHead className="text-right">Corecte</TableHead>
+              <TableHead className="text-right">Lipsă</TableHead>
+              <TableHead className="text-right">Incorecte</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {result.fieldMetrics.map((field) => (
-              <TableRow key={field.field}>
+              <TableRow key={field.field} className="hover:bg-slate-50/70">
                 <TableCell className="font-medium">{fieldLabels[field.field]}</TableCell>
                 <TableCell className="text-right tabular-nums">
                   {formatPercent(field.accuracy)}
@@ -276,11 +299,13 @@ function EvaluationResults({ result }: { result: BatchEvaluationResult }) {
             ))}
           </TableBody>
         </Table>
+        </div>
       </AdminPanel>
 
       <AdminPanel
         title="Rezultate pe document"
-        description="Rezumat document-level si nepotriviri pentru fiecare document evaluat."
+        description="Rezumatul calității pentru fiecare document evaluat."
+        className="overflow-hidden rounded-3xl shadow-sm"
         contentClassName="p-0"
       >
         <Table>
@@ -289,17 +314,12 @@ function EvaluationResults({ result }: { result: BatchEvaluationResult }) {
               <TableHead>Document</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Acuratețe pe câmpuri</TableHead>
-              <TableHead>Neconcordante</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {result.documents.map((document) => {
-              const mismatches = document.fields.filter(
-                (field) => field.missing || field.incorrect,
-              );
-
               return (
-                <TableRow key={document.documentId}>
+                <TableRow key={document.documentId} className="hover:bg-slate-50/70">
                   <TableCell className="font-medium">{document.documentId}</TableCell>
                   <TableCell>
                     <Badge
@@ -317,58 +337,15 @@ function EvaluationResults({ result }: { result: BatchEvaluationResult }) {
                   <TableCell className="text-right tabular-nums">
                     {formatPercent(document.fieldAccuracy)}
                   </TableCell>
-                  <TableCell>
-                    {mismatches.length === 0 ? (
-                      <span className="text-slate-500">Fara neconcordante</span>
-                    ) : (
-                      <div className="space-y-1">
-                        {mismatches.slice(0, 4).map((field) => (
-                          <div key={field.field} className="text-xs text-slate-600">
-                            <span className="font-medium">{fieldLabels[field.field]}:</span>{" "}
-                            Predicție: "{field.predicted || "-"}", Referință: "
-                            {field.expected || "-"}"
-                          </div>
-                        ))}
-                        {mismatches.length > 4 && (
-                          <div className="text-xs text-slate-500">
-                            +{mismatches.length - 4} alte campuri
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </TableCell>
                 </TableRow>
               );
             })}
           </TableBody>
         </Table>
       </AdminPanel>
+
+      <MismatchPanel result={result} />
     </div>
-  );
-}
-
-function DatasetValidationCard() {
-  const datasets = ["SROIE", "CORD", "FATURA", "FUNSD", "XFUND"];
-
-  return (
-    <AdminPanel
-      title="Validare pe seturi de date"
-      description="Pregătit pentru validare pe seturi publice de documente adnotate."
-    >
-      <div className="flex flex-wrap gap-2">
-        {datasets.map((dataset) => (
-          <Badge key={dataset} variant="outline" className="rounded-full px-3 py-1">
-            {dataset}
-          </Badge>
-        ))}
-      </div>
-      <div className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-        <p>
-          Rezultatele sunt afisate numai dupa incarcarea adnotarilor si rularea evaluarii in IMMapp.
-        </p>
-      </div>
-    </AdminPanel>
   );
 }
 
@@ -406,9 +383,121 @@ function ExpectedFieldsPreview({ fields }: { fields: DocumentAiEvaluationFields 
 
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
       <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-3 text-xl font-semibold text-slate-950">{value}</p>
+      <p className="mt-3 text-2xl font-semibold tabular-nums text-slate-950">{value}</p>
+    </div>
+  );
+}
+
+function EvaluationHeroStatus({
+  label,
+  active,
+  className,
+}: {
+  label: string;
+  active: boolean;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex min-w-36 items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-3 py-2.5 text-xs font-medium text-blue-50 backdrop-blur",
+        className,
+      )}
+    >
+      {active ? (
+        <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-300" />
+      ) : (
+        <CircleDashed className="h-4 w-4 shrink-0 text-blue-200" />
+      )}
+      {label}
+    </div>
+  );
+}
+
+function EvaluationMetricOverview({ result }: { result: BatchEvaluationResult | null }) {
+  const metrics = [
+    { label: "Precizie", value: result ? formatPercent(result.precision) : "—" },
+    { label: "Reamintire", value: result ? formatPercent(result.recall) : "—" },
+    { label: "Scor F1", value: result ? formatPercent(result.f1Score) : "—" },
+    { label: "Potrivire exactă", value: result ? formatPercent(result.exactMatchRate) : "—" },
+    { label: "Acuratețe pe câmpuri", value: result ? formatPercent(result.fieldAccuracy) : "—" },
+    { label: "Documente evaluate", value: result ? String(result.documentsEvaluated) : "0" },
+  ];
+
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      {metrics.map((metric) => (
+        <MetricCard key={metric.label} {...metric} />
+      ))}
+    </div>
+  );
+}
+
+function MismatchPanel({ result }: { result: BatchEvaluationResult }) {
+  const mismatches = result.documents.flatMap((document) =>
+    document.fields
+      .filter((field) => field.missing || field.incorrect)
+      .map((field) => ({ ...field, documentId: document.documentId })),
+  );
+
+  return (
+    <AdminPanel
+      title="Diferențe identificate"
+      description="Valorile care merită verificate între predicție și referință."
+      className="overflow-hidden rounded-3xl shadow-sm"
+    >
+      {mismatches.length === 0 ? (
+        <div className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm font-medium text-emerald-800">
+          <CheckCircle2 className="h-5 w-5 shrink-0" />
+          Nu au fost identificate diferențe.
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {mismatches.map((field) => (
+            <div
+              key={`${field.documentId}-${field.field}`}
+              className="rounded-2xl border border-amber-100 bg-amber-50/50 p-4"
+            >
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <p className="font-semibold text-slate-950">{fieldLabels[field.field]}</p>
+                <Badge variant="outline" className="rounded-full bg-white text-slate-600">
+                  {field.documentId}
+                </Badge>
+              </div>
+              <div className="grid gap-3 text-sm sm:grid-cols-3">
+                <DifferenceValue label="Predicție" value={field.predicted || "—"} />
+                <DifferenceValue label="Referință" value={field.expected || "—"} />
+                <DifferenceValue
+                  label="Diferență"
+                  value={field.missing ? "Valoare lipsă" : "Valori diferite"}
+                  accent
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </AdminPanel>
+  );
+}
+
+function DifferenceValue({
+  label,
+  value,
+  accent = false,
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+}) {
+  return (
+    <div className="rounded-xl bg-white p-3">
+      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
+      <p className={cn("mt-1 break-words font-medium text-slate-800", accent && "text-amber-800")}>
+        {value}
+      </p>
     </div>
   );
 }

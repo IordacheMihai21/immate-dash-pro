@@ -28,9 +28,11 @@ import { Route as AppDocumenteRouteImport } from './routes/app.documente'
 import { Route as AppClientiRouteImport } from './routes/app.clienti'
 import { Route as AppAjutorRouteImport } from './routes/app.ajutor'
 import { Route as AppAiForecastRouteImport } from './routes/app.ai-forecast'
+import { Route as AppAiCenterRouteImport } from './routes/app.ai-center'
 import { Route as AppSetariIndexRouteImport } from './routes/app.setari.index'
 import { Route as AppRapoarteIndexRouteImport } from './routes/app.rapoarte.index'
 import { Route as AppEFacturiIndexRouteImport } from './routes/app.e-facturi.index'
+import { Route as AppAiCenterIndexRouteImport } from './routes/app.ai-center.index'
 import { Route as AppSetariUtilizatoriRouteImport } from './routes/app.setari.utilizatori'
 import { Route as AppSetariPreferinteRouteImport } from './routes/app.setari.preferinte'
 import { Route as AppRapoarteTvaRouteImport } from './routes/app.rapoarte.tva'
@@ -41,6 +43,10 @@ import { Route as AppRapoarteExpensesRouteImport } from './routes/app.rapoarte.e
 import { Route as AppRapoarteCashFlowRouteImport } from './routes/app.rapoarte.cash-flow'
 import { Route as AppRapoarteActivitateLunaraRouteImport } from './routes/app.rapoarte.activitate-lunara'
 import { Route as AppEFacturiIdRouteImport } from './routes/app.e-facturi.$id'
+import { Route as AppAiCenterPredictiiFinanciareRouteImport } from './routes/app.ai-center.predictii-financiare'
+import { Route as AppAiCenterLayoutAiRouteImport } from './routes/app.ai-center.layout-ai'
+import { Route as AppAiCenterEvaluareAiRouteImport } from './routes/app.ai-center.evaluare-ai'
+import { Route as AppAiCenterDocumentAiRouteImport } from './routes/app.ai-center.document-ai'
 
 const ReportsRoute = ReportsRouteImport.update({
   id: '/reports',
@@ -137,6 +143,11 @@ const AppAiForecastRoute = AppAiForecastRouteImport.update({
   path: '/ai-forecast',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAiCenterRoute = AppAiCenterRouteImport.update({
+  id: '/ai-center',
+  path: '/ai-center',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSetariIndexRoute = AppSetariIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -151,6 +162,11 @@ const AppEFacturiIndexRoute = AppEFacturiIndexRouteImport.update({
   id: '/e-facturi/',
   path: '/e-facturi/',
   getParentRoute: () => AppRoute,
+} as any)
+const AppAiCenterIndexRoute = AppAiCenterIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppAiCenterRoute,
 } as any)
 const AppSetariUtilizatoriRoute = AppSetariUtilizatoriRouteImport.update({
   id: '/utilizatori',
@@ -205,6 +221,27 @@ const AppEFacturiIdRoute = AppEFacturiIdRouteImport.update({
   path: '/e-facturi/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAiCenterPredictiiFinanciareRoute =
+  AppAiCenterPredictiiFinanciareRouteImport.update({
+    id: '/predictii-financiare',
+    path: '/predictii-financiare',
+    getParentRoute: () => AppAiCenterRoute,
+  } as any)
+const AppAiCenterLayoutAiRoute = AppAiCenterLayoutAiRouteImport.update({
+  id: '/layout-ai',
+  path: '/layout-ai',
+  getParentRoute: () => AppAiCenterRoute,
+} as any)
+const AppAiCenterEvaluareAiRoute = AppAiCenterEvaluareAiRouteImport.update({
+  id: '/evaluare-ai',
+  path: '/evaluare-ai',
+  getParentRoute: () => AppAiCenterRoute,
+} as any)
+const AppAiCenterDocumentAiRoute = AppAiCenterDocumentAiRouteImport.update({
+  id: '/document-ai',
+  path: '/document-ai',
+  getParentRoute: () => AppAiCenterRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -213,6 +250,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reports': typeof ReportsRouteWithChildren
+  '/app/ai-center': typeof AppAiCenterRouteWithChildren
   '/app/ai-forecast': typeof AppAiForecastRoute
   '/app/ajutor': typeof AppAjutorRoute
   '/app/clienti': typeof AppClientiRoute
@@ -226,6 +264,10 @@ export interface FileRoutesByFullPath {
   '/reports/profitability': typeof ReportsProfitabilityRoute
   '/reports/revenue': typeof ReportsRevenueRoute
   '/app/': typeof AppIndexRoute
+  '/app/ai-center/document-ai': typeof AppAiCenterDocumentAiRoute
+  '/app/ai-center/evaluare-ai': typeof AppAiCenterEvaluareAiRoute
+  '/app/ai-center/layout-ai': typeof AppAiCenterLayoutAiRoute
+  '/app/ai-center/predictii-financiare': typeof AppAiCenterPredictiiFinanciareRoute
   '/app/e-facturi/$id': typeof AppEFacturiIdRoute
   '/app/rapoarte/activitate-lunara': typeof AppRapoarteActivitateLunaraRoute
   '/app/rapoarte/cash-flow': typeof AppRapoarteCashFlowRoute
@@ -236,6 +278,7 @@ export interface FileRoutesByFullPath {
   '/app/rapoarte/tva': typeof AppRapoarteTvaRoute
   '/app/setari/preferinte': typeof AppSetariPreferinteRoute
   '/app/setari/utilizatori': typeof AppSetariUtilizatoriRoute
+  '/app/ai-center/': typeof AppAiCenterIndexRoute
   '/app/e-facturi/': typeof AppEFacturiIndexRoute
   '/app/rapoarte/': typeof AppRapoarteIndexRoute
   '/app/setari/': typeof AppSetariIndexRoute
@@ -257,6 +300,10 @@ export interface FileRoutesByTo {
   '/reports/profitability': typeof ReportsProfitabilityRoute
   '/reports/revenue': typeof ReportsRevenueRoute
   '/app': typeof AppIndexRoute
+  '/app/ai-center/document-ai': typeof AppAiCenterDocumentAiRoute
+  '/app/ai-center/evaluare-ai': typeof AppAiCenterEvaluareAiRoute
+  '/app/ai-center/layout-ai': typeof AppAiCenterLayoutAiRoute
+  '/app/ai-center/predictii-financiare': typeof AppAiCenterPredictiiFinanciareRoute
   '/app/e-facturi/$id': typeof AppEFacturiIdRoute
   '/app/rapoarte/activitate-lunara': typeof AppRapoarteActivitateLunaraRoute
   '/app/rapoarte/cash-flow': typeof AppRapoarteCashFlowRoute
@@ -267,6 +314,7 @@ export interface FileRoutesByTo {
   '/app/rapoarte/tva': typeof AppRapoarteTvaRoute
   '/app/setari/preferinte': typeof AppSetariPreferinteRoute
   '/app/setari/utilizatori': typeof AppSetariUtilizatoriRoute
+  '/app/ai-center': typeof AppAiCenterIndexRoute
   '/app/e-facturi': typeof AppEFacturiIndexRoute
   '/app/rapoarte': typeof AppRapoarteIndexRoute
   '/app/setari': typeof AppSetariIndexRoute
@@ -279,6 +327,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reports': typeof ReportsRouteWithChildren
+  '/app/ai-center': typeof AppAiCenterRouteWithChildren
   '/app/ai-forecast': typeof AppAiForecastRoute
   '/app/ajutor': typeof AppAjutorRoute
   '/app/clienti': typeof AppClientiRoute
@@ -292,6 +341,10 @@ export interface FileRoutesById {
   '/reports/profitability': typeof ReportsProfitabilityRoute
   '/reports/revenue': typeof ReportsRevenueRoute
   '/app/': typeof AppIndexRoute
+  '/app/ai-center/document-ai': typeof AppAiCenterDocumentAiRoute
+  '/app/ai-center/evaluare-ai': typeof AppAiCenterEvaluareAiRoute
+  '/app/ai-center/layout-ai': typeof AppAiCenterLayoutAiRoute
+  '/app/ai-center/predictii-financiare': typeof AppAiCenterPredictiiFinanciareRoute
   '/app/e-facturi/$id': typeof AppEFacturiIdRoute
   '/app/rapoarte/activitate-lunara': typeof AppRapoarteActivitateLunaraRoute
   '/app/rapoarte/cash-flow': typeof AppRapoarteCashFlowRoute
@@ -302,6 +355,7 @@ export interface FileRoutesById {
   '/app/rapoarte/tva': typeof AppRapoarteTvaRoute
   '/app/setari/preferinte': typeof AppSetariPreferinteRoute
   '/app/setari/utilizatori': typeof AppSetariUtilizatoriRoute
+  '/app/ai-center/': typeof AppAiCenterIndexRoute
   '/app/e-facturi/': typeof AppEFacturiIndexRoute
   '/app/rapoarte/': typeof AppRapoarteIndexRoute
   '/app/setari/': typeof AppSetariIndexRoute
@@ -315,6 +369,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/reports'
+    | '/app/ai-center'
     | '/app/ai-forecast'
     | '/app/ajutor'
     | '/app/clienti'
@@ -328,6 +383,10 @@ export interface FileRouteTypes {
     | '/reports/profitability'
     | '/reports/revenue'
     | '/app/'
+    | '/app/ai-center/document-ai'
+    | '/app/ai-center/evaluare-ai'
+    | '/app/ai-center/layout-ai'
+    | '/app/ai-center/predictii-financiare'
     | '/app/e-facturi/$id'
     | '/app/rapoarte/activitate-lunara'
     | '/app/rapoarte/cash-flow'
@@ -338,6 +397,7 @@ export interface FileRouteTypes {
     | '/app/rapoarte/tva'
     | '/app/setari/preferinte'
     | '/app/setari/utilizatori'
+    | '/app/ai-center/'
     | '/app/e-facturi/'
     | '/app/rapoarte/'
     | '/app/setari/'
@@ -359,6 +419,10 @@ export interface FileRouteTypes {
     | '/reports/profitability'
     | '/reports/revenue'
     | '/app'
+    | '/app/ai-center/document-ai'
+    | '/app/ai-center/evaluare-ai'
+    | '/app/ai-center/layout-ai'
+    | '/app/ai-center/predictii-financiare'
     | '/app/e-facturi/$id'
     | '/app/rapoarte/activitate-lunara'
     | '/app/rapoarte/cash-flow'
@@ -369,6 +433,7 @@ export interface FileRouteTypes {
     | '/app/rapoarte/tva'
     | '/app/setari/preferinte'
     | '/app/setari/utilizatori'
+    | '/app/ai-center'
     | '/app/e-facturi'
     | '/app/rapoarte'
     | '/app/setari'
@@ -380,6 +445,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/reports'
+    | '/app/ai-center'
     | '/app/ai-forecast'
     | '/app/ajutor'
     | '/app/clienti'
@@ -393,6 +459,10 @@ export interface FileRouteTypes {
     | '/reports/profitability'
     | '/reports/revenue'
     | '/app/'
+    | '/app/ai-center/document-ai'
+    | '/app/ai-center/evaluare-ai'
+    | '/app/ai-center/layout-ai'
+    | '/app/ai-center/predictii-financiare'
     | '/app/e-facturi/$id'
     | '/app/rapoarte/activitate-lunara'
     | '/app/rapoarte/cash-flow'
@@ -403,6 +473,7 @@ export interface FileRouteTypes {
     | '/app/rapoarte/tva'
     | '/app/setari/preferinte'
     | '/app/setari/utilizatori'
+    | '/app/ai-center/'
     | '/app/e-facturi/'
     | '/app/rapoarte/'
     | '/app/setari/'
@@ -552,6 +623,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAiForecastRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/ai-center': {
+      id: '/app/ai-center'
+      path: '/ai-center'
+      fullPath: '/app/ai-center'
+      preLoaderRoute: typeof AppAiCenterRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/setari/': {
       id: '/app/setari/'
       path: '/'
@@ -572,6 +650,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/e-facturi/'
       preLoaderRoute: typeof AppEFacturiIndexRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/app/ai-center/': {
+      id: '/app/ai-center/'
+      path: '/'
+      fullPath: '/app/ai-center/'
+      preLoaderRoute: typeof AppAiCenterIndexRouteImport
+      parentRoute: typeof AppAiCenterRoute
     }
     '/app/setari/utilizatori': {
       id: '/app/setari/utilizatori'
@@ -643,8 +728,56 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEFacturiIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/ai-center/predictii-financiare': {
+      id: '/app/ai-center/predictii-financiare'
+      path: '/predictii-financiare'
+      fullPath: '/app/ai-center/predictii-financiare'
+      preLoaderRoute: typeof AppAiCenterPredictiiFinanciareRouteImport
+      parentRoute: typeof AppAiCenterRoute
+    }
+    '/app/ai-center/layout-ai': {
+      id: '/app/ai-center/layout-ai'
+      path: '/layout-ai'
+      fullPath: '/app/ai-center/layout-ai'
+      preLoaderRoute: typeof AppAiCenterLayoutAiRouteImport
+      parentRoute: typeof AppAiCenterRoute
+    }
+    '/app/ai-center/evaluare-ai': {
+      id: '/app/ai-center/evaluare-ai'
+      path: '/evaluare-ai'
+      fullPath: '/app/ai-center/evaluare-ai'
+      preLoaderRoute: typeof AppAiCenterEvaluareAiRouteImport
+      parentRoute: typeof AppAiCenterRoute
+    }
+    '/app/ai-center/document-ai': {
+      id: '/app/ai-center/document-ai'
+      path: '/document-ai'
+      fullPath: '/app/ai-center/document-ai'
+      preLoaderRoute: typeof AppAiCenterDocumentAiRouteImport
+      parentRoute: typeof AppAiCenterRoute
+    }
   }
 }
+
+interface AppAiCenterRouteChildren {
+  AppAiCenterDocumentAiRoute: typeof AppAiCenterDocumentAiRoute
+  AppAiCenterEvaluareAiRoute: typeof AppAiCenterEvaluareAiRoute
+  AppAiCenterLayoutAiRoute: typeof AppAiCenterLayoutAiRoute
+  AppAiCenterPredictiiFinanciareRoute: typeof AppAiCenterPredictiiFinanciareRoute
+  AppAiCenterIndexRoute: typeof AppAiCenterIndexRoute
+}
+
+const AppAiCenterRouteChildren: AppAiCenterRouteChildren = {
+  AppAiCenterDocumentAiRoute: AppAiCenterDocumentAiRoute,
+  AppAiCenterEvaluareAiRoute: AppAiCenterEvaluareAiRoute,
+  AppAiCenterLayoutAiRoute: AppAiCenterLayoutAiRoute,
+  AppAiCenterPredictiiFinanciareRoute: AppAiCenterPredictiiFinanciareRoute,
+  AppAiCenterIndexRoute: AppAiCenterIndexRoute,
+}
+
+const AppAiCenterRouteWithChildren = AppAiCenterRoute._addFileChildren(
+  AppAiCenterRouteChildren,
+)
 
 interface AppRapoarteRouteChildren {
   AppRapoarteActivitateLunaraRoute: typeof AppRapoarteActivitateLunaraRoute
@@ -689,6 +822,7 @@ const AppSetariRouteWithChildren = AppSetariRoute._addFileChildren(
 )
 
 interface AppRouteChildren {
+  AppAiCenterRoute: typeof AppAiCenterRouteWithChildren
   AppAiForecastRoute: typeof AppAiForecastRoute
   AppAjutorRoute: typeof AppAjutorRoute
   AppClientiRoute: typeof AppClientiRoute
@@ -703,6 +837,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAiCenterRoute: AppAiCenterRouteWithChildren,
   AppAiForecastRoute: AppAiForecastRoute,
   AppAjutorRoute: AppAjutorRoute,
   AppClientiRoute: AppClientiRoute,

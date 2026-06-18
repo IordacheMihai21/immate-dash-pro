@@ -12,8 +12,11 @@ import {
   LayoutDashboard,
   LineChart,
   Menu,
+  Network,
   ReceiptText,
+  ScanText,
   Settings,
+  TrendingUp,
   Users,
   X,
 } from "lucide-react";
@@ -55,9 +58,30 @@ const menuGroups: SidebarGroup[] = [
     ],
   },
   {
-    title: "AI Forecast",
+    title: "AI Center",
     icon: BrainCircuit,
-    items: [{ label: "Predictii pe date reale", to: "/app/ai-forecast", icon: BrainCircuit }],
+    items: [
+      {
+        label: "Document AI",
+        to: "/app/ai-center/document-ai",
+        icon: ScanText,
+      },
+      {
+        label: "Layout AI",
+        to: "/app/ai-center/layout-ai",
+        icon: Network,
+      },
+      {
+        label: "Evaluare AI",
+        to: "/app/ai-center/evaluare-ai",
+        icon: BarChart3,
+      },
+      {
+        label: "Forecast AI",
+        to: "/app/ai-center/predictii-financiare",
+        icon: TrendingUp,
+      },
+    ],
   },
   {
     title: "Rapoarte",

@@ -3,9 +3,11 @@ import {
   AlertTriangle,
   BrainCircuit,
   CheckCircle2,
+  CircleDashed,
   Loader2,
   Network,
   RefreshCw,
+  ShieldCheck,
   Sparkles,
   UploadCloud,
 } from "lucide-react";
@@ -226,24 +228,57 @@ export function LayoutAiAnalysis({
 
   return (
     <div className="space-y-6">
-      <InfoBanner icon={<BrainCircuit className="h-4 w-4" />}>
-        Layout AI este un strat avansat de propuneri peste extracția Document AI. Datele existente
-        nu sunt înlocuite automat.
+      <section className="overflow-hidden rounded-3xl border border-blue-100 bg-gradient-to-br from-slate-950 via-blue-950 to-blue-900 p-6 text-white shadow-lg shadow-blue-950/10 sm:p-8">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-blue-50 backdrop-blur">
+              <Sparkles className="h-3.5 w-3.5" />
+              Analiză layout activă
+            </div>
+            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              Analiză inteligentă a structurii documentului
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-blue-100 sm:text-base">
+              IMMapp folosește OCR și analiză layout-aware pentru a identifica, valida și confirma
+              câmpurile importante din factură.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <HeroStatus
+              label="Serviciu pregătit"
+              active={Boolean(health)}
+            />
+            <HeroStatus
+              label="Model AI disponibil"
+              active={Boolean(health?.layout_model_available)}
+            />
+            <HeroStatus
+              label="Analiză finalizată"
+              active={Boolean(result)}
+              className="col-span-2 sm:col-span-1"
+            />
+          </div>
+        </div>
+      </section>
+
+      <InfoBanner icon={<ShieldCheck className="h-4 w-4" />} tone="emerald">
+        Propunerile completează analiza existentă, iar câmpurile deja confirmate rămân protejate.
       </InfoBanner>
 
       <div className="grid gap-5 xl:grid-cols-[0.82fr_1.18fr]">
         <AdminPanel
           title="Analiză layout activă"
-          description="Verifică serviciul și rulează analiza avansată a structurii documentului."
+          description="Încarcă o factură sau continuă cu documentul procesat anterior."
+          className="overflow-hidden rounded-3xl shadow-sm"
         >
           <div className="space-y-4">
             <BackendStatusCard health={health} message={message} />
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <ResultMetric label="Model layout-aware" value={health?.model ?? "LayoutXLM"} />
+              <ResultMetric label="Model AI" value={health?.model ?? "LayoutXLM"} />
               <ResultMetric
-                label="Status analiză"
-                value={health ? "Serviciu activ" : "Neverificat"}
+                label="Disponibilitate"
+                value={health ? "Serviciu pregătit" : "De verificat"}
               />
             </div>
 
@@ -273,7 +308,7 @@ export function LayoutAiAnalysis({
                 ) : (
                   <RefreshCw className="h-4 w-4" />
                 )}
-                Verifică serviciul
+                Verifică disponibilitatea
               </Button>
 
               <Button
@@ -315,7 +350,8 @@ export function LayoutAiAnalysis({
 
         <AdminPanel
           title="Câmpuri identificate"
-          description="Propuneri AI și comparație cu extracția Document AI curentă."
+          description="Compară propunerile cu datele curente înainte de confirmare."
+          className="overflow-hidden rounded-3xl shadow-sm"
         >
           {!result ? (
             <div className="flex min-h-[300px] items-center justify-center p-8 text-center">
@@ -341,11 +377,11 @@ export function LayoutAiAnalysis({
                 <ResultMetric label="Încredere" value={formatConfidence(result.confidence)} />
               </div>
 
-              {result.runtime_mode === "fallback_layout_aware" && (
-                <InfoBanner tone="blue" icon={<Sparkles className="h-4 w-4" />}>
-                  Analiza layout-aware este activă. Verifică propunerile înainte de aplicare.
-                </InfoBanner>
-              )}
+              <ComparisonSummary
+                result={result}
+                documentAiFields={effectiveDocumentFields}
+                verifiedFields={verifiedFields}
+              />
 
               <LayoutFieldsTable
                 result={result}
@@ -355,10 +391,9 @@ export function LayoutAiAnalysis({
 
               <div className="flex flex-wrap gap-3">
                 <Button
-                  variant="outline"
                   onClick={handleApplyFields}
                   disabled={!hasAnyField(result.fields)}
-                  className="gap-2"
+                  className="gap-2 bg-blue-700 hover:bg-blue-800"
                 >
                   <CheckCircle2 className="h-4 w-4" />
                   Aplică propunerile AI
@@ -395,7 +430,7 @@ function BackendStatusCard({
   return (
     <div
       className={cn(
-        "rounded-2xl border p-4",
+        "rounded-2xl border p-4 shadow-sm",
         isAvailable
           ? "border-emerald-200 bg-emerald-50"
           : isActive
@@ -420,17 +455,17 @@ function BackendStatusCard({
           <div>
             <p className="font-semibold text-slate-950">
               {isAvailable
-                ? "Analiză LayoutXLM activă"
+                ? "Model AI disponibil"
                 : isActive
-                  ? "Analiză layout activă"
-                  : "Serviciu neverificat"}
+                  ? "Serviciu pregătit"
+                  : "Disponibilitate neverificată"}
             </p>
             <p className="mt-1 text-sm text-slate-600">
               {modelInferenceAvailable
-                ? "Modelul LayoutXLM este pregătit pentru analiza documentului."
+                ? "Analiza inteligentă este pregătită pentru document."
                 : isActive
-                  ? "Serviciul poate analiza structura documentului și poate propune câmpuri."
-                  : message || "Apasă Verifică serviciul pentru a confirma disponibilitatea."}
+                  ? "Structura documentului poate fi analizată și comparată."
+                  : message || "Verifică disponibilitatea înainte de prima analiză."}
             </p>
           </div>
         </div>
@@ -452,14 +487,15 @@ function LayoutFieldsTable({
   verifiedFields: DocumentAiFieldKey[];
 }) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-slate-200">
+    <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
       <Table>
-        <TableHeader>
+        <TableHeader className="bg-slate-50/80">
           <TableRow>
             <TableHead>Câmp</TableHead>
             <TableHead>Propunere AI</TableHead>
             <TableHead>Date curente</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead className="hidden 2xl:table-cell">Recomandare</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -471,10 +507,16 @@ function LayoutFieldsTable({
             const status = isVerified ? "confirmed" : comparison.status;
 
             return (
-              <TableRow key={field}>
-                <TableCell className="font-medium">{fieldLabels[field]}</TableCell>
-                <TableCell>{proposed || "-"}</TableCell>
-                <TableCell>{current || "-"}</TableCell>
+              <TableRow key={field} className="hover:bg-slate-50/70">
+                <TableCell className="whitespace-nowrap font-semibold text-slate-900">
+                  {fieldLabels[field]}
+                </TableCell>
+                <TableCell className="min-w-40 font-medium text-slate-900">
+                  {proposed || <span className="text-slate-400">—</span>}
+                </TableCell>
+                <TableCell className="min-w-40 text-slate-600">
+                  {current || <span className="text-slate-400">—</span>}
+                </TableCell>
                 <TableCell>
                   <Badge
                     variant="outline"
@@ -491,6 +533,9 @@ function LayoutFieldsTable({
                   >
                     {getComparisonStatusLabel(status)}
                   </Badge>
+                </TableCell>
+                <TableCell className="hidden max-w-60 text-sm text-slate-500 2xl:table-cell">
+                  {getFieldRecommendation(status)}
                 </TableCell>
               </TableRow>
             );
@@ -516,12 +561,13 @@ function RecommendationsCard({
     <AdminPanel
       title="Recomandări IMMapp"
       description="Pașii recomandați înainte de confirmarea datelor facturii."
+      className="overflow-hidden rounded-3xl shadow-sm"
     >
       <div className="grid gap-3 md:grid-cols-2">
         {recommendations.map((recommendation) => (
           <div
             key={recommendation}
-            className="flex items-start gap-3 border-b border-slate-100 py-3 last:border-0 md:last:border-b"
+            className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 p-4"
           >
             <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
             <p className="text-sm leading-6 text-slate-700">{recommendation}</p>
@@ -656,8 +702,8 @@ function TechnicalDetails({
             value={result?.field_extraction_method ?? "-"}
           />
           <TechnicalItem
-            label="Inferență model executată"
-            value={result?.model_inference_executed ? "Da" : "Nu"}
+            label="Model inference executed"
+            value={result?.model_inference_executed ? "true" : "false"}
           />
           <TechnicalItem
             label="Dispozitiv"
@@ -690,9 +736,9 @@ function TechnicalDetails({
 
         {result && (
           <div className="grid gap-3 sm:grid-cols-3">
-            <ResultMetric label="Tokeni" value={String(result.technical.tokens_count)} />
-            <ResultMetric label="Cuvinte" value={String(result.technical.words_count)} />
-            <ResultMetric label="Poziții" value={String(result.technical.boxes_count)} />
+            <ResultMetric label="tokens_count" value={String(result.technical.tokens_count)} />
+            <ResultMetric label="words_count" value={String(result.technical.words_count)} />
+            <ResultMetric label="boxes_count" value={String(result.technical.boxes_count)} />
           </div>
         )}
 
@@ -740,6 +786,90 @@ function ResultMetric({ label, value }: { label: string; value: string }) {
       <p className="mt-3 text-lg font-semibold text-slate-950">{value}</p>
     </div>
   );
+}
+
+function HeroStatus({
+  label,
+  active,
+  className,
+}: {
+  label: string;
+  active: boolean;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex min-w-36 items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-3 py-2.5 text-xs font-medium text-blue-50 backdrop-blur",
+        className,
+      )}
+    >
+      {active ? (
+        <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-300" />
+      ) : (
+        <CircleDashed className="h-4 w-4 shrink-0 text-blue-200" />
+      )}
+      {label}
+    </div>
+  );
+}
+
+function ComparisonSummary({
+  result,
+  documentAiFields,
+  verifiedFields,
+}: {
+  result: LayoutAiBackendResponse;
+  documentAiFields: LayoutAiFields;
+  verifiedFields: DocumentAiFieldKey[];
+}) {
+  const counts = fieldOrder.reduce(
+    (summary, field) => {
+      const status = verifiedFields.includes(field)
+        ? "confirmed"
+        : compareLayoutFieldValues(field, result.fields[field], documentAiFields[field]).status;
+      summary[status] += 1;
+      return summary;
+    },
+    { confirmed: 0, proposal: 0, review: 0, missing: 0 },
+  );
+  const items = [
+    { label: "Câmpuri confirmate", value: counts.confirmed, tone: "emerald" },
+    { label: "Câmpuri propuse", value: counts.proposal, tone: "blue" },
+    { label: "Câmpuri de verificat", value: counts.review, tone: "amber" },
+    { label: "Câmpuri lipsă", value: counts.missing, tone: "rose" },
+  ] as const;
+
+  return (
+    <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+      {items.map((item) => (
+        <div
+          key={item.label}
+          className={cn(
+            "rounded-xl border px-3 py-3",
+            item.tone === "emerald" && "border-emerald-100 bg-emerald-50",
+            item.tone === "blue" && "border-blue-100 bg-blue-50",
+            item.tone === "amber" && "border-amber-100 bg-amber-50",
+            item.tone === "rose" && "border-rose-100 bg-rose-50",
+          )}
+        >
+          <p className="text-2xl font-semibold tabular-nums text-slate-950">{item.value}</p>
+          <p className="mt-1 text-xs font-medium text-slate-600">{item.label}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function getFieldRecommendation(status: ReturnType<typeof compareLayoutFieldValues>["status"]) {
+  const recommendations = {
+    confirmed: "Valoare coerentă; poate fi confirmată.",
+    proposal: "Propunere nouă disponibilă pentru aplicare.",
+    review: "Compară valorile înainte de confirmare.",
+    missing: "Completează manual dacă informația există pe factură.",
+  } as const;
+
+  return recommendations[status];
 }
 
 function getStatusLabel(value: LayoutAiStatus) {
@@ -832,7 +962,7 @@ function hasAnyField(fields: Partial<Record<DocumentAiFieldKey, unknown>> | null
 }
 
 function getBackendUnavailableMessage() {
-  return "Modulul de analiză AI nu este pornit momentan. Pornește aplicația cu `npm run dev` și încearcă din nou.";
+  return "Analiza inteligentă nu este disponibilă momentan. Încearcă din nou în câteva momente.";
 }
 
 function getTechnicalError(error: unknown) {

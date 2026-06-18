@@ -64,7 +64,7 @@ export const Route = createFileRoute("/app/ai-forecast")({
 
 type DashboardData = Awaited<ReturnType<typeof getDashboardData>>;
 
-function AiForecastPage() {
+export function AiForecastPage() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [forecastStatus, setForecastStatus] = useState(() =>
     typeof window === "undefined"
@@ -162,7 +162,7 @@ function AiForecastPage() {
   return (
     <div className="space-y-6">
       <ReportHero
-        title="AI Forecast"
+        title="Forecast AI"
         subtitle="Estimari, scenarii si recomandari pentru planificarea afacerii, generate exclusiv din documentele e-Factura XML incarcate."
         eyebrow="Predictii si scenarii"
         badge={forecastStatus === "outdated" ? "Necesita actualizare" : "Actualizat"}

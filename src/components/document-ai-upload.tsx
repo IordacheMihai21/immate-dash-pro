@@ -4,6 +4,7 @@ import {
   BadgeCheck,
   BrainCircuit,
   CheckCircle2,
+  CircleDashed,
   FileImage,
   Loader2,
   Network,
@@ -111,6 +112,9 @@ export function DocumentAiUpload({
   );
   const readyForSave = Boolean(
     analysis && editableFields?.invoiceNumber.trim() && toNumber(editableFields?.totalAmount) > 0,
+  );
+  const hasDetectedEntities = Boolean(
+    analysis && Object.values(analysis.fields).some((value) => value !== null && value !== ""),
   );
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
@@ -255,13 +259,47 @@ export function DocumentAiUpload({
 
   return (
     <div className="space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-blue-100 bg-gradient-to-br from-slate-950 via-blue-950 to-blue-900 p-6 text-white shadow-lg shadow-blue-950/10 sm:p-8">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-blue-50 backdrop-blur">
+              <BrainCircuit className="h-3.5 w-3.5" />
+              Document AI activ
+            </div>
+            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              Extragere inteligentă din documente financiare
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-blue-100 sm:text-base">
+              IMMapp transformă facturile PDF, JPG sau PNG în date structurate folosind OCR,
+              preprocesare imagine și extracție de entități.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <DocumentHeroStatus
+              label={analysis?.extractedText ? "OCR finalizat" : "OCR pregătit"}
+              active={Boolean(analysis?.extractedText)}
+            />
+            <DocumentHeroStatus
+              label={hasDetectedEntities ? "Entități detectate" : "Preprocesare activă"}
+              active={hasDetectedEntities}
+            />
+            <DocumentHeroStatus
+              label={readyForSave ? "Date pregătite" : "Date structurate"}
+              active={readyForSave}
+              className="col-span-2 sm:col-span-1"
+            />
+          </div>
+        </div>
+      </section>
+
       <AdminPanel
-        title="Document AI"
-        description="Extrage textul si transforma facturile PDF sau imaginile in date structurate pentru verificare."
+        title="Încarcă și analizează factura"
+        description="Formate acceptate: PDF, PNG, JPG și JPEG."
+        className="overflow-hidden rounded-3xl shadow-sm"
       >
         <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
           <div className="space-y-4">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
               <div className="flex items-center gap-3">
                 <div className="rounded-2xl bg-blue-600 p-3 text-white">
                   <BrainCircuit className="h-5 w-5" />
@@ -271,8 +309,7 @@ export function DocumentAiUpload({
                     OCR → Layout → Entități → Validare → Structurare
                   </h3>
                   <p className="mt-1 text-sm text-slate-500">
-                    Incarca o factura ne-structurata, urmareste fiecare etapa si confirma datele
-                    inainte de salvare.
+                    Cinci etape clare, de la document brut la date pregătite.
                   </p>
                 </div>
               </div>
@@ -286,7 +323,7 @@ export function DocumentAiUpload({
 
             <div className="space-y-2">
               <Label htmlFor="document-ai-file">Factura PDF / Imagine</Label>
-              <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-5">
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-5 transition hover:border-blue-300 hover:bg-blue-50/30">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3">
                     <div className="rounded-xl bg-slate-100 p-3 text-slate-600">
@@ -295,7 +332,7 @@ export function DocumentAiUpload({
                     <div>
                       <p className="text-sm font-medium text-slate-900">PDF, PNG, JPG sau JPEG</p>
                       <p className="text-xs text-slate-500">
-                        Pentru imagini, foloseste o scanare clara si bine luminata.
+                        Recomandăm o scanare clară, dreaptă și bine luminată.
                       </p>
                     </div>
                   </div>
@@ -343,7 +380,7 @@ export function DocumentAiUpload({
                 ) : (
                   <ScanText className="h-4 w-4" />
                 )}
-                Analizeaza factura
+                Analizează factura
               </Button>
 
               <Button
@@ -357,7 +394,7 @@ export function DocumentAiUpload({
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                Salveaza factura verificata
+                Salvează factura verificată
               </Button>
 
               {(analysis || selectedFile) && (
@@ -378,7 +415,7 @@ export function DocumentAiUpload({
               <>
                 <div className="grid gap-3 sm:grid-cols-3">
                   <ScoreCard
-                    label="Incredere generala"
+                    label="Încredere generală"
                     value={`${analysis.overallConfidence}%`}
                     icon={<Sparkles className="h-4 w-4" />}
                   />
@@ -388,59 +425,64 @@ export function DocumentAiUpload({
                     icon={<ScanText className="h-4 w-4" />}
                   />
                   <ScoreCard
-                    label="Tip factura"
+                    label="Tip factură"
                     value={getClassificationLabel(currentClassification)}
                     icon={<BadgeCheck className="h-4 w-4" />}
                   />
                 </div>
 
                 <LayoutSummaryCard analysis={analysis} />
-
-                {analysis.warnings.length > 0 && (
-                  <InfoBanner tone="amber" icon={<AlertTriangle className="h-4 w-4" />}>
-                    <div className="space-y-1">
-                      {analysis.warnings.map((warning) => (
-                        <p key={warning}>{warning}</p>
-                      ))}
-                    </div>
-                  </InfoBanner>
-                )}
-
-                <StructuredPreview
-                  analysis={analysis}
-                  fields={editableFields}
-                  verifiedFields={verifiedFieldSet}
-                  onUpdate={updateField}
-                />
-
-                <DetectedRelationshipsCard
-                  analysis={analysis}
-                  fields={editableFields}
-                  classification={currentClassification}
-                />
-
-                <GeneratedStructureCard
-                  analysis={analysis}
-                  fields={editableFields}
-                  classification={currentClassification}
-                  verifiedFields={verifiedFieldSet}
-                />
               </>
             ) : (
               <EmptyState
-                title="Analiza asteapta un document"
-                description="Selecteaza o factura PDF sau imagine pentru a vedea textul extras, campurile detectate si scorurile de incredere."
+                title="Totul este pregătit"
+                description="Selectează o factură pentru a vedea textul extras, câmpurile detectate și nivelul de încredere."
                 icon={<BrainCircuit className="h-6 w-6" />}
               />
             )}
           </div>
         </div>
+
+        {analysis && (
+          <div className="mt-6 space-y-5 border-t border-slate-100 pt-6">
+            {analysis.warnings.length > 0 && (
+              <InfoBanner tone="amber" icon={<AlertTriangle className="h-4 w-4" />}>
+                <div className="space-y-1">
+                  {analysis.warnings.map((warning) => (
+                    <p key={warning}>{warning}</p>
+                  ))}
+                </div>
+              </InfoBanner>
+            )}
+
+            <StructuredPreview
+              analysis={analysis}
+              fields={editableFields}
+              verifiedFields={verifiedFieldSet}
+              onUpdate={updateField}
+            />
+
+            <DetectedRelationshipsCard
+              analysis={analysis}
+              fields={editableFields}
+              classification={currentClassification}
+            />
+
+            <GeneratedStructureCard
+              analysis={analysis}
+              fields={editableFields}
+              classification={currentClassification}
+              verifiedFields={verifiedFieldSet}
+            />
+          </div>
+        )}
       </AdminPanel>
 
       {analysis && (
         <AdminPanel
           title="Text extras"
-          description="Previzualizare a continutului identificat in document."
+          description="Previzualizare a conținutului identificat în document."
+          className="overflow-hidden rounded-3xl shadow-sm"
         >
           <Textarea
             value={
@@ -475,12 +517,12 @@ function PipelineStatusGrid({
     description: string;
   }[] = [
     {
-      title: "OCR finalizat",
+      title: "Text extras",
       status: getPipelineStatus(Boolean(analysis?.extractedText), Boolean(analysis)),
-      description: "Textul facturii este extras din PDF sau imagine.",
+      description: "Conținut preluat din document.",
     },
     {
-      title: "Layout analizat",
+      title: "Structură analizată",
       status: !analysis
         ? "incomplet"
         : analysis.layout.hasLayoutData
@@ -488,7 +530,7 @@ function PipelineStatusGrid({
           : analysis.extractedText.trim()
             ? "necesită verificare"
             : "incomplet",
-      description: "Cuvintele, liniile si pozitiile sunt folosite pentru campurile sensibile.",
+      description: "Poziții și secțiuni identificate.",
     },
     {
       title: "Entități detectate",
@@ -499,10 +541,10 @@ function PipelineStatusGrid({
           : detectedFields > 0
             ? "necesită verificare"
             : "incomplet",
-      description: "Numar, data, CUI-uri, TVA si valori financiare.",
+      description: "Datele importante sunt localizate.",
     },
     {
-      title: "CUI validat",
+      title: "CUI verificat",
       status: !analysis
         ? "incomplet"
         : cuiFieldsPresent && analysis.companyCui
@@ -510,19 +552,19 @@ function PipelineStatusGrid({
           : cuiFieldsPresent
             ? "necesită verificare"
             : "incomplet",
-      description: "CUI-ul companiei este comparat cu furnizorul si clientul.",
+      description: "Părțile facturii sunt verificate.",
     },
     {
-      title: "Date structurate",
+      title: "Date pregătite",
       status: !analysis ? "incomplet" : readyForSave ? "finalizat" : "necesită verificare",
-      description: "Campurile obligatorii sunt pregatite pentru salvare.",
+      description: "Câmpurile pot fi confirmate.",
     },
   ];
 
   return (
-    <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-      {pipelineSteps.map((step) => (
-        <PipelineStatusCard key={step.title} {...step} />
+    <div className="mt-5 grid gap-2 sm:grid-cols-2">
+      {pipelineSteps.map((step, index) => (
+        <PipelineStatusCard key={step.title} {...step} step={index + 1} />
       ))}
     </div>
   );
@@ -532,10 +574,12 @@ function PipelineStatusCard({
   title,
   status,
   description,
+  step,
 }: {
   title: string;
   status: PipelineStatus;
   description: string;
+  step: number;
 }) {
   const styles: Record<PipelineStatus, string> = {
     finalizat: "border-emerald-200 bg-emerald-50 text-emerald-700",
@@ -544,17 +588,21 @@ function PipelineStatusCard({
   };
 
   return (
-    <div className={cn("rounded-2xl border p-3", styles[status])}>
+    <div className={cn("rounded-xl border p-3", styles[status])}>
       <div className="flex items-start justify-between gap-2">
-        <p className="text-sm font-semibold text-slate-950">{title}</p>
+        <div className="flex items-center gap-2">
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/80 text-[10px] font-bold text-slate-600">
+            {step}
+          </span>
+          <p className="text-xs font-semibold text-slate-950">{title}</p>
+        </div>
         {status === "finalizat" ? (
           <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
         ) : status === "necesită verificare" ? (
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
         ) : null}
       </div>
-      <p className="mt-2 text-xs leading-5 text-slate-600">{description}</p>
-      <p className="mt-3 text-xs font-semibold uppercase tracking-wide">{status}</p>
+      <p className="mt-2 text-xs leading-4 text-slate-600">{description}</p>
     </div>
   );
 }
@@ -713,12 +761,12 @@ function StructuredPreview({
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="font-semibold text-slate-950">Date structurate detectate</h3>
           <p className="mt-1 text-sm text-slate-500">
-            Corecteaza campurile daca este nevoie, apoi salveaza factura.
+            Verifică doar câmpurile marcate și confirmă rezultatul.
           </p>
         </div>
         <Badge variant="outline" className="rounded-full">
@@ -738,7 +786,7 @@ function StructuredPreview({
             <div
               key={field}
               className={cn(
-                "space-y-2 rounded-xl border bg-slate-50 p-3",
+                "space-y-2 rounded-2xl border bg-slate-50/70 p-3.5 transition focus-within:border-blue-300 focus-within:bg-blue-50/30",
                 missing
                   ? "border-rose-200 bg-rose-50/70"
                   : lowConfidence
@@ -770,12 +818,15 @@ function StructuredPreview({
               />
 
               <div className="flex flex-wrap items-center gap-2 text-xs">
-                <Badge variant="outline" className="rounded-full bg-white">
+                <Badge
+                  variant="outline"
+                  className="rounded-full border-slate-200 bg-white text-[10px] font-medium text-slate-500"
+                >
                   {formatExtractionMethod(displayMethod)}
                 </Badge>
                 {(missing || lowConfidence || fieldDetail.warning) && (
                   <span className={missing ? "text-rose-600" : "text-amber-700"}>
-                    {missing ? "Camp lipsa" : (fieldDetail.warning ?? "Necesită verificare")}
+                    {missing ? "Câmp lipsă" : "Verifică valoarea"}
                   </span>
                 )}
               </div>
@@ -783,6 +834,32 @@ function StructuredPreview({
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function DocumentHeroStatus({
+  label,
+  active,
+  className,
+}: {
+  label: string;
+  active: boolean;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex min-w-36 items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-3 py-2.5 text-xs font-medium text-blue-50 backdrop-blur",
+        className,
+      )}
+    >
+      {active ? (
+        <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-300" />
+      ) : (
+        <CircleDashed className="h-4 w-4 shrink-0 text-blue-200" />
+      )}
+      {label}
     </div>
   );
 }
