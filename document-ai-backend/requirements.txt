@@ -3,7 +3,9 @@ uvicorn
 python-multipart
 pydantic
 pillow
+numpy
 transformers
 torch
+torchvision
 sentencepiece
 protobuf

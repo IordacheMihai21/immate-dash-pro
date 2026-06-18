@@ -23,8 +23,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { DocumentAiAnalysis, DocumentAiFieldKey } from "@/lib/documentAiService";
 import {
+  analyzeInvoiceDocument,
+  isSupportedDocumentAiFile,
+  type DocumentAiAnalysis,
+  type DocumentAiFieldKey,
+} from "@/lib/documentAiService";
+import {
+  compareLayoutFieldValues,
   analyzeLayoutWithBackend,
   checkLayoutAiHealth,
   getLayoutAiBackendUrl,
@@ -58,11 +64,13 @@ export function LayoutAiAnalysis({
   documentAiFields,
   verifiedFields,
   onApplyFields,
+  onPreparedAnalysis,
 }: {
   analysis: DocumentAiAnalysis | null;
   documentAiFields: Partial<Record<DocumentAiFieldKey, string>> | null;
   verifiedFields: DocumentAiFieldKey[];
   onApplyFields: (fields: LayoutAiFields) => void;
+  onPreparedAnalysis: (analysis: DocumentAiAnalysis, fields: LayoutAiFields) => void;
 }) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isCheckingHealth, setIsCheckingHealth] = useState(false);
@@ -70,36 +78,51 @@ export function LayoutAiAnalysis({
   const [health, setHealth] = useState<LayoutAiHealth | null>(null);
   const [result, setResult] = useState<LayoutAiBackendResponse | null>(null);
   const [message, setMessage] = useState("");
+  const [technicalError, setTechnicalError] = useState("");
+  const [processMessage, setProcessMessage] = useState("");
+  const [comparisonFields, setComparisonFields] = useState<LayoutAiFields | null>(null);
   const backendUrl = getLayoutAiBackendUrl();
   const hasLocalExtraction = Boolean(analysis?.extractedText || hasAnyField(documentAiFields));
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
-    setSelectedFile(event.target.files?.[0] ?? null);
+    const file = event.target.files?.[0] ?? null;
+    if (file && !isSupportedDocumentAiFile(file)) {
+      toast.error("Selectează un fișier PDF, PNG, JPG sau JPEG.");
+      event.currentTarget.value = "";
+      setSelectedFile(null);
+      return;
+    }
+    setSelectedFile(file);
+    setResult(null);
+    setComparisonFields(null);
     setMessage("");
+    setTechnicalError("");
   }
 
   async function handleCheckBackend() {
     try {
       setIsCheckingHealth(true);
       setMessage("");
+      setTechnicalError("");
       const nextHealth = await checkLayoutAiHealth();
 
       setHealth(nextHealth);
 
-      if (nextHealth.layout_model_available) {
-        toast.success("Backend activ. Model LayoutXLM disponibil.");
+      if (
+        nextHealth.runtime_mode === "full_layoutxlm" ||
+        nextHealth.runtime_mode === "layoutxlm_backbone"
+      ) {
+        toast.success("Serviciul Layout AI este activ.");
       } else {
-        const fallbackMessage =
-          "Backend activ. Model LayoutXLM indisponibil momentan. Se folosește modul fallback layout-aware.";
-        setMessage(fallbackMessage);
-        toast.info(fallbackMessage);
+        setMessage("Analiza layout este activă și pregătită pentru documente.");
+        toast.info("Serviciul Layout AI este activ.");
       }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : backendUnavailableMessage;
+      const errorMessage = getBackendUnavailableMessage();
       setHealth(null);
       setMessage(errorMessage);
-      toast.error(errorMessage);
+      setTechnicalError(getTechnicalError(error));
+      toast.error("Modulul de analiză AI nu este pornit momentan.");
     } finally {
       setIsCheckingHealth(false);
     }
@@ -114,29 +137,64 @@ export function LayoutAiAnalysis({
     try {
       setIsRunning(true);
       setMessage("");
+      setTechnicalError("");
+      let activeAnalysis = analysis;
+      let activeFields = toLayoutFields(documentAiFields ?? analysis?.fields ?? null);
+      const selectedFileNeedsOcr = Boolean(
+        selectedFile &&
+          (!activeAnalysis ||
+            activeAnalysis.fileName !== selectedFile.name ||
+            !activeAnalysis.extractedText.trim()),
+      );
+
+      if (selectedFileNeedsOcr && selectedFile) {
+        setProcessMessage("Pregătim textul documentului pentru analiza layout...");
+        try {
+          activeAnalysis = await analyzeInvoiceDocument(selectedFile);
+        } catch {
+          throw new LayoutPreparationError();
+        }
+        activeFields = toLayoutFields(activeAnalysis.fields);
+        onPreparedAnalysis(activeAnalysis, activeFields);
+      }
+
+      if (!activeAnalysis?.extractedText.trim() || activeAnalysis.extractedText.trim().length < 20) {
+        throw new LayoutPreparationError();
+      }
+
+      setComparisonFields(activeFields);
+      setProcessMessage("Analizăm structura documentului cu LayoutXLM...");
+      const nextHealth = await checkLayoutAiHealth();
+      setHealth(nextHealth);
+
       const nextResult = await analyzeLayoutWithBackend({
         file: selectedFile,
-        ocrText: analysis?.extractedText ?? "",
-        documentAiFields: documentAiFields ?? analysis?.fields ?? null,
+        ocrText: activeAnalysis.extractedText,
+        ocrWords: activeAnalysis.ocrWords,
+        documentAiFields: activeFields,
       });
 
       setResult(nextResult);
 
-      if (nextResult.status === "success") {
-        toast.success("Analiza LayoutXLM a fost finalizată.");
-      } else if (nextResult.status === "fallback") {
-        toast.info(
-          "Backend activ. Model LayoutXLM indisponibil momentan. Se folosește modul fallback layout-aware.",
-        );
+      if (nextResult.status === "ok" && hasAnyField(nextResult.fields)) {
+        toast.success("Analiza documentului a fost finalizată.");
       } else {
-        toast.warning("Analiza LayoutXLM nu a putut genera câmpuri suficiente.");
+        const insufficientMessage =
+          "Nu am putut extrage suficiente câmpuri din document. Verifică imaginea și încearcă din nou.";
+        setMessage(insufficientMessage);
+        toast.warning(insufficientMessage);
       }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : backendUnavailableMessage;
-      setMessage(errorMessage);
-      toast.error(errorMessage);
+      if (error instanceof LayoutPreparationError) {
+        setMessage(error.message);
+        toast.error(error.message);
+      } else {
+        setMessage(getBackendUnavailableMessage());
+        setTechnicalError(getTechnicalError(error));
+        toast.error("Modulul de analiză AI nu este pornit momentan.");
+      }
     } finally {
+      setProcessMessage("");
       setIsRunning(false);
     }
   }
@@ -146,9 +204,25 @@ export function LayoutAiAnalysis({
       return;
     }
 
-    onApplyFields(result.fields);
-    toast.success("Propunerile LayoutXLM au fost aplicate câmpurilor neverificate.");
+    const currentFields = comparisonFields ?? toLayoutFields(documentAiFields);
+    const applicableFields = getApplicableLayoutFields({
+      result,
+      currentFields,
+      verifiedFields,
+      documentConfidences: analysis?.confidences,
+    });
+    const appliedCount = countPopulatedFields(applicableFields);
+
+    if (appliedCount === 0) {
+      toast.info("Nu există propuneri mai sigure de aplicat automat.");
+      return;
+    }
+
+    onApplyFields(applicableFields);
+    toast.success(`${appliedCount} propuneri AI au fost aplicate câmpurilor neconfirmate.`);
   }
+
+  const effectiveDocumentFields = comparisonFields ?? toLayoutFields(documentAiFields);
 
   return (
     <div className="space-y-6">
@@ -159,26 +233,22 @@ export function LayoutAiAnalysis({
 
       <div className="grid gap-5 xl:grid-cols-[0.82fr_1.18fr]">
         <AdminPanel
-          title="Status backend"
-          description="Conectare la serviciul local LayoutXLM pentru analiză layout-aware."
+          title="Analiză layout activă"
+          description="Verifică serviciul și rulează analiza avansată a structurii documentului."
         >
           <div className="space-y-4">
             <BackendStatusCard health={health} message={message} />
 
-            <div className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600">
-              Endpoint: <span className="font-medium text-slate-950">{backendUrl}</span>
-            </div>
-
             <div className="grid gap-3 sm:grid-cols-2">
               <ResultMetric label="Model layout-aware" value={health?.model ?? "LayoutXLM"} />
               <ResultMetric
-                label="Status backend"
-                value={health ? "Backend activ" : "Neverificat"}
+                label="Status analiză"
+                value={health ? "Serviciu activ" : "Neverificat"}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="layout-ai-file">Document opțional pentru backend</Label>
+              <Label htmlFor="layout-ai-file">Document opțional pentru analiză</Label>
               <Input
                 id="layout-ai-file"
                 type="file"
@@ -186,8 +256,8 @@ export function LayoutAiAnalysis({
                 onChange={handleFileChange}
               />
               <p className="text-xs leading-5 text-slate-500">
-                Dacă există o extracție Document AI curentă, OCR text și câmpurile detectate sunt
-                trimise automat către backend.
+                Poți încărca documentul direct. IMMapp pregătește automat textul și structura
+                necesare analizei.
               </p>
             </div>
 
@@ -203,7 +273,7 @@ export function LayoutAiAnalysis({
                 ) : (
                   <RefreshCw className="h-4 w-4" />
                 )}
-                Verifică backend
+                Verifică serviciul
               </Button>
 
               <Button
@@ -216,22 +286,36 @@ export function LayoutAiAnalysis({
                 ) : (
                   <UploadCloud className="h-4 w-4" />
                 )}
-                Rulează analiza LayoutXLM
+                Analizează documentul
               </Button>
             </div>
+
+            {processMessage && (
+              <div className="flex items-center gap-3 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm font-medium text-blue-800">
+                <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                {processMessage}
+              </div>
+            )}
 
             {message && (
               <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                <p>{message}</p>
+                <p className="whitespace-pre-line">{message}</p>
               </div>
             )}
+
+            <TechnicalDetails
+              health={health}
+              result={result}
+              backendUrl={backendUrl}
+              technicalError={technicalError}
+            />
           </div>
         </AdminPanel>
 
         <AdminPanel
-          title="Propuneri LayoutXLM"
-          description="Câmpuri prezise de backend și comparație cu extracția Document AI."
+          title="Câmpuri identificate"
+          description="Propuneri AI și comparație cu extracția Document AI curentă."
         >
           {!result ? (
             <div className="flex min-h-[300px] items-center justify-center p-8 text-center">
@@ -239,43 +323,35 @@ export function LayoutAiAnalysis({
                 <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
                   <Network className="h-6 w-6" />
                 </div>
-                <h3 className="font-semibold text-slate-950">Așteaptă analiza LayoutXLM</h3>
+                <h3 className="font-semibold text-slate-950">Analiza este pregătită</h3>
                 <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
-                  Rulează analiza pentru a vedea câmpurile propuse de LayoutXLM și diferențele față
-                  de extracția Document AI.
+                  Rulează analiza pentru a vedea câmpurile propuse și diferențele față de extracția
+                  Document AI.
                 </p>
               </div>
             </div>
           ) : (
             <div className="space-y-5">
               <div className="grid gap-3 sm:grid-cols-3">
-                <ResultMetric label="Model" value={result.model} />
-                <ResultMetric label="Status" value={getStatusLabel(result.status)} />
-                <ResultMetric label="Confidence" value={formatConfidence(result.confidence)} />
+                <ResultMetric label="Analiză document" value={getStatusLabel(result.status)} />
+                <ResultMetric
+                  label="Câmpuri identificate"
+                  value={String(countPopulatedFields(result.fields))}
+                />
+                <ResultMetric label="Încredere" value={formatConfidence(result.confidence)} />
               </div>
 
-              {result.status === "fallback" && (
-                <InfoBanner tone="amber" icon={<AlertTriangle className="h-4 w-4" />}>
-                  Backend activ. Model LayoutXLM indisponibil momentan. Se folosește modul fallback
-                  layout-aware.
+              {result.runtime_mode === "fallback_layout_aware" && (
+                <InfoBanner tone="blue" icon={<Sparkles className="h-4 w-4" />}>
+                  Analiza layout-aware este activă. Verifică propunerile înainte de aplicare.
                 </InfoBanner>
               )}
 
               <LayoutFieldsTable
                 result={result}
-                documentAiFields={documentAiFields}
+                documentAiFields={effectiveDocumentFields}
                 verifiedFields={verifiedFields}
               />
-
-              {result.notes.length > 0 && (
-                <InfoBanner tone="blue" icon={<Sparkles className="h-4 w-4" />}>
-                  <div className="space-y-1">
-                    {result.notes.map((note) => (
-                      <p key={note}>{note}</p>
-                    ))}
-                  </div>
-                </InfoBanner>
-              )}
 
               <div className="flex flex-wrap gap-3">
                 <Button
@@ -285,15 +361,22 @@ export function LayoutAiAnalysis({
                   className="gap-2"
                 >
                   <CheckCircle2 className="h-4 w-4" />
-                  Aplică propunerile LayoutXLM
+                  Aplică propunerile AI
                 </Button>
               </div>
 
-              <TokenPreview result={result} />
             </div>
           )}
         </AdminPanel>
       </div>
+
+      {result && (
+        <RecommendationsCard
+          result={result}
+          documentAiFields={effectiveDocumentFields}
+          verifiedFields={verifiedFields}
+        />
+      )}
     </div>
   );
 }
@@ -307,6 +390,7 @@ function BackendStatusCard({
 }) {
   const isAvailable = Boolean(health?.layout_model_available);
   const isActive = Boolean(health);
+  const modelInferenceAvailable = Boolean(health?.model_inference_available);
 
   return (
     <div
@@ -336,17 +420,17 @@ function BackendStatusCard({
           <div>
             <p className="font-semibold text-slate-950">
               {isAvailable
-                ? "LayoutXLM disponibil"
+                ? "Analiză LayoutXLM activă"
                 : isActive
-                  ? "LayoutXLM fallback"
-                  : "Backend neverificat"}
+                  ? "Analiză layout activă"
+                  : "Serviciu neverificat"}
             </p>
             <p className="mt-1 text-sm text-slate-600">
-              {isAvailable
-                ? "Backend activ. Modelul layout-aware este disponibil."
+              {modelInferenceAvailable
+                ? "Modelul LayoutXLM este pregătit pentru analiza documentului."
                 : isActive
-                  ? "Backend activ. Model LayoutXLM indisponibil momentan. Se folosește modul fallback layout-aware."
-                  : message || "Apasă Verifică backend pentru statusul serviciului local."}
+                  ? "Serviciul poate analiza structura documentului și poate propune câmpuri."
+                  : message || "Apasă Verifică serviciul pentru a confirma disponibilitatea."}
             </p>
           </div>
         </div>
@@ -373,8 +457,8 @@ function LayoutFieldsTable({
         <TableHeader>
           <TableRow>
             <TableHead>Câmp</TableHead>
-            <TableHead>Câmpuri prezise de LayoutXLM</TableHead>
-            <TableHead>Comparare cu extracția Document AI</TableHead>
+            <TableHead>Propunere AI</TableHead>
+            <TableHead>Date curente</TableHead>
             <TableHead>Status</TableHead>
           </TableRow>
         </TableHeader>
@@ -383,7 +467,8 @@ function LayoutFieldsTable({
             const proposed = result.fields[field] ?? "";
             const current = documentAiFields?.[field] ?? "";
             const isVerified = verifiedFields.includes(field);
-            const same = normalizeFieldValue(proposed) === normalizeFieldValue(current);
+            const comparison = compareLayoutFieldValues(field, proposed, current);
+            const status = isVerified ? "confirmed" : comparison.status;
 
             return (
               <TableRow key={field}>
@@ -395,22 +480,16 @@ function LayoutFieldsTable({
                     variant="outline"
                     className={cn(
                       "rounded-full",
-                      isVerified
-                        ? "border-blue-200 bg-blue-50 text-blue-700"
-                        : proposed && current && same
+                      status === "confirmed"
                           ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                          : proposed
+                          : status === "review"
                             ? "border-amber-200 bg-amber-50 text-amber-700"
-                            : "border-slate-200 bg-slate-50 text-slate-500",
+                            : status === "proposal"
+                              ? "border-blue-200 bg-blue-50 text-blue-700"
+                              : "border-slate-200 bg-slate-50 text-slate-500",
                     )}
                   >
-                    {isVerified
-                      ? "Verificat manual"
-                      : proposed && current && same
-                        ? "Potrivire"
-                        : proposed
-                          ? "Propunere"
-                          : "Lipsă"}
+                    {getComparisonStatusLabel(status)}
                   </Badge>
                 </TableCell>
               </TableRow>
@@ -420,6 +499,85 @@ function LayoutFieldsTable({
       </Table>
     </div>
   );
+}
+
+function RecommendationsCard({
+  result,
+  documentAiFields,
+  verifiedFields,
+}: {
+  result: LayoutAiBackendResponse;
+  documentAiFields: LayoutAiFields;
+  verifiedFields: DocumentAiFieldKey[];
+}) {
+  const recommendations = buildRecommendations(result, documentAiFields, verifiedFields);
+
+  return (
+    <AdminPanel
+      title="Recomandări IMMapp"
+      description="Pașii recomandați înainte de confirmarea datelor facturii."
+    >
+      <div className="grid gap-3 md:grid-cols-2">
+        {recommendations.map((recommendation) => (
+          <div
+            key={recommendation}
+            className="flex items-start gap-3 border-b border-slate-100 py-3 last:border-0 md:last:border-b"
+          >
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+            <p className="text-sm leading-6 text-slate-700">{recommendation}</p>
+          </div>
+        ))}
+      </div>
+    </AdminPanel>
+  );
+}
+
+function buildRecommendations(
+  result: LayoutAiBackendResponse,
+  documentAiFields: LayoutAiFields,
+  verifiedFields: DocumentAiFieldKey[],
+) {
+  const statuses = fieldOrder.reduce(
+    (acc, field) => {
+      acc[field] = verifiedFields.includes(field)
+        ? "confirmed"
+        : compareLayoutFieldValues(field, result.fields[field], documentAiFields[field]).status;
+      return acc;
+    },
+    {} as Record<DocumentAiFieldKey, ReturnType<typeof compareLayoutFieldValues>["status"]>,
+  );
+  const recommendations: string[] = [];
+  const dateComparison = compareLayoutFieldValues(
+    "invoiceDate",
+    result.fields.invoiceDate,
+    documentAiFields.invoiceDate,
+  );
+
+  if (statuses.totalAmount === "confirmed") {
+    recommendations.push("Totalul de plată este confirmat de analiza layout.");
+  }
+  if (dateComparison.status === "confirmed" && dateComparison.formatDifference) {
+    recommendations.push(
+      "Data facturii a fost recunoscută în format diferit, dar reprezintă aceeași valoare.",
+    );
+  }
+  if (statuses.supplierName === "review" || statuses.customerName === "review") {
+    recommendations.push("Furnizorul sau clientul necesită verificare manuală.");
+  }
+  if (statuses.vatAmount === "review") {
+    recommendations.push("Valoarea TVA diferă între extracții și trebuie verificată.");
+  }
+  if (Object.values(statuses).some((status) => status === "missing")) {
+    recommendations.push("Câmpurile lipsă pot fi completate manual înainte de salvare.");
+  }
+  if (Object.values(statuses).some((status) => status === "proposal")) {
+    recommendations.push("Propunerile AI pot fi aplicate doar pentru câmpurile neconfirmate.");
+  }
+  if (recommendations.length === 0) {
+    recommendations.push("Datele identificate sunt coerente și pregătite pentru confirmare.");
+  }
+
+  return recommendations.slice(0, 5);
 }
 
 function TokenPreview({ result }: { result: LayoutAiBackendResponse }) {
@@ -464,6 +622,117 @@ function TokenPreview({ result }: { result: LayoutAiBackendResponse }) {
   );
 }
 
+function TechnicalDetails({
+  health,
+  result,
+  backendUrl,
+  technicalError,
+}: {
+  health: LayoutAiHealth | null;
+  result: LayoutAiBackendResponse | null;
+  backendUrl: string;
+  technicalError: string;
+}) {
+  const runtimeMode = result?.runtime_mode ?? health?.runtime_mode;
+  const fallbackReason = result?.fallback_reason ?? health?.fallback_reason;
+  const notes = result?.notes ?? health?.notes ?? [];
+
+  return (
+    <details className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <summary className="cursor-pointer select-none text-sm font-semibold text-slate-950">
+        Detalii tehnice
+      </summary>
+      <div className="mt-4 space-y-4 text-sm text-slate-600">
+        <dl className="grid gap-3 sm:grid-cols-2">
+          <TechnicalItem label="Model" value={result?.model ?? health?.model ?? "LayoutXLM"} />
+          <TechnicalItem
+            label="Model id"
+            value={result?.model_id ?? health?.model_id ?? "microsoft/layoutxlm-base"}
+          />
+          <TechnicalItem label="Runtime mode" value={runtimeMode ?? "neverificat"} />
+          <TechnicalItem label="Backend URL" value={backendUrl} />
+          <TechnicalItem
+            label="Metodă extracție"
+            value={result?.field_extraction_method ?? "-"}
+          />
+          <TechnicalItem
+            label="Inferență model executată"
+            value={result?.model_inference_executed ? "Da" : "Nu"}
+          />
+          <TechnicalItem
+            label="Dispozitiv"
+            value={result?.technical.device ?? health?.device ?? "cpu"}
+          />
+        </dl>
+
+        {runtimeMode === "layoutxlm_backbone" && (
+          <p className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-800">
+            Model LayoutXLM încărcat. Se folosește backbone-ul LayoutXLM împreună cu extracția
+            layout-aware pentru câmpurile de factură.
+          </p>
+        )}
+        {runtimeMode === "full_layoutxlm" && (
+          <p className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-800">
+            Modelul LayoutXLM cu clasificare de tokeni este încărcat și produce predicții de
+            entități.
+          </p>
+        )}
+        {runtimeMode === "fallback_layout_aware" && (
+          <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-900">
+            Modelul LayoutXLM complet nu este disponibil local. Se folosește fallback layout-aware.
+          </p>
+        )}
+
+        {fallbackReason && (
+          <TechnicalItem label="Motiv fallback" value={fallbackReason} />
+        )}
+        {technicalError && <TechnicalItem label="Eroare serviciu" value={technicalError} />}
+
+        {result && (
+          <div className="grid gap-3 sm:grid-cols-3">
+            <ResultMetric label="Tokeni" value={String(result.technical.tokens_count)} />
+            <ResultMetric label="Cuvinte" value={String(result.technical.words_count)} />
+            <ResultMetric label="Poziții" value={String(result.technical.boxes_count)} />
+          </div>
+        )}
+
+        {notes.length > 0 && (
+          <div>
+            <p className="font-medium text-slate-900">Note tehnice</p>
+            <ul className="mt-2 space-y-1">
+              {notes.map((note) => (
+                <li key={note}>{note}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {result && <TokenPreview result={result} />}
+
+        {result && (
+          <details className="rounded-lg border border-slate-200 bg-white p-3">
+            <summary className="cursor-pointer font-medium text-slate-900">
+              Răspuns JSON
+            </summary>
+            <pre className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap break-all text-xs text-slate-600">
+              {JSON.stringify(result, null, 2)}
+            </pre>
+          </details>
+        )}
+      </div>
+    </details>
+  );
+}
+
+function TechnicalItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</dt>
+      <dd className="mt-1 break-words font-medium text-slate-900">{value}</dd>
+    </div>
+  );
+}
+
 function ResultMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -475,12 +744,79 @@ function ResultMetric({ label, value }: { label: string; value: string }) {
 
 function getStatusLabel(value: LayoutAiStatus) {
   const labels: Record<LayoutAiStatus, string> = {
-    success: "LayoutXLM disponibil",
-    fallback: "Fallback layout-aware",
+    ok: "Finalizată",
+    success: "Finalizată",
+    fallback: "Finalizată",
     unavailable: "Indisponibil",
   };
 
   return labels[value];
+}
+
+function getComparisonStatusLabel(status: ReturnType<typeof compareLayoutFieldValues>["status"]) {
+  const labels = {
+    confirmed: "Confirmat",
+    proposal: "Propunere AI",
+    review: "Necesită verificare",
+    missing: "Lipsă",
+  } as const;
+  return labels[status];
+}
+
+function getApplicableLayoutFields({
+  result,
+  currentFields,
+  verifiedFields,
+  documentConfidences,
+}: {
+  result: LayoutAiBackendResponse;
+  currentFields: LayoutAiFields;
+  verifiedFields: DocumentAiFieldKey[];
+  documentConfidences?: Partial<Record<DocumentAiFieldKey, number>>;
+}) {
+  const verified = new Set(verifiedFields);
+  return fieldOrder.reduce(
+    (applicable, field) => {
+      const proposed = result.fields[field]?.trim();
+      if (!proposed || verified.has(field)) {
+        return applicable;
+      }
+
+      const current = currentFields[field]?.trim();
+      const comparison = compareLayoutFieldValues(field, proposed, current);
+      if (comparison.status === "proposal") {
+        applicable[field] = proposed;
+        return applicable;
+      }
+
+      if (comparison.status === "review") {
+        const documentConfidence = documentConfidences?.[field] ?? (current ? 0.75 : 0);
+        const layoutConfidence = result.field_details[field]?.confidence ?? 0;
+        if (documentConfidence < 0.8 && layoutConfidence > documentConfidence) {
+          applicable[field] = proposed;
+        }
+      }
+
+      return applicable;
+    },
+    toLayoutFields(null),
+  );
+}
+
+function countPopulatedFields(fields: LayoutAiFields) {
+  return Object.values(fields).filter((value) => value.trim()).length;
+}
+
+function toLayoutFields(
+  fields: Partial<Record<DocumentAiFieldKey, unknown>> | null | undefined,
+): LayoutAiFields {
+  return fieldOrder.reduce(
+    (normalized, field) => {
+      normalized[field] = String(fields?.[field] ?? "").trim();
+      return normalized;
+    },
+    {} as LayoutAiFields,
+  );
 }
 
 function formatConfidence(value: number | null | undefined) {
@@ -495,6 +831,19 @@ function hasAnyField(fields: Partial<Record<DocumentAiFieldKey, unknown>> | null
   return Boolean(fields && Object.values(fields).some((value) => String(value ?? "").trim()));
 }
 
-function normalizeFieldValue(value: string) {
-  return value.trim().toLowerCase().replace(/\s+/g, " ");
+function getBackendUnavailableMessage() {
+  return "Modulul de analiză AI nu este pornit momentan. Pornește aplicația cu `npm run dev` și încearcă din nou.";
+}
+
+function getTechnicalError(error: unknown) {
+  return error instanceof Error ? error.message : backendUnavailableMessage;
+}
+
+class LayoutPreparationError extends Error {
+  constructor() {
+    super(
+      "Nu am putut extrage suficient text din document. Încearcă o imagine mai clară sau rulează Document AI înainte de analiza layout.",
+    );
+    this.name = "LayoutPreparationError";
+  }
 }

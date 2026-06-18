@@ -245,6 +245,19 @@ function DocumentsPage() {
     writeStoredJson(DOCUMENT_AI_VERIFIED_FIELDS_KEY, uniqueFields);
   }, []);
 
+  const handleLayoutAiPreparedAnalysis = useCallback(
+    (analysis: DocumentAiAnalysis, fields: LayoutAiFields) => {
+      handleDocumentAiAnalysisChange(analysis);
+      handleDocumentAiFieldsChange(fields);
+      handleDocumentAiVerifiedFieldsChange([]);
+    },
+    [
+      handleDocumentAiAnalysisChange,
+      handleDocumentAiFieldsChange,
+      handleDocumentAiVerifiedFieldsChange,
+    ],
+  );
+
   const clearDocumentAiAnalysis = useCallback(() => {
     setLatestDocumentAiAnalysis(null);
     setLatestDocumentAiFields(null);
@@ -631,6 +644,7 @@ function DocumentsPage() {
             documentAiFields={latestDocumentAiFields}
             verifiedFields={latestDocumentAiVerifiedFields}
             onApplyFields={handleApplyLayoutAiFields}
+            onPreparedAnalysis={handleLayoutAiPreparedAnalysis}
           />
         </TabsContent>
       </Tabs>

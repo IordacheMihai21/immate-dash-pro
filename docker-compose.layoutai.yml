@@ -1,0 +1,18 @@
+services:
+  layout-ai:
+    build:
+      context: ./document-ai-backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      LAYOUTXLM_MODEL_ID: ${LAYOUTXLM_MODEL_ID:-microsoft/layoutxlm-base}
+      LAYOUTXLM_DEVICE: cpu
+      LAYOUTXLM_LOCAL_FILES_ONLY: "false"
+      HF_HOME: /opt/huggingface
+    volumes:
+      - layout_ai_huggingface:/opt/huggingface
+    restart: unless-stopped
+
+volumes:
+  layout_ai_huggingface:
