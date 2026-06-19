@@ -29,6 +29,7 @@ import {
   type DocumentAiFieldKey,
 } from "@/lib/documentAiService";
 import { saveDocumentAiInvoice } from "@/lib/invoiceService";
+import { recordDocumentAiCorrection } from "@/lib/documentAiCorrectionService";
 import { classifyInvoiceByCui, type InvoiceClassification } from "@/lib/cuiUtils";
 import { cn } from "@/lib/utils";
 
@@ -83,6 +84,7 @@ export function DocumentAiUpload({
   onClearAnalysis: () => void;
 }) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const correctionStartValuesRef = useRef<Partial<Record<DocumentAiFieldKey, string>>>({});
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [progress, setProgress] = useState(0);
   const [progressLabel, setProgressLabel] = useState("");
@@ -235,6 +237,10 @@ export function DocumentAiUpload({
       return;
     }
 
+    if (correctionStartValuesRef.current[field] === undefined) {
+      correctionStartValuesRef.current[field] = editableFields[field];
+    }
+
     onEditableFieldsChange({
       ...editableFields,
       [field]: value,
@@ -245,11 +251,24 @@ export function DocumentAiUpload({
     }
   }
 
+  function commitFieldCorrection(field: DocumentAiFieldKey, correctedValue: string) {
+    const previousPredictedValue = correctionStartValuesRef.current[field];
+    delete correctionStartValuesRef.current[field];
+    if (!analysis || previousPredictedValue === undefined) return;
+    recordDocumentAiCorrection({
+      analysis,
+      fieldName: field,
+      previousPredictedValue,
+      correctedValue,
+    });
+  }
+
   function handleClearAnalysis() {
     setSelectedFile(null);
     setIsSaved(false);
     setProgress(0);
     setProgressLabel("");
+    correctionStartValuesRef.current = {};
     onClearAnalysis();
 
     if (fileInputRef.current) {
@@ -460,6 +479,7 @@ export function DocumentAiUpload({
               fields={editableFields}
               verifiedFields={verifiedFieldSet}
               onUpdate={updateField}
+              onCommit={commitFieldCorrection}
             />
 
             <DetectedRelationshipsCard
@@ -666,7 +686,9 @@ function LayoutSummaryCard({ analysis }: { analysis: DocumentAiAnalysis }) {
         />
       </div>
 
-      {ocrDetails && <OcrDetailsPanel details={ocrDetails} extractedText={analysis.extractedText} />}
+      {ocrDetails && (
+        <OcrDetailsPanel details={ocrDetails} extractedText={analysis.extractedText} />
+      )}
     </div>
   );
 }
@@ -735,7 +757,10 @@ function OcrDetailsPanel({
           <LayoutMetric label="Variantă selectată" value={details.selectedLabel} />
           <LayoutMetric label="Încredere OCR" value={formatConfidence(details.confidence)} />
           <LayoutMetric label="Scor OCR" value={formatConfidence(details.score)} />
-          <LayoutMetric label="Cuvinte-cheie detectate" value={String(details.invoiceKeywordCount)} />
+          <LayoutMetric
+            label="Cuvinte-cheie detectate"
+            value={String(details.invoiceKeywordCount)}
+          />
         </div>
         <pre className="mt-3 max-h-56 overflow-auto rounded-xl bg-slate-950 p-4 text-xs leading-5 text-slate-100">
           {(extractedText.trim() || "Nu exista text OCR selectat.").slice(0, 1000)}
@@ -750,11 +775,13 @@ function StructuredPreview({
   fields,
   verifiedFields,
   onUpdate,
+  onCommit,
 }: {
   analysis: DocumentAiAnalysis;
   fields: DocumentAiEditableFields | null;
   verifiedFields: Set<DocumentAiFieldKey>;
   onUpdate: (field: DocumentAiFieldKey, value: string) => void;
+  onCommit: (field: DocumentAiFieldKey, value: string) => void;
 }) {
   if (!fields) {
     return null;
@@ -813,6 +840,7 @@ function StructuredPreview({
                 value={fields[field]}
                 inputMode={numericFields.has(field) ? "decimal" : "text"}
                 onChange={(event) => onUpdate(field, event.target.value)}
+                onBlur={(event) => onCommit(field, event.target.value)}
                 placeholder="Nedetectat"
                 className="bg-white"
               />

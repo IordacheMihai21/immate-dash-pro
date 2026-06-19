@@ -1,0 +1,10 @@
+invoices_dataset_final.zip
+raw/*
+train/*
+test/*
+processed/*.jsonl
+processed/layoutxlm_preparation_summary.json
+!raw/.gitkeep
+!train/.gitkeep
+!test/.gitkeep
+!processed/.gitkeep

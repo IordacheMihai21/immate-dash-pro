@@ -1,14 +1,17 @@
-import { useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import {
   AlertTriangle,
   BrainCircuit,
   CheckCircle2,
   CircleDashed,
+  FileText,
+  ImageIcon,
   Loader2,
   Network,
   RefreshCw,
   ShieldCheck,
   Sparkles,
+  Trash2,
   UploadCloud,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -33,18 +36,21 @@ import {
 } from "@/lib/documentAiService";
 import {
   compareLayoutFieldValues,
+  isCleanerLayoutProposal,
   analyzeLayoutWithBackend,
   checkLayoutAiHealth,
-  getLayoutAiBackendUrl,
   type LayoutAiBackendResponse,
   type LayoutAiFields,
+  type LayoutAiFieldDetail,
   type LayoutAiHealth,
   type LayoutAiStatus,
 } from "@/lib/layoutAiService";
 import { cn } from "@/lib/utils";
-
-const backendUnavailableMessage =
-  "Backend indisponibil. Se afișează analiza locală existentă.";
+import {
+  clearLayoutAiSession,
+  loadLayoutAiSession,
+  saveLayoutAiSession,
+} from "@/lib/layoutAiSessionService";
 
 const fieldLabels: Record<DocumentAiFieldKey, string> = {
   invoiceNumber: "Număr factură",
@@ -71,41 +77,88 @@ export function LayoutAiAnalysis({
   analysis: DocumentAiAnalysis | null;
   documentAiFields: Partial<Record<DocumentAiFieldKey, string>> | null;
   verifiedFields: DocumentAiFieldKey[];
-  onApplyFields: (fields: LayoutAiFields) => void;
+  onApplyFields: (
+    fields: LayoutAiFields,
+    details: Record<DocumentAiFieldKey, LayoutAiFieldDetail>,
+  ) => void;
   onPreparedAnalysis: (analysis: DocumentAiAnalysis, fields: LayoutAiFields) => void;
 }) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const sessionHydratedRef = useRef(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState("");
   const [isCheckingHealth, setIsCheckingHealth] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [health, setHealth] = useState<LayoutAiHealth | null>(null);
   const [result, setResult] = useState<LayoutAiBackendResponse | null>(null);
   const [message, setMessage] = useState("");
-  const [technicalError, setTechnicalError] = useState("");
   const [processMessage, setProcessMessage] = useState("");
   const [comparisonFields, setComparisonFields] = useState<LayoutAiFields | null>(null);
-  const backendUrl = getLayoutAiBackendUrl();
   const hasLocalExtraction = Boolean(analysis?.extractedText || hasAnyField(documentAiFields));
+
+  useEffect(() => {
+    let active = true;
+    void loadLayoutAiSession()
+      .then((session) => {
+        if (!active || !session) return;
+        setSelectedFile(session.file);
+        setResult(session.result);
+        setComparisonFields(session.comparisonFields);
+        setMessage(session.message);
+      })
+      .catch((error) => console.warn("Layout AI session could not be restored", error))
+      .finally(() => {
+        if (active) sessionHydratedRef.current = true;
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!sessionHydratedRef.current) return;
+    void saveLayoutAiSession({
+      file: selectedFile,
+      result,
+      comparisonFields,
+      message,
+    }).catch((error) => console.warn("Layout AI session could not be persisted", error));
+  }, [comparisonFields, message, result, selectedFile]);
+
+  useEffect(() => {
+    if (!selectedFile || !isPreviewableImage(selectedFile)) {
+      setPreviewUrl("");
+      return;
+    }
+
+    const nextPreviewUrl = URL.createObjectURL(selectedFile);
+    setPreviewUrl(nextPreviewUrl);
+
+    return () => URL.revokeObjectURL(nextPreviewUrl);
+  }, [selectedFile]);
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] ?? null;
-    if (file && !isSupportedDocumentAiFile(file)) {
+
+    if (!file) {
+      return;
+    }
+
+    if (!isSupportedDocumentAiFile(file)) {
       toast.error("Selectează un fișier PDF, PNG, JPG sau JPEG.");
       event.currentTarget.value = "";
-      setSelectedFile(null);
       return;
     }
     setSelectedFile(file);
     setResult(null);
     setComparisonFields(null);
     setMessage("");
-    setTechnicalError("");
   }
 
   async function handleCheckBackend() {
     try {
       setIsCheckingHealth(true);
       setMessage("");
-      setTechnicalError("");
       const nextHealth = await checkLayoutAiHealth();
 
       setHealth(nextHealth);
@@ -119,11 +172,10 @@ export function LayoutAiAnalysis({
         setMessage("Analiza layout este activă și pregătită pentru documente.");
         toast.info("Serviciul Layout AI este activ.");
       }
-    } catch (error) {
+    } catch {
       const errorMessage = getBackendUnavailableMessage();
       setHealth(null);
       setMessage(errorMessage);
-      setTechnicalError(getTechnicalError(error));
       toast.error("Modulul de analiză AI nu este pornit momentan.");
     } finally {
       setIsCheckingHealth(false);
@@ -139,14 +191,13 @@ export function LayoutAiAnalysis({
     try {
       setIsRunning(true);
       setMessage("");
-      setTechnicalError("");
       let activeAnalysis = analysis;
       let activeFields = toLayoutFields(documentAiFields ?? analysis?.fields ?? null);
       const selectedFileNeedsOcr = Boolean(
         selectedFile &&
-          (!activeAnalysis ||
-            activeAnalysis.fileName !== selectedFile.name ||
-            !activeAnalysis.extractedText.trim()),
+        (!activeAnalysis ||
+          activeAnalysis.fileName !== selectedFile.name ||
+          !activeAnalysis.extractedText.trim()),
       );
 
       if (selectedFileNeedsOcr && selectedFile) {
@@ -160,7 +211,10 @@ export function LayoutAiAnalysis({
         onPreparedAnalysis(activeAnalysis, activeFields);
       }
 
-      if (!activeAnalysis?.extractedText.trim() || activeAnalysis.extractedText.trim().length < 20) {
+      if (
+        !activeAnalysis?.extractedText.trim() ||
+        activeAnalysis.extractedText.trim().length < 20
+      ) {
         throw new LayoutPreparationError();
       }
 
@@ -174,6 +228,7 @@ export function LayoutAiAnalysis({
         ocrText: activeAnalysis.extractedText,
         ocrWords: activeAnalysis.ocrWords,
         documentAiFields: activeFields,
+        verifiedFields,
       });
 
       setResult(nextResult);
@@ -192,7 +247,6 @@ export function LayoutAiAnalysis({
         toast.error(error.message);
       } else {
         setMessage(getBackendUnavailableMessage());
-        setTechnicalError(getTechnicalError(error));
         toast.error("Modulul de analiză AI nu este pornit momentan.");
       }
     } finally {
@@ -220,8 +274,25 @@ export function LayoutAiAnalysis({
       return;
     }
 
-    onApplyFields(applicableFields);
+    onApplyFields(applicableFields, result.field_details);
     toast.success(`${appliedCount} propuneri AI au fost aplicate câmpurilor neconfirmate.`);
+  }
+
+  function handleResetLayoutAnalysis() {
+    setSelectedFile(null);
+    setResult(null);
+    setMessage("");
+    setProcessMessage("");
+    setComparisonFields(null);
+    void clearLayoutAiSession().catch((error) =>
+      console.warn("Layout AI session could not be cleared", error),
+    );
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+
+    toast.info("Documentul și analiza Layout AI au fost șterse.");
   }
 
   const effectiveDocumentFields = comparisonFields ?? toLayoutFields(documentAiFields);
@@ -244,10 +315,7 @@ export function LayoutAiAnalysis({
             </p>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            <HeroStatus
-              label="Serviciu pregătit"
-              active={Boolean(health)}
-            />
+            <HeroStatus label="Serviciu pregătit" active={Boolean(health)} />
             <HeroStatus
               label="Model AI disponibil"
               active={Boolean(health?.layout_model_available)}
@@ -283,18 +351,27 @@ export function LayoutAiAnalysis({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="layout-ai-file">Document opțional pentru analiză</Label>
+              <Label htmlFor="layout-ai-file">Document pentru analiză</Label>
               <Input
+                ref={fileInputRef}
                 id="layout-ai-file"
                 type="file"
                 accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
                 onChange={handleFileChange}
               />
               <p className="text-xs leading-5 text-slate-500">
-                Poți încărca documentul direct. IMMapp pregătește automat textul și structura
-                necesare analizei.
+                Încarcă o factură PDF sau imagine. IMMapp pregătește automat documentul pentru
+                analiză.
               </p>
             </div>
+
+            {selectedFile && (
+              <UploadedDocumentCard
+                file={selectedFile}
+                previewUrl={previewUrl}
+                status={result ? "Analiză finalizată" : "Pregătit pentru analiză"}
+              />
+            )}
 
             <div className="flex flex-wrap gap-3">
               <Button
@@ -323,6 +400,18 @@ export function LayoutAiAnalysis({
                 )}
                 Analizează documentul
               </Button>
+
+              {(selectedFile || result || message) && (
+                <Button
+                  variant="ghost"
+                  onClick={handleResetLayoutAnalysis}
+                  disabled={isRunning || isCheckingHealth}
+                  className="gap-2 text-slate-600 hover:bg-rose-50 hover:text-rose-700"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {selectedFile ? "Șterge documentul" : "Resetează analiza"}
+                </Button>
+              )}
             </div>
 
             {processMessage && (
@@ -338,13 +427,6 @@ export function LayoutAiAnalysis({
                 <p className="whitespace-pre-line">{message}</p>
               </div>
             )}
-
-            <TechnicalDetails
-              health={health}
-              result={result}
-              backendUrl={backendUrl}
-              technicalError={technicalError}
-            />
           </div>
         </AdminPanel>
 
@@ -399,7 +481,6 @@ export function LayoutAiAnalysis({
                   Aplică propunerile AI
                 </Button>
               </div>
-
             </div>
           )}
         </AdminPanel>
@@ -412,6 +493,63 @@ export function LayoutAiAnalysis({
           verifiedFields={verifiedFields}
         />
       )}
+    </div>
+  );
+}
+
+function UploadedDocumentCard({
+  file,
+  previewUrl,
+  status,
+}: {
+  file: File;
+  previewUrl: string;
+  status: "Pregătit pentru analiză" | "Analiză finalizată";
+}) {
+  const isComplete = status === "Analiză finalizată";
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50/80 to-white p-4 shadow-sm">
+      <div className="flex items-center gap-4">
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white bg-white text-blue-600 shadow-sm">
+          {previewUrl ? (
+            <img
+              src={previewUrl}
+              alt={`Previzualizare ${file.name}`}
+              className="h-full w-full object-cover"
+            />
+          ) : isPreviewableImage(file) ? (
+            <ImageIcon className="h-6 w-6" />
+          ) : (
+            <FileText className="h-6 w-6" />
+          )}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+              Document încărcat
+            </p>
+            <Badge
+              variant="outline"
+              className={cn(
+                "rounded-full bg-white",
+                isComplete
+                  ? "border-emerald-200 text-emerald-700"
+                  : "border-blue-200 text-blue-700",
+              )}
+            >
+              {status}
+            </Badge>
+          </div>
+          <p className="mt-1 truncate font-semibold text-slate-950" title={file.name}>
+            {file.name}
+          </p>
+          <p className="mt-1 text-xs text-slate-500">
+            {getFileTypeLabel(file)} · {formatFileSize(file.size)}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -523,12 +661,12 @@ function LayoutFieldsTable({
                     className={cn(
                       "rounded-full",
                       status === "confirmed"
-                          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                          : status === "review"
-                            ? "border-amber-200 bg-amber-50 text-amber-700"
-                            : status === "proposal"
-                              ? "border-blue-200 bg-blue-50 text-blue-700"
-                              : "border-slate-200 bg-slate-50 text-slate-500",
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                        : status === "review"
+                          ? "border-amber-200 bg-amber-50 text-amber-700"
+                          : status === "proposal"
+                            ? "border-blue-200 bg-blue-50 text-blue-700"
+                            : "border-slate-200 bg-slate-50 text-slate-500",
                     )}
                   >
                     {getComparisonStatusLabel(status)}
@@ -697,10 +835,7 @@ function TechnicalDetails({
           />
           <TechnicalItem label="Runtime mode" value={runtimeMode ?? "neverificat"} />
           <TechnicalItem label="Backend URL" value={backendUrl} />
-          <TechnicalItem
-            label="Metodă extracție"
-            value={result?.field_extraction_method ?? "-"}
-          />
+          <TechnicalItem label="Metodă extracție" value={result?.field_extraction_method ?? "-"} />
           <TechnicalItem
             label="Model inference executed"
             value={result?.model_inference_executed ? "true" : "false"}
@@ -729,9 +864,7 @@ function TechnicalDetails({
           </p>
         )}
 
-        {fallbackReason && (
-          <TechnicalItem label="Motiv fallback" value={fallbackReason} />
-        )}
+        {fallbackReason && <TechnicalItem label="Motiv fallback" value={fallbackReason} />}
         {technicalError && <TechnicalItem label="Eroare serviciu" value={technicalError} />}
 
         {result && (
@@ -757,9 +890,7 @@ function TechnicalDetails({
 
         {result && (
           <details className="rounded-lg border border-slate-200 bg-white p-3">
-            <summary className="cursor-pointer font-medium text-slate-900">
-              Răspuns JSON
-            </summary>
+            <summary className="cursor-pointer font-medium text-slate-900">Răspuns JSON</summary>
             <pre className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap break-all text-xs text-slate-600">
               {JSON.stringify(result, null, 2)}
             </pre>
@@ -905,32 +1036,33 @@ function getApplicableLayoutFields({
   documentConfidences?: Partial<Record<DocumentAiFieldKey, number>>;
 }) {
   const verified = new Set(verifiedFields);
-  return fieldOrder.reduce(
-    (applicable, field) => {
-      const proposed = result.fields[field]?.trim();
-      if (!proposed || verified.has(field)) {
-        return applicable;
-      }
-
-      const current = currentFields[field]?.trim();
-      const comparison = compareLayoutFieldValues(field, proposed, current);
-      if (comparison.status === "proposal") {
-        applicable[field] = proposed;
-        return applicable;
-      }
-
-      if (comparison.status === "review") {
-        const documentConfidence = documentConfidences?.[field] ?? (current ? 0.75 : 0);
-        const layoutConfidence = result.field_details[field]?.confidence ?? 0;
-        if (documentConfidence < 0.8 && layoutConfidence > documentConfidence) {
-          applicable[field] = proposed;
-        }
-      }
-
+  return fieldOrder.reduce((applicable, field) => {
+    const proposed = result.fields[field]?.trim();
+    if (!proposed || verified.has(field)) {
       return applicable;
-    },
-    toLayoutFields(null),
-  );
+    }
+
+    const current = currentFields[field]?.trim();
+    const comparison = compareLayoutFieldValues(field, proposed, current);
+    if (comparison.status === "proposal") {
+      applicable[field] = proposed;
+      return applicable;
+    }
+
+    if (comparison.status === "review") {
+      const documentConfidence = documentConfidences?.[field] ?? (current ? 0.75 : 0);
+      const layoutConfidence = result.field_details[field]?.confidence ?? 0;
+      const semanticallyBetter = isCleanerLayoutProposal(field, proposed, current);
+      if (
+        (semanticallyBetter && layoutConfidence >= 0.62) ||
+        (documentConfidence < 0.8 && layoutConfidence > documentConfidence)
+      ) {
+        applicable[field] = proposed;
+      }
+    }
+
+    return applicable;
+  }, toLayoutFields(null));
 }
 
 function countPopulatedFields(fields: LayoutAiFields) {
@@ -940,13 +1072,10 @@ function countPopulatedFields(fields: LayoutAiFields) {
 function toLayoutFields(
   fields: Partial<Record<DocumentAiFieldKey, unknown>> | null | undefined,
 ): LayoutAiFields {
-  return fieldOrder.reduce(
-    (normalized, field) => {
-      normalized[field] = String(fields?.[field] ?? "").trim();
-      return normalized;
-    },
-    {} as LayoutAiFields,
-  );
+  return fieldOrder.reduce((normalized, field) => {
+    normalized[field] = String(fields?.[field] ?? "").trim();
+    return normalized;
+  }, {} as LayoutAiFields);
 }
 
 function formatConfidence(value: number | null | undefined) {
@@ -961,12 +1090,30 @@ function hasAnyField(fields: Partial<Record<DocumentAiFieldKey, unknown>> | null
   return Boolean(fields && Object.values(fields).some((value) => String(value ?? "").trim()));
 }
 
-function getBackendUnavailableMessage() {
-  return "Analiza inteligentă nu este disponibilă momentan. Încearcă din nou în câteva momente.";
+function isPreviewableImage(file: File) {
+  return file.type === "image/jpeg" || file.type === "image/png";
 }
 
-function getTechnicalError(error: unknown) {
-  return error instanceof Error ? error.message : backendUnavailableMessage;
+function getFileTypeLabel(file: File) {
+  const extension = file.name.split(".").pop()?.toUpperCase();
+
+  if (extension === "JPEG") {
+    return "JPG";
+  }
+
+  return extension || (file.type === "application/pdf" ? "PDF" : "Document");
+}
+
+function formatFileSize(size: number) {
+  if (size < 1024 * 1024) {
+    return `${Math.max(1, Math.round(size / 1024))} KB`;
+  }
+
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function getBackendUnavailableMessage() {
+  return "Analiza inteligentă nu este disponibilă momentan. Încearcă din nou în câteva momente.";
 }
 
 class LayoutPreparationError extends Error {

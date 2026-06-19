@@ -12,7 +12,31 @@ class LayoutXlmModelManager:
     """Lazy LayoutXLM loader with a truthful fallback-safe runtime contract."""
 
     def __init__(self) -> None:
-        self.model_id = os.getenv("LAYOUTXLM_MODEL_ID", "microsoft/layoutxlm-base")
+        self.base_model_id = os.getenv("LAYOUTXLM_MODEL_ID", "microsoft/layoutxlm-base")
+        default_classifier = os.path.join(
+            os.path.dirname(__file__), "models", "layoutxlm-invoice-token-classifier"
+        )
+        self.fine_tuned_model_path = os.path.abspath(
+            os.getenv("LAYOUTXLM_FINE_TUNED_MODEL_PATH", default_classifier)
+        )
+        self.fine_tuned_model_available = os.path.isfile(
+            os.path.join(self.fine_tuned_model_path, "config.json")
+        )
+        dataset_root = os.path.join(os.path.dirname(__file__), "datasets", "fatura")
+        self.layoutxlm_training_ready = all(
+            os.path.isfile(path)
+            for path in [
+                os.path.join(dataset_root, "inferred_label_map.json"),
+                os.path.join(dataset_root, "processed", "layoutxlm_train.jsonl"),
+                os.path.join(dataset_root, "processed", "layoutxlm_test.jsonl"),
+            ]
+        )
+        self.fine_tuned_model_used = False
+        self.model_id = (
+            self.fine_tuned_model_path
+            if self.fine_tuned_model_available
+            else self.base_model_id
+        )
         self.device_name = os.getenv("LAYOUTXLM_DEVICE", "cpu").strip() or "cpu"
         self.local_files_only = _env_flag("LAYOUTXLM_LOCAL_FILES_ONLY", False)
         self.runtime_mode: RuntimeMode = "fallback_layout_aware"
@@ -56,12 +80,18 @@ class LayoutXlmModelManager:
                     "snapshot_download": snapshot_download,
                 }
                 try:
-                    with _offline_huggingface_hub():
-                        self._load_components(loaders, local_files_only=True)
-                except Exception as local_error:
-                    if self.local_files_only or not _is_cache_miss(local_error):
+                    self._load_with_cache_policy(loaders)
+                    self.fine_tuned_model_used = self.fine_tuned_model_available
+                except Exception as fine_tuned_error:
+                    if not self.fine_tuned_model_available:
                         raise
-                    self._load_components(loaders, local_files_only=False)
+                    self.model_id = self.base_model_id
+                    self.fine_tuned_model_used = False
+                    self._load_with_cache_policy(loaders)
+                    self.notes = [
+                        "Clasificatorul local nu a putut fi incarcat; modelul de baza este folosit.",
+                        _compact_error(fine_tuned_error),
+                    ]
 
                 self._torch = torch
                 self._model.to(self.device_name)
@@ -77,17 +107,24 @@ class LayoutXlmModelManager:
                     ],
                 )
                 if probe["tokens_count"] <= 0:
-                    raise RuntimeError("LayoutXLM forward pass returned no active tokens.")
+                    raise RuntimeError(
+                        "LayoutXLM forward pass returned no active tokens."
+                    )
                 self.layout_model_available = True
                 self.model_inference_available = True
                 self.fallback_reason = None
-                self.notes = [
-                    "Modelul LayoutXLM a fost incarcat pentru inferenta reala.",
+                self.notes = list(self.notes) + [
+                    (
+                        "Clasificatorul LayoutXLM specializat a fost incarcat."
+                        if self.fine_tuned_model_used
+                        else "Modelul LayoutXLM de baza a fost incarcat pentru inferenta reala."
+                    ),
                 ]
             except Exception as exc:
                 self.runtime_mode = "fallback_layout_aware"
                 self.layout_model_available = False
                 self.model_inference_available = False
+                self.fine_tuned_model_used = False
                 self.fallback_reason = _compact_error(exc)
                 self.notes = [
                     "Modelul LayoutXLM nu a putut fi incarcat; extractorul layout-aware ramane disponibil.",
@@ -95,9 +132,22 @@ class LayoutXlmModelManager:
             finally:
                 self._loaded = True
 
+    def _load_with_cache_policy(self, loaders: Dict[str, Any]) -> None:
+        try:
+            with _offline_huggingface_hub():
+                self._load_components(loaders, local_files_only=True)
+        except Exception as local_error:
+            if (
+                self.local_files_only
+                or os.path.isdir(self.model_id)
+                or not _is_cache_miss(local_error)
+            ):
+                raise
+            self._load_components(loaders, local_files_only=False)
+
     def _load_components(self, loaders: Dict[str, Any], local_files_only: bool) -> None:
         source = self.model_id
-        if local_files_only:
+        if local_files_only and not os.path.isdir(source):
             source = loaders["snapshot_download"](
                 self.model_id,
                 local_files_only=True,
@@ -151,6 +201,10 @@ class LayoutXlmModelManager:
             "runtime_mode": self.runtime_mode,
             "layout_model_available": self.layout_model_available,
             "model_inference_available": self.model_inference_available,
+            "fine_tuned_model_available": self.fine_tuned_model_available,
+            "fine_tuned_model_used": self.fine_tuned_model_used,
+            "fine_tuned_model_path": self.fine_tuned_model_path,
+            "layoutxlm_training_ready": self.layoutxlm_training_ready,
             "fallback_available": True,
             "device": self.device_name,
             "notes": list(self.notes),
@@ -178,6 +232,10 @@ class LayoutXlmModelManager:
             "words_count": len(words),
             "boxes_count": len(boxes),
             "model_confidence": None,
+            "fine_tuned_model_available": self.fine_tuned_model_available,
+            "fine_tuned_model_used": self.fine_tuned_model_used,
+            "fine_tuned_model_path": self.fine_tuned_model_path,
+            "layoutxlm_training_ready": self.layoutxlm_training_ready,
             "token_predictions": [],
             "notes": list(self.notes),
         }
@@ -187,7 +245,9 @@ class LayoutXlmModelManager:
 
         if not words:
             base_result["runtime_mode"] = "fallback_layout_aware"
-            base_result["fallback_reason"] = "Nu exista cuvinte OCR pentru inferenta LayoutXLM."
+            base_result["fallback_reason"] = (
+                "Nu exista cuvinte OCR pentru inferenta LayoutXLM."
+            )
             return base_result
 
         try:
@@ -218,7 +278,9 @@ class LayoutXlmModelManager:
                     "field_extraction_method": "Fallback layout-aware extraction",
                     "fallback_reason": reason,
                     "notes": list(self.notes)
-                    + ["Inferenta LayoutXLM a esuat; analiza layout-aware a fost pastrata."],
+                    + [
+                        "Inferenta LayoutXLM a esuat; analiza layout-aware a fost pastrata."
+                    ],
                 }
             )
             return base_result
@@ -254,7 +316,9 @@ class LayoutXlmModelManager:
             outputs = self._model(**model_inputs)
 
         attention_mask = model_inputs.get("attention_mask")
-        tokens_count = int(attention_mask.sum().item()) if attention_mask is not None else 0
+        tokens_count = (
+            int(attention_mask.sum().item()) if attention_mask is not None else 0
+        )
         result: Dict[str, Any] = {
             "tokens_count": tokens_count,
             "model_confidence": None,
@@ -289,7 +353,9 @@ def _has_token_classification_head(config: Any) -> bool:
         return True
 
     labels = list((getattr(config, "id2label", None) or {}).values())
-    meaningful_labels = [label for label in labels if not re.fullmatch(r"LABEL_\d+", str(label))]
+    meaningful_labels = [
+        label for label in labels if not re.fullmatch(r"LABEL_\d+", str(label))
+    ]
     return len(meaningful_labels) > 1
 
 

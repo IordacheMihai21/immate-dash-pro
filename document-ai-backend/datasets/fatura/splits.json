@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "seed": 42,
+  "train_ratio": 0.8,
+  "directory_mapping": {
+    "set1": "train",
+    "set2": "test"
+  },
+  "train": [],
+  "test": []
+}

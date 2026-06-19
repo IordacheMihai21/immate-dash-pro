@@ -1,4 +1,9 @@
 import type { DocumentAiFieldKey, OcrWord } from "@/lib/documentAiService";
+import {
+  cleanPartyName,
+  isInvalidPartyCandidate,
+  normalizeInvoiceNumber,
+} from "@/lib/invoiceCandidateEngine";
 
 const fieldKeys: DocumentAiFieldKey[] = [
   "invoiceNumber",
@@ -54,6 +59,10 @@ export type LayoutAiHealth = {
   runtime_mode: LayoutAiRuntimeMode;
   layout_model_available: boolean;
   model_inference_available: boolean;
+  fine_tuned_model_available?: boolean;
+  fine_tuned_model_used?: boolean;
+  fine_tuned_model_path?: string;
+  layoutxlm_training_ready?: boolean;
   fallback_available: boolean;
   fallback_reason?: string | null;
   device: string;
@@ -86,6 +95,10 @@ export type LayoutAiBackendResponse = {
   runtime_mode: LayoutAiRuntimeMode;
   layout_model_available: boolean;
   model_inference_executed: boolean;
+  fine_tuned_model_available: boolean;
+  fine_tuned_model_used: boolean;
+  fine_tuned_model_path?: string | null;
+  layoutxlm_training_ready: boolean;
   field_extraction_method: string;
   fallback_reason?: string | null;
   confidence: number;
@@ -109,6 +122,7 @@ export type AnalyzeLayoutPayload = {
   ocrText?: string | null;
   ocrWords?: OcrWord[] | null;
   documentAiFields?: Partial<Record<DocumentAiFieldKey, unknown>> | null;
+  verifiedFields?: DocumentAiFieldKey[] | null;
 };
 
 export function getLayoutAiBackendUrl() {
@@ -167,6 +181,10 @@ export async function analyzeLayoutWithBackend(
     formData.append("document_ai_fields", JSON.stringify(payload.documentAiFields));
   }
 
+  if (payload.verifiedFields?.length) {
+    formData.append("verified_fields", JSON.stringify(payload.verifiedFields));
+  }
+
   const endpoint = "/analyze-layout";
   const response = await fetchLayoutAi(
     endpoint,
@@ -190,8 +208,11 @@ export async function analyzeLayoutWithBackend(
     runtime_mode: normalizeRuntimeMode(data.runtime_mode),
     layout_model_available: Boolean(data.layout_model_available),
     model_inference_executed: Boolean(data.model_inference_executed),
-    field_extraction_method:
-      data.field_extraction_method ?? "Fallback layout-aware extraction",
+    fine_tuned_model_available: Boolean(data.fine_tuned_model_available),
+    fine_tuned_model_used: Boolean(data.fine_tuned_model_used),
+    fine_tuned_model_path: data.fine_tuned_model_path ?? null,
+    layoutxlm_training_ready: Boolean(data.layoutxlm_training_ready),
+    field_extraction_method: data.field_extraction_method ?? "Fallback layout-aware extraction",
     fallback_reason: data.fallback_reason ?? null,
     confidence: typeof data.confidence === "number" ? data.confidence : 0,
     fields: normalizeLayoutFields(data.fields),
@@ -221,7 +242,11 @@ export function compareLayoutFieldValues(
   }
 
   if (proposed && !current) {
-    return { status: "proposal", equivalent: false, formatDifference: false };
+    return {
+      status: isLayoutFieldSemanticallyValid(field, proposed) ? "proposal" : "review",
+      equivalent: false,
+      formatDifference: false,
+    };
   }
 
   if (!proposed && current) {
@@ -229,11 +254,52 @@ export function compareLayoutFieldValues(
   }
 
   const equivalent = areLayoutFieldValuesEquivalent(field, proposed, current);
+  const semanticallyValid =
+    isLayoutFieldSemanticallyValid(field, proposed) &&
+    isLayoutFieldSemanticallyValid(field, current);
   return {
-    status: equivalent ? "confirmed" : "review",
+    status: equivalent && semanticallyValid ? "confirmed" : "review",
     equivalent,
     formatDifference: equivalent && normalizePlainText(proposed) !== normalizePlainText(current),
   };
+}
+
+export function isLayoutFieldSemanticallyValid(field: DocumentAiFieldKey, value: unknown) {
+  const text = stringifyField(value).trim();
+  if (!text) return false;
+  if (field === "supplierName" || field === "customerName") {
+    return !isInvalidPartyCandidate(text);
+  }
+  if (field === "invoiceNumber") {
+    return /\d/.test(text) && Boolean(normalizeInvoiceNumber(text));
+  }
+  if (field === "invoiceDate") return normalizeDateValue(text) !== null;
+  if (field === "subtotal" || field === "vatAmount" || field === "totalAmount") {
+    return normalizeAmountValue(text) !== null;
+  }
+  if (field === "currency") {
+    return ["RON", "EUR", "USD", "GBP"].includes(normalizeCurrencyValue(text));
+  }
+  return true;
+}
+
+export function isCleanerLayoutProposal(
+  field: DocumentAiFieldKey,
+  proposedValue: unknown,
+  currentValue: unknown,
+) {
+  const proposed = stringifyField(proposedValue).trim();
+  const current = stringifyField(currentValue).trim();
+  if (!isLayoutFieldSemanticallyValid(field, proposed)) return false;
+  if (!current || !isLayoutFieldSemanticallyValid(field, current)) return true;
+  if (field === "supplierName" || field === "customerName") {
+    const cleanedCurrent = cleanPartyName(current);
+    return (
+      normalizePlainText(cleanedCurrent) === normalizePlainText(proposed) &&
+      proposed.length < current.length
+    );
+  }
+  return false;
 }
 
 export function areLayoutFieldValuesEquivalent(
@@ -347,9 +413,7 @@ export function normalizeCuiValue(value: unknown) {
     .replace(/^RO(?=\d)/, "");
 }
 
-function normalizeFieldDetails(
-  value: unknown,
-): Record<DocumentAiFieldKey, LayoutAiFieldDetail> {
+function normalizeFieldDetails(value: unknown): Record<DocumentAiFieldKey, LayoutAiFieldDetail> {
   const source = normalizeObject(value) as Partial<Record<DocumentAiFieldKey, unknown>>;
   return fieldKeys.reduce(
     (details, field) => {
@@ -398,8 +462,7 @@ function normalizeTechnical(value: unknown): LayoutAiBackendResponse["technical"
     tokens_count: toFiniteNumber(source.tokens_count),
     words_count: toFiniteNumber(source.words_count),
     boxes_count: toFiniteNumber(source.boxes_count),
-    model_confidence:
-      typeof source.model_confidence === "number" ? source.model_confidence : null,
+    model_confidence: typeof source.model_confidence === "number" ? source.model_confidence : null,
   };
 }
 
@@ -463,11 +526,7 @@ function normalizePlainText(value: string) {
     .replace(/\s+/g, " ");
 }
 
-async function fetchLayoutAi(
-  endpoint: string,
-  init: RequestInit | undefined,
-  timeoutMs: number,
-) {
+async function fetchLayoutAi(endpoint: string, init: RequestInit | undefined, timeoutMs: number) {
   const controller = new AbortController();
   let didTimeout = false;
   const timeoutId = globalThis.setTimeout(() => {

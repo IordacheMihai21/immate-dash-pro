@@ -22,6 +22,8 @@ export type FieldComparison = {
   predicted: string;
   expected: string;
   correct: boolean;
+  strictCorrect: boolean;
+  evaluated: boolean;
   missing: boolean;
   incorrect: boolean;
 };
@@ -29,6 +31,8 @@ export type FieldComparison = {
 export type DocumentEvaluationResult = {
   documentId: string;
   exactMatch: boolean;
+  strictExactMatch: boolean;
+  normalizedExactMatch: boolean;
   fieldAccuracy: number;
   precision: number;
   recall: number;
@@ -49,6 +53,8 @@ export type BatchEvaluationItem = {
 export type BatchEvaluationResult = {
   documentsEvaluated: number;
   exactMatchRate: number;
+  strictExactMatchRate: number;
+  normalizedExactMatchRate: number;
   fieldAccuracy: number;
   precision: number;
   recall: number;
@@ -83,21 +89,22 @@ export function hasEvaluationFields(fields: DocumentAiEvaluationFields) {
   });
 }
 
-export function parseFaturaAnnotationToExpected(
-  annotation: unknown,
-): DocumentAiEvaluationFields {
+export function parseFaturaAnnotationToExpected(annotation: unknown): DocumentAiEvaluationFields {
   if (isRecord(annotation) && hasDirectEvaluationKeys(annotation)) {
     return toEvaluationFields(annotation);
   }
 
   const entries = collectAnnotationEntries(annotation);
-  const numberText = findAnnotationText(entries, (key) => key === "NUMBER" || key === "INVOICENUMBER");
+  const numberText = findAnnotationText(
+    entries,
+    (key) => key === "NUMBER" || key === "INVOICENUMBER",
+  );
   const dateText = findAnnotationText(entries, (key) => key === "DATE" || key === "INVOICEDATE");
   const sellerText = findAnnotationText(entries, (key) =>
     ["SELLERNAME", "SUPPLIERNAME", "VENDORNAME"].includes(key),
   );
   const gstinText = findAnnotationText(entries, (key) =>
-    ["GSTIN", "SUPPLIERCUI", "SUPPLIERTAXID", "VATID", "TAXID"].includes(key),
+    ["GSTIN", "GSTINSELLER", "SUPPLIERCUI", "SUPPLIERTAXID", "VATID", "TAXID"].includes(key),
   );
   const buyerText = findAnnotationText(entries, (key) =>
     ["BUYER", "BUYERNAME", "CUSTOMER", "CUSTOMERNAME"].includes(key),
@@ -105,10 +112,12 @@ export function parseFaturaAnnotationToExpected(
   const subtotalText = findAnnotationText(entries, (key) =>
     ["SUBTOTAL", "SUBTOTALAMOUNT", "SUBTOTALVALUE", "NETAMOUNT"].includes(key),
   );
-  const vatText = findAnnotationText(entries, (key) =>
-    /^(GST|VAT|TAX|TVA)/.test(key) &&
-    !["GSTIN", "VATID", "VATCODE", "TAXID"].includes(key) &&
-    !key.includes("TOTAL"),
+  const vatText = findAnnotationText(
+    entries,
+    (key) =>
+      /^(GST|VAT|TAX|TVA)/.test(key) &&
+      !/^(GSTIN|VATID|VATCODE|TAXID)/.test(key) &&
+      !key.includes("TOTAL"),
   );
   const totalText = findAnnotationText(entries, (key) =>
     ["TOTAL", "GRANDTOTAL", "AMOUNTDUE", "PAYABLEAMOUNT"].includes(key),
@@ -163,8 +172,13 @@ export function compareField(
 ): FieldComparison {
   const normalizedPredicted = normalizeValue(predicted);
   const normalizedExpected = normalizeValue(expected);
+  const rawPredicted =
+    predicted === null || predicted === undefined ? "" : String(predicted).trim();
+  const rawExpected = expected === null || expected === undefined ? "" : String(expected).trim();
+  const evaluated = Boolean(normalizedExpected);
   const missing = Boolean(normalizedExpected) && !normalizedPredicted;
   const correct = Boolean(normalizedExpected) && normalizedPredicted === normalizedExpected;
+  const strictCorrect = evaluated && rawPredicted === rawExpected;
   const incorrect = Boolean(normalizedExpected) && Boolean(normalizedPredicted) && !correct;
 
   return {
@@ -172,6 +186,8 @@ export function compareField(
     predicted: predicted === null || predicted === undefined ? "" : String(predicted),
     expected: expected === null || expected === undefined ? "" : String(expected),
     correct,
+    strictCorrect,
+    evaluated,
     missing,
     incorrect,
   };
@@ -212,7 +228,12 @@ export function evaluateDocument(
   const incorrectFields = fields.filter((field) => field.incorrect).length;
   const totalFields = fields.filter((field) => normalizeValue(field.expected)).length;
   const fieldAccuracy = totalFields > 0 ? correctFields / totalFields : 0;
-  const exactMatch = totalFields > 0 && correctFields === totalFields;
+  const evaluatedFields = fields.filter((field) => field.evaluated);
+  const strictExactMatch =
+    evaluatedFields.length > 0 && evaluatedFields.every((field) => field.strictCorrect);
+  const normalizedExactMatch =
+    evaluatedFields.length > 0 && evaluatedFields.every((field) => field.correct);
+  const exactMatch = normalizedExactMatch;
   const { precision, recall, f1Score } = calculatePrecisionRecallF1({
     correct: correctFields,
     missing: missingFields,
@@ -222,6 +243,8 @@ export function evaluateDocument(
   return {
     documentId,
     exactMatch,
+    strictExactMatch,
+    normalizedExactMatch,
     fieldAccuracy,
     precision,
     recall,
@@ -250,9 +273,17 @@ export function evaluateBatch(items: BatchEvaluationItem[]): BatchEvaluationResu
 
   return {
     documentsEvaluated: documents.length,
+    strictExactMatchRate:
+      documents.length > 0
+        ? documents.filter((document) => document.strictExactMatch).length / documents.length
+        : 0,
+    normalizedExactMatchRate:
+      documents.length > 0
+        ? documents.filter((document) => document.normalizedExactMatch).length / documents.length
+        : 0,
     exactMatchRate:
       documents.length > 0
-        ? documents.filter((document) => document.exactMatch).length / documents.length
+        ? documents.filter((document) => document.normalizedExactMatch).length / documents.length
         : 0,
     fieldAccuracy: totalFields > 0 ? correctFields / totalFields : 0,
     precision,
@@ -347,7 +378,7 @@ function normalizeAnnotationKey(value: string) {
 
 function extractInvoiceNumber(value: string) {
   return cleanupAnnotationLabel(value)
-    .replace(/^(INVOICE\s*(?:#|NO\.?|NUMBER)?|NUMBER)\s*[:#-]?\s*/i, "")
+    .replace(/^(?:INVOICE\s*(?:#|NO\.?|NUMBER|ID)?|NUMBER|ID)\s*[:#-]?\s*/i, "")
     .trim();
 }
 
@@ -361,20 +392,23 @@ function extractIsoDate(value: string) {
 
 function extractTaxIdentifier(value: string) {
   return cleanupAnnotationLabel(value)
-    .replace(/^(GSTIN|VAT\s*(?:ID|CODE|NO\.?|NUMBER)?|TAX\s*(?:ID|NO\.?|NUMBER)?|CUI|CIF)\s*[:#-]?\s*/i, "")
+    .replace(
+      /^(GSTIN|VAT\s*(?:ID|CODE|NO\.?|NUMBER)?|TAX\s*(?:ID|NO\.?|NUMBER)?|CUI|CIF)\s*[:#-]?\s*/i,
+      "",
+    )
     .replace(/\s+/g, "")
     .trim();
 }
 
 function extractBuyerName(value: string) {
-  return cleanupAnnotationLabel(value)
-    .split(/\r?\n/)
-    .map((line) =>
-      line
-        .replace(/^(BUYER|CUSTOMER|CLIENT|BILL\s+TO|SOLD\s+TO)\s*[:#-]?\s*/i, "")
-        .trim(),
-    )
-    .find(Boolean) ?? "";
+  return (
+    cleanupAnnotationLabel(value)
+      .split(/\r?\n/)
+      .map((line) =>
+        line.replace(/^(BUYER|CUSTOMER|CLIENT|BILL\s+TO|SOLD\s+TO)\s*[:#-]?\s*/i, "").trim(),
+      )
+      .find(Boolean) ?? ""
+  );
 }
 
 function cleanupAnnotationLabel(value: string | undefined) {
@@ -395,7 +429,16 @@ function formatAnnotationAmount(value: number | null) {
 }
 
 function extractCurrency(value: string) {
-  return cleanupAnnotationLabel(value).match(/\b(RON|LEI|EUR|USD|GBP)\b/i)?.[1]?.toUpperCase() ?? "";
+  const text = cleanupAnnotationLabel(value);
+  const code = text.match(/\b(RON|LEI|LEU|EUR|USD|GBP)\b/i)?.[1]?.toUpperCase();
+
+  if (code) {
+    return code === "LEI" || code === "LEU" ? "RON" : code;
+  }
+  if (text.includes("$")) return "USD";
+  if (text.includes("€")) return "EUR";
+  if (text.includes("£")) return "GBP";
+  return "";
 }
 
 function hasDirectEvaluationKeys(value: Record<string, unknown>) {
@@ -464,7 +507,10 @@ function parseComparableDate(value: string) {
 }
 
 function normalizeDateForComparison(value: string) {
-  const parts = value.replace(/[./\s]/g, "-").split("-").filter(Boolean);
+  const parts = value
+    .replace(/[./\s]/g, "-")
+    .split("-")
+    .filter(Boolean);
 
   if (parts[0]?.length === 4) {
     const [year, month, day] = parts;

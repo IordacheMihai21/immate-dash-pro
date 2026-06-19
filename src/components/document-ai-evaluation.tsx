@@ -1,12 +1,5 @@
 import { useEffect, useMemo, useRef, type ChangeEvent } from "react";
-import {
-  BarChart3,
-  CheckCircle2,
-  CircleDashed,
-  FileJson,
-  Sparkles,
-  Trash2,
-} from "lucide-react";
+import { BarChart3, CheckCircle2, CircleDashed, FileJson, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminPanel, InfoBanner } from "@/components/admin-ui";
 import { Badge } from "@/components/ui/badge";
@@ -180,8 +173,8 @@ export function DocumentAiEvaluation({
       </section>
 
       <InfoBanner icon={<BarChart3 className="h-4 w-4" />}>
-        Evaluarea compară câmpurile extrase automat cu adnotările de referință din datasetul
-        FATURA.
+        Evaluarea compară câmpurile extrase automat cu adnotările de referință din datasetul FATURA.
+        Câmpurile absente din referință nu sunt obligatorii și nu reduc scorurile.
       </InfoBanner>
 
       <EvaluationMetricOverview result={result} />
@@ -275,30 +268,30 @@ function EvaluationResults({ result }: { result: BatchEvaluationResult }) {
         contentClassName="p-0"
       >
         <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Câmp</TableHead>
-              <TableHead className="text-right">Acuratețe</TableHead>
-              <TableHead className="text-right">Corecte</TableHead>
-              <TableHead className="text-right">Lipsă</TableHead>
-              <TableHead className="text-right">Incorecte</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {result.fieldMetrics.map((field) => (
-              <TableRow key={field.field} className="hover:bg-slate-50/70">
-                <TableCell className="font-medium">{fieldLabels[field.field]}</TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {formatPercent(field.accuracy)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums">{field.correct}</TableCell>
-                <TableCell className="text-right tabular-nums">{field.missing}</TableCell>
-                <TableCell className="text-right tabular-nums">{field.incorrect}</TableCell>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Câmp</TableHead>
+                <TableHead className="text-right">Acuratețe</TableHead>
+                <TableHead className="text-right">Corecte</TableHead>
+                <TableHead className="text-right">Lipsă</TableHead>
+                <TableHead className="text-right">Incorecte</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {result.fieldMetrics.map((field) => (
+                <TableRow key={field.field} className="hover:bg-slate-50/70">
+                  <TableCell className="font-medium">{fieldLabels[field.field]}</TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {formatPercent(field.accuracy)}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">{field.correct}</TableCell>
+                  <TableCell className="text-right tabular-nums">{field.missing}</TableCell>
+                  <TableCell className="text-right tabular-nums">{field.incorrect}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       </AdminPanel>
 
@@ -326,12 +319,17 @@ function EvaluationResults({ result }: { result: BatchEvaluationResult }) {
                       variant="outline"
                       className={cn(
                         "rounded-full",
-                        document.exactMatch
+                        (document.strictExactMatch ?? false) ||
+                          (document.normalizedExactMatch ?? document.exactMatch)
                           ? "border-emerald-200 bg-emerald-50 text-emerald-700"
                           : "border-amber-200 bg-amber-50 text-amber-700",
                       )}
                     >
-                      {document.exactMatch ? "Potrivire exactă" : "Necesită analiză"}
+                      {document.strictExactMatch
+                        ? "Exact strict"
+                        : (document.normalizedExactMatch ?? document.exactMatch)
+                          ? "Exact normalizat"
+                          : "Necesită analiză"}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
@@ -354,9 +352,7 @@ function ExpectedFieldsPreview({ fields }: { fields: DocumentAiEvaluationFields 
     <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="font-semibold text-slate-950">
-            Câmpuri de referință extrase din dataset
-          </h3>
+          <h3 className="font-semibold text-slate-950">Câmpuri de referință extrase din dataset</h3>
           <p className="mt-1 text-sm text-slate-500">
             Aceste valori sunt folosite ca referință în calculul metricilor.
           </p>
@@ -421,13 +417,20 @@ function EvaluationMetricOverview({ result }: { result: BatchEvaluationResult | 
     { label: "Precizie", value: result ? formatPercent(result.precision) : "—" },
     { label: "Reamintire", value: result ? formatPercent(result.recall) : "—" },
     { label: "Scor F1", value: result ? formatPercent(result.f1Score) : "—" },
-    { label: "Potrivire exactă", value: result ? formatPercent(result.exactMatchRate) : "—" },
+    {
+      label: "Exact strict",
+      value: result ? formatPercent(result.strictExactMatchRate ?? result.exactMatchRate) : "—",
+    },
+    {
+      label: "Exact normalizat",
+      value: result ? formatPercent(result.normalizedExactMatchRate ?? result.exactMatchRate) : "—",
+    },
     { label: "Acuratețe pe câmpuri", value: result ? formatPercent(result.fieldAccuracy) : "—" },
     { label: "Documente evaluate", value: result ? String(result.documentsEvaluated) : "0" },
   ];
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
       {metrics.map((metric) => (
         <MetricCard key={metric.label} {...metric} />
       ))}

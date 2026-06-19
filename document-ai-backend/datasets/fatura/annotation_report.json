@@ -1,0 +1,1584 @@
+{
+  "dataset_path": "invoices_dataset_final.zip",
+  "dataset_source_type": "zip",
+  "mapping_warning": "Label names are inferred from observed samples; no official label map was present.",
+  "counts": {
+    "valid_files": 39981,
+    "images": 9990,
+    "json_files": 29987,
+    "hugg_train": 7200,
+    "hugg_test": 1400,
+    "coco_train": 7200,
+    "coco_test": 1400
+  },
+  "validation": {
+    "hugg_valid": 8600,
+    "hugg_invalid_count": 0,
+    "hugg_invalid_examples": [],
+    "coco_valid": 8600,
+    "coco_invalid_count": 0,
+    "coco_invalid_examples": [],
+    "read_error_count": 0,
+    "read_error_examples": []
+  },
+  "unique_ner_tags": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+  ],
+  "unique_coco_class_labels": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+  ],
+  "label_report": {
+    "0": {
+      "inferred_name": "SELLER_WEBSITE",
+      "mapping_status": "inferred_not_official",
+      "hugg_token_count": 1000,
+      "coco_region_count": 1000,
+      "sample_tokens": [
+        "www.ThompsonandSons.org",
+        "www.BuchananandSons.com",
+        "www.PaulGibsonandAnderson.com",
+        "www.PattonOrtizandMoore.org",
+        "www.GrahamCarrilloandStark.com"
+      ],
+      "sample_spans": [
+        "www.ThompsonandSons.org",
+        "www.BuchananandSons.com",
+        "www.PaulGibsonandAnderson.com",
+        "www.PattonOrtizandMoore.org",
+        "www.GrahamCarrilloandStark.com"
+      ],
+      "sample_documents": [
+        "Template1_Instance0",
+        "Template1_Instance100",
+        "Template1_Instance101",
+        "Template1_Instance102",
+        "Template1_Instance103",
+        "Template1_Instance104",
+        "Template1_Instance105",
+        "Template1_Instance106",
+        "Template1_Instance107",
+        "Template1_Instance108",
+        "Template1_Instance109",
+        "Template1_Instance10"
+      ],
+      "sample_boxes": [
+        [
+          0.182353,
+          0.248514,
+          0.27395,
+          0.014269
+        ],
+        [
+          0.182353,
+          0.248514,
+          0.27395,
+          0.014269
+        ],
+        [
+          0.182353,
+          0.248514,
+          0.27395,
+          0.014269
+        ],
+        [
+          0.182353,
+          0.248514,
+          0.27395,
+          0.014269
+        ],
+        [
+          0.182353,
+          0.248514,
+          0.27395,
+          0.014269
+        ],
+        [
+          0.182353,
+          0.248514,
+          0.27395,
+          0.014269
+        ],
+        [
+          0.182353,
+          0.248514,
+          0.27395,
+          0.014269
+        ],
+        [
+          0.182353,
+          0.248514,
+          0.27395,
+          0.014269
+        ],
+        [
+          0.182353,
+          0.248514,
+          0.27395,
+          0.014269
+        ],
+        [
+          0.182353,
+          0.248514,
+          0.27395,
+          0.014269
+        ],
+        [
+          0.182353,
+          0.248514,
+          0.27395,
+          0.014269
+        ],
+        [
+          0.182353,
+          0.248514,
+          0.27395,
+          0.014269
+        ]
+      ]
+    },
+    "1": {
+      "inferred_name": "TOTAL_BLOCK",
+      "mapping_status": "inferred_not_official",
+      "hugg_token_count": 21800,
+      "coco_region_count": 7000,
+      "sample_tokens": [
+        "TOTAL",
+        "1060.47",
+        "$",
+        "213.65",
+        "EUR",
+        "623.26",
+        "USD",
+        "634.84",
+        "800.03",
+        "340.00",
+        "1153.63",
+        "810.55"
+      ],
+      "sample_spans": [
+        "TOTAL 1060.47 $",
+        "TOTAL 213.65 EUR",
+        "TOTAL 623.26 USD",
+        "TOTAL 634.84 $",
+        "TOTAL 800.03 $",
+        "TOTAL 340.00 USD",
+        "TOTAL 1153.63 USD",
+        "TOTAL 810.55 EUR",
+        "TOTAL 642.59 EUR",
+        "TOTAL 908.32 EUR",
+        "TOTAL 501.56 EUR",
+        "TOTAL 239.25 $"
+      ],
+      "sample_documents": [
+        "Template13_Instance0",
+        "Template13_Instance100",
+        "Template13_Instance101",
+        "Template13_Instance102",
+        "Template13_Instance103",
+        "Template13_Instance104",
+        "Template13_Instance105",
+        "Template13_Instance106",
+        "Template13_Instance107",
+        "Template13_Instance108",
+        "Template13_Instance109",
+        "Template13_Instance10"
+      ],
+      "sample_boxes": [
+        [
+          0.76474,
+          0.714143,
+          0.174857,
+          0.014269
+        ],
+        [
+          0.774813,
+          0.714143,
+          0.195005,
+          0.014269
+        ],
+        [
+          0.774813,
+          0.714143,
+          0.195005,
+          0.014269
+        ],
+        [
+          0.759133,
+          0.714143,
+          0.163644,
+          0.014269
+        ],
+        [
+          0.759133,
+          0.714143,
+          0.163644,
+          0.014269
+        ],
+        [
+          0.774813,
+          0.714143,
+          0.195005,
+          0.014269
+        ],
+        [
+          0.78042,
+          0.714143,
+          0.206219,
+          0.014269
+        ],
+        [
+          0.774813,
+          0.714143,
+          0.195005,
+          0.014269
+        ],
+        [
+          0.774813,
+          0.714143,
+          0.195005,
+          0.014269
+        ],
+        [
+          0.774813,
+          0.714143,
+          0.195005,
+          0.014269
+        ],
+        [
+          0.774813,
+          0.714143,
+          0.195005,
+          0.014269
+        ],
+        [
+          0.759133,
+          0.714143,
+          0.163644,
+          0.014269
+        ]
+      ]
+    },
+    "2": {
+      "inferred_name": "TOTAL_IN_WORDS_BLOCK",
+      "mapping_status": "inferred_not_official",
+      "hugg_token_count": 39491,
+      "coco_region_count": 3600,
+      "sample_tokens": [
+        "Total",
+        "in",
+        "words",
+        "one",
+        "thousand",
+        "and",
+        "si-",
+        "xty",
+        "point",
+        "four",
+        "seven",
+        "two"
+      ],
+      "sample_spans": [
+        "Total in words one thousand and si- xty point four seven",
+        "Total in words two hundred and thi- rteen point six five",
+        "Total in words six hundred and twent- y-three point two six",
+        "Total in words six hundred and thirty- -four point eight four",
+        "Total in words eight hundred p- oint zero three",
+        "Total in words three hundr- ed and forty",
+        "Total in words one thousand, one hundred an- d fifty-three point six three",
+        "Total in words eight hundred and - ten point five five",
+        "Total in words six hundred and fort- y-two point five nine",
+        "Total in words nine hundred and ei- ght point three two",
+        "Total in words five hundred and - one point five six",
+        "Total in words two hundred and thirt- y-nine point two five"
+      ],
+      "sample_documents": [
+        "Template13_Instance0",
+        "Template13_Instance100",
+        "Template13_Instance101",
+        "Template13_Instance102",
+        "Template13_Instance103",
+        "Template13_Instance104",
+        "Template13_Instance105",
+        "Template13_Instance106",
+        "Template13_Instance107",
+        "Template13_Instance108",
+        "Template13_Instance109",
+        "Template13_Instance10"
+      ],
+      "sample_boxes": [
+        [
+          0.20563,
+          0.701301,
+          0.357479,
+          0.031391
+        ],
+        [
+          0.203936,
+          0.701301,
+          0.354091,
+          0.031391
+        ],
+        [
+          0.214595,
+          0.701301,
+          0.375408,
+          0.031391
+        ],
+        [
+          0.213476,
+          0.701301,
+          0.37317,
+          0.031391
+        ],
+        [
+          0.183768,
+          0.701301,
+          0.313755,
+          0.031391
+        ],
+        [
+          0.1636,
+          0.701301,
+          0.273418,
+          0.031391
+        ],
+        [
+          0.254931,
+          0.701301,
+          0.456081,
+          0.031391
+        ],
+        [
+          0.198339,
+          0.701301,
+          0.342897,
+          0.031391
+        ],
+        [
+          0.205066,
+          0.701301,
+          0.35635,
+          0.031391
+        ],
+        [
+          0.203392,
+          0.701301,
+          0.353002,
+          0.031391
+        ],
+        [
+          0.191624,
+          0.701301,
+          0.329466,
+          0.031391
+        ],
+        [
+          0.211217,
+          0.701301,
+          0.368652,
+          0.031391
+        ]
+      ]
+    },
+    "3": {
+      "inferred_name": "INVOICE_DATE_BLOCK",
+      "mapping_status": "inferred_not_official",
+      "hugg_token_count": 21059,
+      "coco_region_count": 8400,
+      "sample_tokens": [
+        "Invoice",
+        "Date",
+        "26-Jan-2000",
+        "19-Mar-2015",
+        "29-May-1996",
+        "26-Sep-1997",
+        "16-May-2013",
+        "12-Aug-2018",
+        "11-Mar-2000",
+        "06-May-2017",
+        "06-Nov-2022",
+        "23-Oct-1997"
+      ],
+      "sample_spans": [
+        "Invoice Date 26-Jan-2000",
+        "Date 19-Mar-2015",
+        "Invoice Date 29-May-1996",
+        "Invoice Date 26-Sep-1997",
+        "Invoice Date 16-May-2013",
+        "Invoice Date 12-Aug-2018",
+        "Date 11-Mar-2000",
+        "Date 06-May-2017",
+        "Invoice Date 06-Nov-2022",
+        "Date 23-Oct-1997",
+        "Invoice Date 11-Nov-1998",
+        "Invoice Date 13-Jun-2022"
+      ],
+      "sample_documents": [
+        "Template13_Instance0",
+        "Template13_Instance100",
+        "Template13_Instance101",
+        "Template13_Instance102",
+        "Template13_Instance103",
+        "Template13_Instance104",
+        "Template13_Instance105",
+        "Template13_Instance106",
+        "Template13_Instance107",
+        "Template13_Instance108",
+        "Template13_Instance109",
+        "Template13_Instance10"
+      ],
+      "sample_boxes": [
+        [
+          0.324988,
+          0.244464,
+          0.236531,
+          0.014269
+        ],
+        [
+          0.291348,
+          0.244464,
+          0.16925,
+          0.014269
+        ],
+        [
+          0.327781,
+          0.244464,
+          0.242118,
+          0.014269
+        ],
+        [
+          0.326672,
+          0.244464,
+          0.239899,
+          0.014269
+        ],
+        [
+          0.327781,
+          0.244464,
+          0.242118,
+          0.014269
+        ],
+        [
+          0.326672,
+          0.244464,
+          0.239899,
+          0.014269
+        ],
+        [
+          0.291348,
+          0.244464,
+          0.16925,
+          0.014269
+        ],
+        [
+          0.293032,
+          0.244464,
+          0.172618,
+          0.014269
+        ],
+        [
+          0.326662,
+          0.244464,
+          0.239879,
+          0.014269
+        ],
+        [
+          0.289674,
+          0.244464,
+          0.165903,
+          0.014269
+        ],
+        [
+          0.326662,
+          0.244464,
+          0.239879,
+          0.014269
+        ],
+        [
+          0.324988,
+          0.244464,
+          0.236531,
+          0.014269
+        ]
+      ]
+    },
+    "4": {
+      "inferred_name": "DUE_DATE_BLOCK",
+      "mapping_status": "inferred_not_official",
+      "hugg_token_count": 14394,
+      "coco_region_count": 4798,
+      "sample_tokens": [
+        "Due",
+        "Date",
+        "17-Nov-1993",
+        "18-May-2008",
+        "12-Aug-2021",
+        "31-Mar-2019",
+        "18-Aug-2020",
+        "22-Sep-2001",
+        "28-Jun-2012",
+        "02-Sep-2010",
+        "11-Feb-2014",
+        "12-Mar-1997"
+      ],
+      "sample_spans": [
+        "Due Date 17-Nov-1993",
+        "Due Date 18-May-2008",
+        "Due Date 12-Aug-2021",
+        "Due Date 31-Mar-2019",
+        "Due Date 18-Aug-2020",
+        "Due Date 22-Sep-2001",
+        "Due Date 28-Jun-2012",
+        "Due Date 02-Sep-2010",
+        "Due Date 11-Feb-2014",
+        "Due Date 12-Mar-1997",
+        "Due Date 27-Aug-2006",
+        "Due Date 10-Oct-1995"
+      ],
+      "sample_documents": [
+        "Template13_Instance0",
+        "Template13_Instance100",
+        "Template13_Instance101",
+        "Template13_Instance102",
+        "Template13_Instance103",
+        "Template13_Instance104",
+        "Template13_Instance105",
+        "Template13_Instance106",
+        "Template13_Instance107",
+        "Template13_Instance108",
+        "Template13_Instance109",
+        "Template13_Instance10"
+      ],
+      "sample_boxes": [
+        [
+          0.718797,
+          0.244464,
+          0.224148,
+          0.014269
+        ],
+        [
+          0.719361,
+          0.244464,
+          0.225277,
+          0.014269
+        ],
+        [
+          0.719351,
+          0.244464,
+          0.225257,
+          0.014269
+        ],
+        [
+          0.717677,
+          0.244464,
+          0.221909,
+          0.014269
+        ],
+        [
+          0.719351,
+          0.244464,
+          0.225257,
+          0.014269
+        ],
+        [
+          0.718242,
+          0.244464,
+          0.223039,
+          0.014269
+        ],
+        [
+          0.717677,
+          0.244464,
+          0.221909,
+          0.014269
+        ],
+        [
+          0.718242,
+          0.244464,
+          0.223039,
+          0.014269
+        ],
+        [
+          0.717677,
+          0.244464,
+          0.221909,
+          0.014269
+        ],
+        [
+          0.717677,
+          0.244464,
+          0.221909,
+          0.014269
+        ],
+        [
+          0.719351,
+          0.244464,
+          0.225257,
+          0.014269
+        ],
+        [
+          0.716558,
+          0.244464,
+          0.219671,
+          0.014269
+        ]
+      ]
+    },
+    "5": {
+      "inferred_name": "BUYER_BLOCK",
+      "mapping_status": "inferred_not_official",
+      "hugg_token_count": 95259,
+      "coco_region_count": 5000,
+      "sample_tokens": [
+        "Bill",
+        "to",
+        "Michael",
+        "Greene",
+        "841",
+        "Marshall",
+        "Knolls",
+        "Timothystad,",
+        "SC",
+        "63653",
+        "US",
+        "Tel"
+      ],
+      "sample_spans": [
+        "Bill to Michael Greene 841 Marshall Knolls Timothystad, SC 63653 US Tel +(755)659-2112 Email malonejerry@example.net Site https //church.biz/",
+        "Bill to Benjamin Matthews 59659 Bullock Vista Suite 516 West Karen, GU 46535 US Tel +(369)926-8493 Email whernandez@example.com Site http //www.ward-owens.com/",
+        "Bill to Stephanie Nelson 318 Marc Neck Apt. 720 Wandastad, PA 52098 US Tel +(763)330-1911 Email michelle67@example.net Site https //www.mitchell.com/",
+        "Buyer Michael Johnson 39474 Selena Flat New Laura, SD 26787 US Tel +(827)890-2950 Email oferguson@example.com Site https //prince.info/",
+        "Buyer Whitney Nichols 67317 Aaron Mountains Emilyfort, NE 01066 US Tel +(033)336-9982 Email sbrown@example.org Site http //strong.net/",
+        "Bill to Kelly Johnson 51213 Adkins Locks South Corytown, CO 15323 US Tel +(772)040-3456 Email sophia47@example.com Site http //www.perry-barnett.com/",
+        "Bill to James Johns 6716 Alicia Parkways New Joseport, NY 11502 US Tel +(138)657-6513 Email johnlewis@example.com Site https //www.barrett.com/",
+        "Buyer Kevin Williams 56450 Burnett Plain Port Edwardland, KY 19205 US Tel +(697)848-7564 Email garybrown@example.org Site https //burnett.biz/",
+        "Bill to Tiffany Wright 4159 White Green Johnsonchester, ID 43947 US Tel +(807)514-9839 Email wperez@example.net Site https //williams.org/",
+        "Bill to William Lopez PhD 5419 Trujillo Garden Boyleview, PA 93068 US Tel +(013)627-7050 Email smurphy@example.org Site https //michael.com/",
+        "Buyer Jacqueline Walter 4880 Zhang Way Apt. 871 Wilsonhaven, ND 18193 US Tel +(670)853-1659 Email apowell@example.net Site http //www.kim.com/",
+        "Bill to Timothy Curtis 5933 Esparza Place Suite 352 East Richard, CA 74026 US Tel +(244)431-2088 Email katherine19@example.org Site https //cook.org/"
+      ],
+      "sample_documents": [
+        "Template14_Instance0",
+        "Template14_Instance100",
+        "Template14_Instance101",
+        "Template14_Instance102",
+        "Template14_Instance103",
+        "Template14_Instance104",
+        "Template14_Instance105",
+        "Template14_Instance106",
+        "Template14_Instance107",
+        "Template14_Instance108",
+        "Template14_Instance109",
+        "Template14_Instance10"
+      ],
+      "sample_boxes": [
+        [
+          0.726975,
+          0.327698,
+          0.311092,
+          0.099881
+        ],
+        [
+          0.733691,
+          0.327698,
+          0.324524,
+          0.099881
+        ],
+        [
+          0.721378,
+          0.327698,
+          0.299899,
+          0.099881
+        ],
+        [
+          0.724716,
+          0.327698,
+          0.306575,
+          0.099881
+        ],
+        [
+          0.706787,
+          0.327698,
+          0.270716,
+          0.099881
+        ],
+        [
+          0.736716,
+          0.327698,
+          0.330575,
+          0.099881
+        ],
+        [
+          0.721368,
+          0.327698,
+          0.299879,
+          0.099881
+        ],
+        [
+          0.722477,
+          0.327698,
+          0.302097,
+          0.099881
+        ],
+        [
+          0.712655,
+          0.327698,
+          0.282454,
+          0.099881
+        ],
+        [
+          0.713513,
+          0.327698,
+          0.284168,
+          0.099881
+        ],
+        [
+          0.706797,
+          0.327698,
+          0.270736,
+          0.099881
+        ],
+        [
+          0.726975,
+          0.327698,
+          0.311092,
+          0.099881
+        ]
+      ]
+    },
+    "6": {
+      "inferred_name": "SUPPLIER_NAME",
+      "mapping_status": "inferred_not_official",
+      "hugg_token_count": 15000,
+      "coco_region_count": 5600,
+      "sample_tokens": [
+        "Fernandez",
+        "PLC",
+        "Faulkner",
+        "LLC",
+        "Woods-Gibbs",
+        "Berg,",
+        "Ward",
+        "and",
+        "Wright",
+        "Montgomery,",
+        "Harrison",
+        "Vaughan"
+      ],
+      "sample_spans": [
+        "Fernandez PLC",
+        "Faulkner LLC",
+        "Woods-Gibbs",
+        "Berg, Ward and Wright",
+        "Montgomery, Harrison and Vaughan",
+        "Yoder LLC",
+        "Foster, Wells and Martin",
+        "Murphy-Gallegos",
+        "Kelly-Moss",
+        "Jensen Group",
+        "Miller Inc",
+        "Duran, Morgan and Lopez"
+      ],
+      "sample_documents": [
+        "Template13_Instance0",
+        "Template13_Instance100",
+        "Template13_Instance101",
+        "Template13_Instance102",
+        "Template13_Instance103",
+        "Template13_Instance104",
+        "Template13_Instance105",
+        "Template13_Instance106",
+        "Template13_Instance107",
+        "Template13_Instance108",
+        "Template13_Instance109",
+        "Template13_Instance10"
+      ],
+      "sample_boxes": [
+        [
+          0.104202,
+          0.068966,
+          0.144538,
+          0.014269
+        ],
+        [
+          0.104202,
+          0.068966,
+          0.144538,
+          0.014269
+        ],
+        [
+          0.104202,
+          0.068966,
+          0.144538,
+          0.014269
+        ],
+        [
+          0.104202,
+          0.068966,
+          0.144538,
+          0.014269
+        ],
+        [
+          0.104202,
+          0.068966,
+          0.144538,
+          0.014269
+        ],
+        [
+          0.104202,
+          0.068966,
+          0.144538,
+          0.014269
+        ],
+        [
+          0.104202,
+          0.068966,
+          0.144538,
+          0.014269
+        ],
+        [
+          0.104202,
+          0.068966,
+          0.144538,
+          0.014269
+        ],
+        [
+          0.104202,
+          0.068966,
+          0.144538,
+          0.014269
+        ],
+        [
+          0.104202,
+          0.068966,
+          0.144538,
+          0.014269
+        ],
+        [
+          0.104202,
+          0.068966,
+          0.144538,
+          0.014269
+        ],
+        [
+          0.104202,
+          0.068966,
+          0.144538,
+          0.014269
+        ]
+      ]
+    },
+    "8": {
+      "inferred_name": "BILL_TO_BLOCK",
+      "mapping_status": "inferred_not_official",
+      "hugg_token_count": 25957,
+      "coco_region_count": 1400,
+      "sample_tokens": [
+        "BILL_TO",
+        "Jason",
+        "Roberts",
+        "645",
+        "Claudia",
+        "Expressway",
+        "Suite",
+        "600",
+        "South",
+        "Anthonyland,",
+        "OH",
+        "99813"
+      ],
+      "sample_spans": [
+        "BILL_TO Jason Roberts 645 Claudia Expressway Suite 600 South Anthonyland, OH 99813 US Tel +(414)326-1227 Email daviserika@example.net Site http //www.howard.com/",
+        "BILL_TO Gregory Martin 4252 Rachel Mews Apt. 992 North Jeffrey, OK 52847 US Tel +(085)485-4669 Email jensenjamie@example.com Site https //gibbs-hill.net/",
+        "BILL_TO Lori Smith 34033 Stacy Hollow Hensleyburgh, HI 69826 US Tel +(122)895-4631 Email rachel26@example.org Site https //scott.org/",
+        "BILL_TO Kristen Tapia 4083 Stephen Fort Haleyberg, MH 27017 US Tel +(127)400-9154 Email dominguezhelen@example.net Site http //www.barnes.org/",
+        "BILL_TO Calvin Edwards 36686 Jesse Landing Apt. 963 Joneschester, KS 63442 US Tel +(913)654-0644 Email whitejames@example.org Site http //www.farrell-evans.org/",
+        "BILL_TO Paul Sexton 2692 Timothy Turnpike Suite 074 Lake Eric, AL 13229 US Tel +(252)991-4316 Email oscar61@example.net Site http //www.walter.com/",
+        "BILL_TO Daniel Robinson 61717 Elizabeth Light South Thomas, WV 01324 US Tel +(876)023-9879 Email estesbrett@example.org Site http //reed-price.net/",
+        "BILL_TO Troy Warner 8693 Brittany Landing Dawsonstad, ME 21573 US Tel +(897)835-7635 Email jchapman@example.org Site https //johnson.com/",
+        "BILL_TO Dr. Erica Parker PhD 7400 Daisy Meadows Samanthaton, ID 10621 US Tel +(463)192-2004 Email reginaldvalencia@example.net Site https //smith.com/",
+        "BILL_TO Walter Mcclure 630 Griffin Island South Ashley, IL 81826 US Tel +(376)133-8735 Email jeff51@example.org Site https //www.hull.org/",
+        "BILL_TO Sarah Pope 4940 Lopez Spurs East Curtisshire, OH 59312 US Tel +(288)211-7273 Email smithadam@example.com Site https //barnes.com/",
+        "BILL_TO Micheal Lewis 83560 Gary Landing Apt. 949 Michaelport, NM 18845 US Tel +(606)755-8839 Email meganallen@example.org Site http //alvarez-holder.org/"
+      ],
+      "sample_documents": [
+        "Template27_Instance0",
+        "Template27_Instance100",
+        "Template27_Instance101",
+        "Template27_Instance102",
+        "Template27_Instance103",
+        "Template27_Instance104",
+        "Template27_Instance105",
+        "Template27_Instance106",
+        "Template27_Instance107",
+        "Template27_Instance108",
+        "Template27_Instance109",
+        "Template27_Instance10"
+      ],
+      "sample_boxes": [
+        [
+          0.224492,
+          0.246715,
+          0.301086,
+          0.107253
+        ],
+        [
+          0.222191,
+          0.246715,
+          0.296482,
+          0.107253
+        ],
+        [
+          0.202668,
+          0.246715,
+          0.257437,
+          0.107253
+        ],
+        [
+          0.237064,
+          0.246715,
+          0.326229,
+          0.107253
+        ],
+        [
+          0.218798,
+          0.246715,
+          0.289697,
+          0.107253
+        ],
+        [
+          0.217791,
+          0.246715,
+          0.287682,
+          0.107253
+        ],
+        [
+          0.209333,
+          0.246715,
+          0.270766,
+          0.107253
+        ],
+        [
+          0.208307,
+          0.246715,
+          0.268714,
+          0.107253
+        ],
+        [
+          0.236574,
+          0.246715,
+          0.325249,
+          0.107253
+        ],
+        [
+          0.19005,
+          0.246715,
+          0.232202,
+          0.107253
+        ],
+        [
+          0.218068,
+          0.246715,
+          0.288237,
+          0.107253
+        ],
+        [
+          0.216016,
+          0.246715,
+          0.284133,
+          0.107253
+        ]
+      ]
+    },
+    "9": {
+      "inferred_name": "SHIP_TO_BLOCK",
+      "mapping_status": "inferred_not_official",
+      "hugg_token_count": 33357,
+      "coco_region_count": 1800,
+      "sample_tokens": [
+        "SHIP_TO",
+        "Brandi",
+        "Sosa",
+        "1426",
+        "Jennifer",
+        "Freeway",
+        "Davenportfurt,",
+        "NH",
+        "21762",
+        "US",
+        "Tel",
+        "+(510)904-4602"
+      ],
+      "sample_spans": [
+        "SHIP_TO Brandi Sosa 1426 Jennifer Freeway Davenportfurt, NH 21762 US Tel +(510)904-4602 Email jcolon@example.com Site https //www.buckley.org/",
+        "SHIP_TO Barbara Harrison 83849 Wilson Causeway Suite 822 North Feliciaside, WY 89458 US Tel +(889)274-0572 Email kempmichael@example.com Site http //oneal.org/",
+        "SHIP_TO Jackie Martinez 879 Kristin Parkway Boylefurt, OK 27454 US Tel +(467)331-4656 Email morganmahoney@example.net Site https //thomas.com/",
+        "SHIP_TO Mikayla Solis 8784 Miller Lake Lake Mary, ME 79025 US Tel +(310)006-6378 Email laurenbright@example.net Site http //www.gonzalez-cole.info/",
+        "SHIP_TO Jason Serrano 41211 Laura Mountain Suite 517 North Reneeberg, FL 80161 US Tel +(879)225-0997 Email gpeterson@example.net Site https //www.cohen-morse.info/",
+        "SHIP_TO Bradley Shepherd 017 Peter Lodge Apt. 822 Eugeneview, AK 40651 US Tel +(337)571-6008 Email kristenwhite@example.net Site http //richardson-strickland.biz/",
+        "SHIP_TO Anthony Campbell 884 Ronnie Coves Apt. 009 Harryville, IA 15550 US Tel +(809)583-8495 Email hunterbest@example.net Site http //www.garcia.com/",
+        "SHIP_TO Cheryl Shaw 5129 James Unions Spearsmouth, UT 98540 US Tel +(128)996-9117 Email veronica82@example.com Site https //www.crawford-kelly.biz/",
+        "SHIP_TO James Alvarez 2340 Ayers Corner Apt. 858 Zamoraville, CO 86196 US Tel +(425)649-0326 Email jacksonwilliam@example.org Site http //kent.net/",
+        "SHIP_TO Angelica Padilla 096 Miller Squares Jessicaton, FL 67553 US Tel +(581)820-2661 Email david56@example.com Site http //heath.info/",
+        "SHIP_TO Laura Watts 6344 Jones Walks Apt. 209 South Lisa, VA 49758 US Tel +(016)220-1166 Email ferrellstephanie@example.com Site https //www.dennis.com/",
+        "SHIP_TO Tiffany Erickson 167 Stephanie Lodge Lake Lawrenceport, MI 74603 US Tel +(071)657-5217 Email sextonjordan@example.com Site https //www.mata-cruz.com/"
+      ],
+      "sample_documents": [
+        "Template18_Instance0",
+        "Template18_Instance100",
+        "Template18_Instance101",
+        "Template18_Instance102",
+        "Template18_Instance103",
+        "Template18_Instance104",
+        "Template18_Instance105",
+        "Template18_Instance106",
+        "Template18_Instance107",
+        "Template18_Instance108",
+        "Template18_Instance109",
+        "Template18_Instance10"
+      ],
+      "sample_boxes": [
+        [
+          0.699187,
+          0.362054,
+          0.258879,
+          0.107253
+        ],
+        [
+          0.723637,
+          0.362054,
+          0.307778,
+          0.107253
+        ],
+        [
+          0.734406,
+          0.362054,
+          0.329316,
+          0.107253
+        ],
+        [
+          0.722287,
+          0.362054,
+          0.305079,
+          0.107253
+        ],
+        [
+          0.724857,
+          0.362054,
+          0.310219,
+          0.107253
+        ],
+        [
+          0.727945,
+          0.362054,
+          0.316393,
+          0.107253
+        ],
+        [
+          0.707692,
+          0.362054,
+          0.275887,
+          0.107253
+        ],
+        [
+          0.725384,
+          0.362054,
+          0.311272,
+          0.107253
+        ],
+        [
+          0.726207,
+          0.362054,
+          0.312918,
+          0.107253
+        ],
+        [
+          0.699492,
+          0.362054,
+          0.259489,
+          0.107253
+        ],
+        [
+          0.733907,
+          0.362054,
+          0.328318,
+          0.107253
+        ],
+        [
+          0.72311,
+          0.362054,
+          0.306724,
+          0.107253
+        ]
+      ]
+    },
+    "10": {
+      "inferred_name": "TABLE_REGION",
+      "mapping_status": "inferred_not_official",
+      "hugg_token_count": 8600,
+      "coco_region_count": 8600,
+      "sample_tokens": [
+        "table"
+      ],
+      "sample_spans": [
+        "table"
+      ],
+      "sample_documents": [
+        "Template13_Instance0",
+        "Template13_Instance100",
+        "Template13_Instance101",
+        "Template13_Instance102",
+        "Template13_Instance103",
+        "Template13_Instance104",
+        "Template13_Instance105",
+        "Template13_Instance106",
+        "Template13_Instance107",
+        "Template13_Instance108",
+        "Template13_Instance109",
+        "Template13_Instance10"
+      ],
+      "sample_boxes": [
+        [
+          0.516571,
+          0.553044,
+          0.865076,
+          0.178359
+        ],
+        [
+          0.516571,
+          0.588716,
+          0.865076,
+          0.107015
+        ],
+        [
+          0.516571,
+          0.553044,
+          0.865076,
+          0.178359
+        ],
+        [
+          0.516571,
+          0.553044,
+          0.865076,
+          0.178359
+        ],
+        [
+          0.516571,
+          0.535208,
+          0.865076,
+          0.214031
+        ],
+        [
+          0.516571,
+          0.588716,
+          0.865076,
+          0.107015
+        ],
+        [
+          0.516571,
+          0.535208,
+          0.865076,
+          0.214031
+        ],
+        [
+          0.516571,
+          0.535208,
+          0.865076,
+          0.214031
+        ],
+        [
+          0.516571,
+          0.57088,
+          0.865076,
+          0.142687
+        ],
+        [
+          0.516571,
+          0.535208,
+          0.865076,
+          0.214031
+        ],
+        [
+          0.516571,
+          0.57088,
+          0.865076,
+          0.142687
+        ],
+        [
+          0.516571,
+          0.57088,
+          0.865076,
+          0.142687
+        ]
+      ]
+    },
+    "11": {
+      "inferred_name": "LOGO_REGION",
+      "mapping_status": "inferred_not_official",
+      "hugg_token_count": 8600,
+      "coco_region_count": 8600,
+      "sample_tokens": [
+        "logo"
+      ],
+      "sample_spans": [
+        "logo"
+      ],
+      "sample_documents": [
+        "Template13_Instance0",
+        "Template13_Instance100",
+        "Template13_Instance101",
+        "Template13_Instance102",
+        "Template13_Instance103",
+        "Template13_Instance104",
+        "Template13_Instance105",
+        "Template13_Instance106",
+        "Template13_Instance107",
+        "Template13_Instance108",
+        "Template13_Instance109",
+        "Template13_Instance10"
+      ],
+      "sample_boxes": [
+        [
+          0.176471,
+          0.148633,
+          0.151261,
+          0.107015
+        ],
+        [
+          0.176471,
+          0.148633,
+          0.151261,
+          0.107015
+        ],
+        [
+          0.176471,
+          0.148633,
+          0.151261,
+          0.107015
+        ],
+        [
+          0.176471,
+          0.148633,
+          0.151261,
+          0.107015
+        ],
+        [
+          0.176471,
+          0.148633,
+          0.151261,
+          0.107015
+        ],
+        [
+          0.176471,
+          0.148633,
+          0.151261,
+          0.107015
+        ],
+        [
+          0.176471,
+          0.148633,
+          0.151261,
+          0.107015
+        ],
+        [
+          0.176471,
+          0.148633,
+          0.151261,
+          0.107015
+        ],
+        [
+          0.176471,
+          0.148633,
+          0.151261,
+          0.107015
+        ],
+        [
+          0.176471,
+          0.148633,
+          0.151261,
+          0.107015
+        ],
+        [
+          0.176471,
+          0.148633,
+          0.151261,
+          0.107015
+        ],
+        [
+          0.176471,
+          0.148633,
+          0.151261,
+          0.107015
+        ]
+      ]
+    },
+    "12": {
+      "inferred_name": "INVOICE_NUMBER_BLOCK",
+      "mapping_status": "inferred_not_official",
+      "hugg_token_count": 22800,
+      "coco_region_count": 7600,
+      "sample_tokens": [
+        "INVOICE",
+        "#",
+        "INV/57-22/068",
+        "INV/12-44/477",
+        "ID",
+        "INV23686355",
+        "8Y9M3d-554",
+        "1847-906",
+        "Invoice",
+        "number",
+        "INV63281191",
+        "5Y7M1d-943"
+      ],
+      "sample_spans": [
+        "INVOICE # INV/57-22/068",
+        "INVOICE # INV/12-44/477",
+        "INVOICE ID INV23686355",
+        "INVOICE # 8Y9M3d-554",
+        "INVOICE ID 1847-906",
+        "Invoice number INV63281191",
+        "Invoice number 5Y7M1d-943",
+        "INVOICE ID 5Y2M6d-021",
+        "Invoice number 6Y8M4d-906",
+        "Invoice number INV/27-79/634",
+        "INVOICE ID 1Y4M1d-940",
+        "INVOICE ID INV/62-56/598"
+      ],
+      "sample_documents": [
+        "Template14_Instance0",
+        "Template14_Instance100",
+        "Template14_Instance101",
+        "Template14_Instance102",
+        "Template14_Instance103",
+        "Template14_Instance104",
+        "Template14_Instance105",
+        "Template14_Instance106",
+        "Template14_Instance107",
+        "Template14_Instance108",
+        "Template14_Instance109",
+        "Template14_Instance10"
+      ],
+      "sample_boxes": [
+        [
+          0.687449,
+          0.196902,
+          0.235402,
+          0.014269
+        ],
+        [
+          0.687449,
+          0.196902,
+          0.235402,
+          0.014269
+        ],
+        [
+          0.688568,
+          0.196902,
+          0.23764,
+          0.014269
+        ],
+        [
+          0.680158,
+          0.196902,
+          0.22082,
+          0.014269
+        ],
+        [
+          0.669509,
+          0.196902,
+          0.199523,
+          0.014269
+        ],
+        [
+          0.70315,
+          0.196902,
+          0.266803,
+          0.014269
+        ],
+        [
+          0.699217,
+          0.196902,
+          0.258938,
+          0.014269
+        ],
+        [
+          0.684635,
+          0.196902,
+          0.229775,
+          0.014269
+        ],
+        [
+          0.699217,
+          0.196902,
+          0.258938,
+          0.014269
+        ],
+        [
+          0.706508,
+          0.196902,
+          0.273519,
+          0.014269
+        ],
+        [
+          0.684635,
+          0.196902,
+          0.229775,
+          0.014269
+        ],
+        [
+          0.691926,
+          0.196902,
+          0.244356,
+          0.014269
+        ]
+      ]
+    },
+    "13": {
+      "inferred_name": "OTHER",
+      "mapping_status": "inferred_not_official",
+      "hugg_token_count": 265598,
+      "coco_region_count": 42397,
+      "sample_tokens": [
+        "Terms",
+        "and",
+        "Conditions",
+        "will",
+        "be",
+        "charged",
+        "if",
+        "payment",
+        "is",
+        "not",
+        "made",
+        "within"
+      ],
+      "sample_spans": [
+        "Terms and Conditions will be charged if payment is not made within the due date.",
+        "Note All payments to be made in cash. Contact us for queries on these quotations. Bank Name Central Bank of Texas Branch Name Raf CAMP Bank Account Number 14276312 Bank Swift Code SBININBB250 Address 2942 Gary Village Suite 237 New Yolandaland, IL 18166 US",
+        "TAX INVOICE",
+        "Terms & Conditions 1. Please send payment within 8 days of receiving this invoice. There will be a 2.5% interest charge per month on late invoices. 2. Please include the Invoice number in your payment notes.",
+        "Note This order is shipped through blue dart courier Bank Name Central Bank of England Branch Name Raf CAMP Bank Account Number 13364567 Bank Swift Code SBININBB250 Address 2942 Gary Village Suite 237 New Yolandaland, IL 18166 US",
+        "COMMERCIAL INVOICE",
+        "Note Total payment due in 14 days. Bank Name State Bank of Europe Branch Name Raf CAMP Bank Account Number 10222125 Bank Swift Code SBININBB250 Address 2942 Gary Village Suite 237 New Yolandaland, IL 18166 US",
+        "Thank you for choosing us! Bank Name State Bank of England Branch Name Raf CAMP Bank Account Number 15111001 Bank Swift Code SBININBB250 Address 2942 Gary Village Suite 237 New Yolandaland, IL 18166 US",
+        "Thank you for choosing us! Bank Name Central Bank of USA Branch Name Raf CAMP Bank Account Number 10561049 Bank Swift Code SBININBB250 Address 2942 Gary Village Suite 237 New Yolandaland, IL 18166 US",
+        "INVOICE",
+        "Note Total payment due in 14 days. Bank Name State Bank of USA Branch Name Raf CAMP Bank Account Number 18101815 Bank Swift Code SBININBB250 Address 2942 Gary Village Suite 237 New Yolandaland, IL 18166 US",
+        "Thank you for your business! Bank Name State Bank of Texas Branch Name Raf CAMP Bank Account Number 17906466 Bank Swift Code SBININBB250 Address 2942 Gary Village Suite 237 New Yolandaland, IL 18166 US"
+      ],
+      "sample_documents": [
+        "Template13_Instance0",
+        "Template13_Instance100",
+        "Template13_Instance101",
+        "Template13_Instance102",
+        "Template13_Instance103",
+        "Template13_Instance104",
+        "Template13_Instance105",
+        "Template13_Instance106",
+        "Template13_Instance107",
+        "Template13_Instance108",
+        "Template13_Instance109",
+        "Template13_Instance10"
+      ],
+      "sample_boxes": [
+        [
+          0.268504,
+          0.787372,
+          0.469781,
+          0.026159
+        ],
+        [
+          0.628605,
+          0.860635,
+          0.416874,
+          0.031391
+        ],
+        [
+          0.615197,
+          0.374785,
+          0.383334,
+          0.065636
+        ],
+        [
+          0.712128,
+          0.077044,
+          0.348625,
+          0.031391
+        ],
+        [
+          0.105059,
+          0.015263,
+          0.193311,
+          0.021403
+        ],
+        [
+          0.286739,
+          0.801641,
+          0.506252,
+          0.054697
+        ],
+        [
+          0.645425,
+          0.860635,
+          0.450514,
+          0.031391
+        ],
+        [
+          0.62639,
+          0.374785,
+          0.405721,
+          0.065636
+        ],
+        [
+          0.712128,
+          0.077044,
+          0.348625,
+          0.031391
+        ],
+        [
+          0.178995,
+          0.015263,
+          0.341183,
+          0.021403
+        ],
+        [
+          0.286739,
+          0.801641,
+          0.506252,
+          0.054697
+        ],
+        [
+          0.589398,
+          0.852074,
+          0.338461,
+          0.014269
+        ]
+      ]
+    }
+  }
+}

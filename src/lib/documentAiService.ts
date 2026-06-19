@@ -1,5 +1,10 @@
 import { classifyInvoiceByCui, type InvoiceClassification } from "./cuiUtils";
 import { getCompanyProfile } from "./companyService";
+import {
+  calculateDocumentConfidence as calculateCandidateDocumentConfidence,
+  extractInvoiceCandidates,
+  type CandidateFieldResult,
+} from "./invoiceCandidateEngine";
 
 export type DocumentAiFieldKey =
   | "invoiceNumber"
@@ -23,10 +28,17 @@ export type DocumentAiConfidenceMap = Record<DocumentAiFieldKey, number>;
 
 export type DocumentAiFieldDetail = {
   value: DocumentAiFieldValue;
+  normalizedValue?: string | number | null;
   confidence: number;
   method: DocumentAiExtractionMethod;
   warning?: string;
   sourceText?: string;
+  alternatives?: Array<{
+    value: string | number;
+    normalizedValue: string | number;
+    confidence: number;
+    sourceText: string;
+  }>;
 };
 
 export type DocumentAiFieldDetails = Record<DocumentAiFieldKey, DocumentAiFieldDetail>;
@@ -211,7 +223,7 @@ const EMPTY_FIELDS: DocumentAiExtractedFields = {
   subtotal: null,
   vatAmount: null,
   totalAmount: null,
-  currency: "RON",
+  currency: null,
 };
 
 const EMPTY_CONFIDENCE: DocumentAiConfidenceMap = {
@@ -293,7 +305,11 @@ export async function analyzeInvoiceDocument(
     companyCui,
     layout,
   );
-  const overallConfidence = calculateOverallConfidence(confidences);
+  const overallConfidence = calculateCandidateDocumentConfidence({
+    fields: fieldDetails,
+    ocrConfidence: extraction.confidence,
+    consistencyScore: calculateFinancialConsistency(fieldDetails),
+  });
   const classification = classifyInvoiceByCui({
     companyCui,
     supplierCui: String(fields.supplierCui ?? ""),
@@ -328,7 +344,13 @@ async function extractText(
 
     if (pdfText.trim().length >= 40) {
       onProgress?.({ status: "Text extras din PDF", progress: 1 });
-      const ocrDetails = buildOcrDetailsFromText("pdf-text", "Text PDF selectabil", pdfText, 0.72, []);
+      const ocrDetails = buildOcrDetailsFromText(
+        "pdf-text",
+        "Text PDF selectabil",
+        pdfText,
+        0.72,
+        [],
+      );
 
       return {
         text: pdfText,
@@ -364,10 +386,7 @@ async function extractText(
       if (typeof message.progress === "number") {
         onProgress?.({
           status: `OCR ${index + 1}/${variants.length}: ${variant.label}`,
-          progress: Math.max(
-            0.08,
-            Math.min(baseProgress + message.progress * progressSpan, 0.95),
-          ),
+          progress: Math.max(0.08, Math.min(baseProgress + message.progress * progressSpan, 0.95)),
         });
       } else if (message.status) {
         onProgress?.({
@@ -399,9 +418,7 @@ async function extractText(
         invoiceKeywordCount: 0,
         score: 0,
         error:
-          error instanceof Error
-            ? error.message
-            : "OCR-ul nu a putut procesa aceasta varianta.",
+          error instanceof Error ? error.message : "OCR-ul nu a putut procesa aceasta varianta.",
       });
     }
   }
@@ -596,7 +613,9 @@ function applyGrayscale(imageData: ImageData) {
   const { data } = imageData;
 
   for (let index = 0; index < data.length; index += 4) {
-    const gray = Math.round(data[index] * 0.299 + data[index + 1] * 0.587 + data[index + 2] * 0.114);
+    const gray = Math.round(
+      data[index] * 0.299 + data[index + 1] * 0.587 + data[index + 2] * 0.114,
+    );
 
     data[index] = gray;
     data[index + 1] = gray;
@@ -668,7 +687,10 @@ function scoreOcrResult(text: string, confidence: number, words: OcrWord[]) {
   const shortTextPenalty = text.trim().length < 80 || wordCount < 10 ? 0.15 : 0;
   const score = Math.max(
     0,
-    Math.min(1, confidence * 0.5 + usefulWordFactor * 0.25 + keywordFactor * 0.25 - shortTextPenalty),
+    Math.min(
+      1,
+      confidence * 0.5 + usefulWordFactor * 0.25 + keywordFactor * 0.25 - shortTextPenalty,
+    ),
   );
 
   return {
@@ -747,10 +769,7 @@ function buildOcrDetailsFromText(
   };
 }
 
-async function extractSelectablePdfText(
-  file: File,
-  onProgress?: (progress: OcrProgress) => void,
-) {
+async function extractSelectablePdfText(file: File, onProgress?: (progress: OcrProgress) => void) {
   const pdfjs = (await import("pdfjs-dist/legacy/build/pdf.mjs")) as unknown as PdfJsModule;
 
   pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -849,6 +868,68 @@ function extractInvoiceFieldDetails(
   layoutLines: LayoutLine[],
   ocrConfidence: number,
 ): DocumentAiFieldDetails {
+  const extraction = extractInvoiceCandidates({
+    text,
+    lines: layoutLines.map((line) => ({
+      text: line.text,
+      confidence: line.confidence,
+      bbox: line.bbox,
+    })),
+    ocrConfidence,
+  });
+
+  return Object.entries(extraction.fields).reduce((details, [field, result]) => {
+    details[field as DocumentAiFieldKey] = candidateResultToFieldDetail(result);
+    return details;
+  }, {} as DocumentAiFieldDetails);
+}
+
+function candidateResultToFieldDetail(result: CandidateFieldResult): DocumentAiFieldDetail {
+  return {
+    value: result.value,
+    normalizedValue: result.normalizedValue,
+    confidence: result.confidence,
+    method: result.method,
+    sourceText: result.sourceText,
+    warning: result.warning,
+    alternatives: result.alternatives.map((candidate) => ({
+      value: candidate.value,
+      normalizedValue: candidate.normalizedValue,
+      confidence: candidate.confidence,
+      sourceText: candidate.sourceText,
+    })),
+  };
+}
+
+function calculateFinancialConsistency(details: DocumentAiFieldDetails) {
+  if (
+    details.subtotal.normalizedValue === null ||
+    details.subtotal.normalizedValue === undefined ||
+    details.vatAmount.normalizedValue === null ||
+    details.vatAmount.normalizedValue === undefined ||
+    details.totalAmount.normalizedValue === null ||
+    details.totalAmount.normalizedValue === undefined
+  ) {
+    return 0.7;
+  }
+
+  const subtotal = Number(details.subtotal.normalizedValue);
+  const tax = Number(details.vatAmount.normalizedValue);
+  const total = Number(details.totalAmount.normalizedValue);
+
+  if (![subtotal, tax, total].every(Number.isFinite)) {
+    return 0.7;
+  }
+
+  return Math.abs(subtotal + tax - total) <= Math.max(0.02, Math.abs(total) * 0.015) ? 1 : 0.35;
+}
+
+function extractInvoiceFieldDetailsLegacy(
+  text: string,
+  words: OcrWord[],
+  layoutLines: LayoutLine[],
+  ocrConfidence: number,
+): DocumentAiFieldDetails {
   const normalizedText = text.replace(/\r/g, "\n");
   const textLines = normalizedText
     .split("\n")
@@ -892,74 +973,82 @@ function extractInvoiceFieldDetails(
     findCuiCandidate(customerLayoutBlock, customerBlock, 0.83) ??
     buildCandidate(allCuis.find((cui) => cui !== supplierCui.value) ?? null, 0.56, "Regex");
   const totalAmount =
-    findLayoutAmount(layoutLines, [
-      "total de plata",
-      "total de plată",
-      "total de plata (lei)",
-      "total de plată (lei)",
-      "total plata",
-      "total factură curentă",
-      "total factura curenta",
-      "total factura curenta cu tva",
-      "total factură curentă cu tva",
-      "total factura",
-      "valoare cu tva",
-      "valoare totala",
-      "grand total",
-      "amount due",
-      "balance due",
-      "total",
-    ], {
-      amountPosition: "last",
-      combineNearbyLines: true,
-      excludedTerms: [
-        "fara tva",
-        "fără tva",
-        "without vat",
-        "tax exclusive",
-        "sub_total",
-        "subtotal",
-        "sub total",
-        "total tva",
-        "valoare tva",
-        "gst",
+    findLayoutAmount(
+      layoutLines,
+      [
+        "total de plata",
+        "total de plată",
+        "total de plata (lei)",
+        "total de plată (lei)",
+        "total plata",
+        "total factură curentă",
+        "total factura curenta",
+        "total factura curenta cu tva",
+        "total factură curentă cu tva",
+        "total factura",
+        "valoare cu tva",
+        "valoare totala",
+        "grand total",
+        "amount due",
+        "balance due",
+        "total",
       ],
-      nearbyLines: 6,
-    }) ??
-    findRegexAmount(normalizedText, [
-      "total de plata",
-      "total de plată",
-      "total de plata (lei)",
-      "total de plată (lei)",
-      "total plata",
-      "total factură curentă",
-      "total factura curenta",
-      "total factura curenta cu tva",
-      "total factură curentă cu tva",
-      "total factura",
-      "valoare cu tva",
-      "valoare totala",
-      "grand total",
-      "amount due",
-      "balance due",
-      "total",
-    ], {
-      amountPosition: "last",
-      combineNearbyLines: true,
-      excludedTerms: [
-        "fara tva",
-        "fără tva",
-        "without vat",
-        "tax exclusive",
-        "sub_total",
-        "subtotal",
-        "sub total",
-        "total tva",
-        "valoare tva",
-        "gst",
+      {
+        amountPosition: "last",
+        combineNearbyLines: true,
+        excludedTerms: [
+          "fara tva",
+          "fără tva",
+          "without vat",
+          "tax exclusive",
+          "sub_total",
+          "subtotal",
+          "sub total",
+          "total tva",
+          "valoare tva",
+          "gst",
+        ],
+        nearbyLines: 6,
+      },
+    ) ??
+    findRegexAmount(
+      normalizedText,
+      [
+        "total de plata",
+        "total de plată",
+        "total de plata (lei)",
+        "total de plată (lei)",
+        "total plata",
+        "total factură curentă",
+        "total factura curenta",
+        "total factura curenta cu tva",
+        "total factură curentă cu tva",
+        "total factura",
+        "valoare cu tva",
+        "valoare totala",
+        "grand total",
+        "amount due",
+        "balance due",
+        "total",
       ],
-      nearbyLines: 6,
-    });
+      {
+        amountPosition: "last",
+        combineNearbyLines: true,
+        excludedTerms: [
+          "fara tva",
+          "fără tva",
+          "without vat",
+          "tax exclusive",
+          "sub_total",
+          "subtotal",
+          "sub total",
+          "total tva",
+          "valoare tva",
+          "gst",
+        ],
+        nearbyLines: 6,
+      },
+    );
   const vatCandidates = findTaxAmountCandidates(layoutLines, textLines);
   const vatAmount = vatCandidates[0]
     ? buildCandidate(
@@ -1063,10 +1152,17 @@ function findLayoutAmount(
   for (const labelLine of labelLines) {
     const nearbyLines = options.nearbyLines ?? 3;
     const candidateTexts = options.combineNearbyLines
-      ? [lines.slice(labelLine.index, labelLine.index + nearbyLines).map((line) => line.text).join(" ")]
+      ? [
+          lines
+            .slice(labelLine.index, labelLine.index + nearbyLines)
+            .map((line) => line.text)
+            .join(" "),
+        ]
       : [
           labelLine.line.text,
-          ...lines.slice(labelLine.index + 1, labelLine.index + nearbyLines).map((line) => line.text),
+          ...lines
+            .slice(labelLine.index + 1, labelLine.index + nearbyLines)
+            .map((line) => line.text),
         ];
 
     for (const candidateText of candidateTexts) {
@@ -1198,7 +1294,16 @@ function findTaxAmountCandidates(
 }
 
 function extractAmountAfterTaxLabel(line: string) {
-  if (isTaxIdentifierLine(line) || hasExcludedAmountTerm(line, ["tax exclusive", "net amount", "subtotal", "sub_total", "sub total"])) {
+  if (
+    isTaxIdentifierLine(line) ||
+    hasExcludedAmountTerm(line, [
+      "tax exclusive",
+      "net amount",
+      "subtotal",
+      "sub_total",
+      "sub total",
+    ])
+  ) {
     return null;
   }
 
@@ -1423,9 +1528,11 @@ function isLikelySupplierNameLine(value: string) {
     return false;
   }
 
-  if (/(^invoice$|invoice\s*#|invoice\s+no|date|address|gstin|vat|tax|buyer|customer|client|seller|supplier|vendor|total|amount|eur|usd|gbp|ron|lei)/i.test(
-    normalized,
-  )) {
+  if (
+    /(^invoice$|invoice\s*#|invoice\s+no|date|address|gstin|vat|tax|buyer|customer|client|seller|supplier|vendor|total|amount|eur|usd|gbp|ron|lei)/i.test(
+      normalized,
+    )
+  ) {
     return false;
   }
 
@@ -1543,9 +1650,11 @@ function isLikelyCustomerNameLine(value: string) {
     return false;
   }
 
-  if (/(factur|total|tva|cui|cif|cod fiscal|cod tva|iban|banca|email|telefon|adresa|ron|lei|scadent|contract|abonament|serie|numar|nr\.)/i.test(
-    normalized,
-  )) {
+  if (
+    /(factur|total|tva|cui|cif|cod fiscal|cod tva|iban|banca|email|telefon|adresa|ron|lei|scadent|contract|abonament|serie|numar|nr\.)/i.test(
+      normalized,
+    )
+  ) {
     return false;
   }
 
@@ -1565,7 +1674,10 @@ function chooseCandidate(
   return preferredHasValue ? preferred : fallback;
 }
 
-function findCompanyNameCandidate(textLines: string[], layoutLines: LayoutLine[]): ExtractionCandidate {
+function findCompanyNameCandidate(
+  textLines: string[],
+  layoutLines: LayoutLine[],
+): ExtractionCandidate {
   const layoutCandidate = layoutLines.find((line) => isLikelyCompanyName(line.text));
 
   if (layoutCandidate) {
@@ -1594,9 +1706,9 @@ function isLikelyCompanyName(value: string) {
     return false;
   }
 
-  if (/(factura|total|data|cui|cif|cod fiscal|cod tva|tva|iban|cont|banca|client)/i.test(
-    normalized,
-  )) {
+  if (
+    /(factura|total|data|cui|cif|cod fiscal|cod tva|tva|iban|cont|banca|client)/i.test(normalized)
+  ) {
     return false;
   }
 
@@ -1604,12 +1716,19 @@ function isLikelyCompanyName(value: string) {
 }
 
 function cleanupCompanyName(value: string) {
-  return value.replace(/\s+/g, " ").replace(/[,:;-]+$/, "").trim().slice(0, 90);
+  return value
+    .replace(/\s+/g, " ")
+    .replace(/[,:;-]+$/, "")
+    .trim()
+    .slice(0, 90);
 }
 
 function cleanupPartyName(value: string) {
   return value
-    .replace(/^(client|customer|buyer|bill\s+to|sold\s+to|cumparator|cumpărător|beneficiar)\s*[:#\-]?\s*/i, "")
+    .replace(
+      /^(client|customer|buyer|bill\s+to|sold\s+to|cumparator|cumpărător|beneficiar)\s*[:#\-]?\s*/i,
+      "",
+    )
     .replace(/\s+/g, " ")
     .replace(/[,:;-]+$/, "")
     .trim()
@@ -1903,8 +2022,7 @@ function isInvoiceMetadataLine(value: string) {
   return (
     /\b(data\s+facturii|data\s+scadent|seria\s+si\s+numarul\s+facturii|perioada\s+de\s+facturare|factura\s+curenta|total|tva|rest\s+de\s+plata)\b/i.test(
       normalized,
-    ) ||
-    /\b\d{1,2}[./-]\d{1,2}[./-]\d{2,4}\b/.test(value)
+    ) || /\b\d{1,2}[./-]\d{1,2}[./-]\d{2,4}\b/.test(value)
   );
 }
 
@@ -2021,10 +2139,7 @@ function findAmountsInText(text: string, options: AmountMatchOptions = {}) {
       const index = match.index ?? 0;
       const tail = text.slice(index + match[0].length).trimStart();
 
-      return (
-        !tail.startsWith("%") &&
-        isAllowedMonetaryToken(match[0], options.maxIntegerDigits)
-      );
+      return !tail.startsWith("%") && isAllowedMonetaryToken(match[0], options.maxIntegerDigits);
     })
     .map((match) => parseAmount(match[0]))
     .filter((value): value is number => value !== null);
@@ -2117,7 +2232,10 @@ function parseAmount(value: string | null | undefined) {
 }
 
 function normalizeDate(value: string) {
-  const parts = value.replace(/[./\s]/g, "-").split("-").filter(Boolean);
+  const parts = value
+    .replace(/[./\s]/g, "-")
+    .split("-")
+    .filter(Boolean);
 
   if (parts[0]?.length === 4) {
     const [year, month, day] = parts;

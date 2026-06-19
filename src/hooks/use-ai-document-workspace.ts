@@ -10,7 +10,7 @@ import {
   type BatchEvaluationResult,
   type DocumentAiEvaluationFields,
 } from "@/lib/documentAiEvaluationService";
-import type { LayoutAiFields } from "@/lib/layoutAiService";
+import type { LayoutAiFieldDetail, LayoutAiFields } from "@/lib/layoutAiService";
 
 const DOCUMENT_AI_ANALYSIS_KEY = "immapp:document-ai:last-analysis";
 const DOCUMENT_AI_FILE_NAME_KEY = "immapp:document-ai:last-file-name";
@@ -149,7 +149,10 @@ export function useAiDocumentWorkspace() {
   }, []);
 
   const handleApplyLayoutFields = useCallback(
-    (layoutFields: LayoutAiFields) => {
+    (
+      layoutFields: LayoutAiFields,
+      layoutDetails?: Record<DocumentAiFieldKey, LayoutAiFieldDetail>,
+    ) => {
       const currentFields =
         fields ??
         (analysis ? toDocumentAiEditableFields(analysis.fields) : createEmptyDocumentAiFields());
@@ -167,9 +170,36 @@ export function useAiDocumentWorkspace() {
         { ...currentFields },
       );
 
+      if (analysis) {
+        const nextAnalysis = DOCUMENT_AI_FIELD_KEYS.reduce(
+          (next, field) => {
+            const proposedValue = layoutFields[field]?.trim();
+            const detail = layoutDetails?.[field];
+            if (!proposedValue || verifiedSet.has(field) || !detail) return next;
+            next.fields[field] = proposedValue;
+            next.confidences[field] = detail.confidence;
+            next.fieldDetails[field] = {
+              value: proposedValue,
+              normalizedValue: proposedValue,
+              confidence: detail.confidence,
+              method: "Layout heuristic",
+              sourceText: detail.sourceText ?? undefined,
+              warning: detail.warning ?? undefined,
+            };
+            return next;
+          },
+          {
+            ...analysis,
+            fields: { ...analysis.fields },
+            confidences: { ...analysis.confidences },
+            fieldDetails: { ...analysis.fieldDetails },
+          },
+        );
+        handleAnalysisChange(nextAnalysis);
+      }
       handleFieldsChange(nextFields);
     },
-    [analysis, fields, handleFieldsChange, verifiedFields],
+    [analysis, fields, handleAnalysisChange, handleFieldsChange, verifiedFields],
   );
 
   useEffect(() => {

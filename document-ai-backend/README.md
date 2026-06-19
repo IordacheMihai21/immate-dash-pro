@@ -13,6 +13,7 @@ Backend FastAPI pentru modulul Layout AI din IMMapp. Serviciul incarca lazy un m
 - `ocr_text` - text OCR, optional
 - `ocr_words` - JSON string cu textul, increderea si bounding box-ul cuvintelor OCR, optional
 - `document_ai_fields` - JSON string cu campuri Document AI, optional
+- `verified_fields` - lista JSON cu numele campurilor confirmate manual; acestea nu sunt suprascrise
 
 ## Creare mediu virtual
 
@@ -111,3 +112,66 @@ Modurile raportate de API sunt:
 - `unavailable` - nu exista suficiente date nici pentru analiza locala
 
 Modelul de baza LayoutXLM foloseste arhitectura vizuala LayoutLMv2. In unele medii aceasta necesita o instalare compatibila `detectron2`. Lipsa ei nu opreste backendul: motivul exact apare in `/health`, iar extractia layout-aware ramane functionala.
+
+## Dataset, auto-labeling si fine-tuning
+
+Structura locala este documentata in `datasets/fatura/README.md`. Un flux complet arata astfel:
+
+```bash
+python training/prepare_fatura_dataset.py \
+  --images "/path/to/images" \
+  --annotations "/path/to/json" \
+  --ocr-dir "/path/to/ocr" \
+  --output datasets/fatura/processed \
+  --splits datasets/fatura/splits.json
+
+python training/train_layoutxlm_token_classifier.py \
+  --data datasets/fatura/processed \
+  --output models/layoutxlm-invoice-token-classifier \
+  --dry-run
+```
+
+Elimina `--dry-run` numai dupa verificarea etichetelor si intr-un mediu cu memorie suficienta.
+Modelul salvat in `models/layoutxlm-invoice-token-classifier` este detectat automat. Daca lipseste sau
+nu poate fi incarcat, backendul revine la LayoutXLM de baza si apoi la extractorul candidat
+layout-aware, fara a opri API-ul. Calea poate fi schimbata prin
+`LAYOUTXLM_FINE_TUNED_MODEL_PATH`.
+
+Date sintetice pentru extinderea viitoare a setului de antrenare, nu pentru benchmarkul FATURA:
+
+```bash
+python training/generate_synthetic_invoices.py --count 100
+```
+
+Pentru arhiva completa FATURA cu adnotari hugg si COCO:
+
+```bash
+FATURA_DATASET_PATH=/path/invoices_dataset_final.zip npm run document-ai:inspect-fatura
+FATURA_DATASET_PATH=/path/invoices_dataset_final.zip npm run document-ai:prepare-layoutxlm
+npm run document-ai:train-layoutxlm -- --dry-run
+npm run document-ai:train-layoutxlm -- --smoke-test
+```
+
+Inspectorul valideaza lungimile `words/bboxes/ner_tags` si `class_labels/boxes`. Pregatirea
+normalizeaza bbox-urile hugg in intervalul LayoutXLM 0-1000 si foloseste split-urile oficiale
+`strat1_train/dev/test`. Maparea claselor ramane marcata `inferred_not_official` pana la o
+confirmare manuala.
+
+`--smoke-test` executa un singur pas pe un subset minuscul si nu scrie in directorul modelului
+real fara `--save`. Pentru antrenarea completa pe GPU, dupa revizuirea maparii:
+
+```bash
+npm run document-ai:train-layoutxlm -- --fp16 --epochs 3 --batch-size 2
+```
+
+Pe un MacBook fara CUDA foloseste pachetul cloud:
+
+- `training/IMMapp_LayoutXLM_FATURA_Training_Colab.ipynb`
+- `training/colab_layoutxlm_training.md`
+- `training/kaggle_layoutxlm_training.md`
+
+Importul local al arhivei rezultate valideaza intai continutul si inlocuieste atomic modelul:
+
+```bash
+npm run document-ai:import-trained-model -- /path/to/layoutxlm-invoice-token-classifier.zip
+```
