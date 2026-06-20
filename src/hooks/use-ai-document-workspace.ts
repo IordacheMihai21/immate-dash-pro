@@ -20,6 +20,7 @@ const DOCUMENT_AI_PREDICTED_TEXT_KEY = "immapp:document-ai:last-predicted-text";
 const FATURA_ANNOTATION_KEY = "immapp:document-ai:last-fatura-annotation";
 const FATURA_EXPECTED_KEY = "immapp:document-ai:last-fatura-expected";
 const EVALUATION_KEY = "immapp:document-ai:last-evaluation";
+const DOCUMENT_AI_UI_PIPELINE_VERSION = 4;
 const DOCUMENT_AI_FIELD_KEYS: DocumentAiFieldKey[] = [
   "invoiceNumber",
   "invoiceDate",
@@ -213,18 +214,33 @@ export function useAiDocumentWorkspace() {
     const storedExpected = readStoredJson<DocumentAiEvaluationFields>(FATURA_EXPECTED_KEY);
     const storedEvaluation = readStoredJson<BatchEvaluationResult>(EVALUATION_KEY);
 
-    if (storedAnalysis) {
+    const storedAnalysisIsCurrent =
+      storedAnalysis?.uiPipelineVersion === DOCUMENT_AI_UI_PIPELINE_VERSION;
+
+    if (storedAnalysis && storedAnalysisIsCurrent) {
       setAnalysis(storedAnalysis);
       setFields(storedFields ?? toDocumentAiEditableFields(storedAnalysis.fields));
-    } else if (storedFields) {
+    } else if (!storedAnalysis && storedFields) {
       setFields(storedFields);
+    } else if (storedAnalysis && !storedAnalysisIsCurrent) {
+      removeStorageKeys([
+        DOCUMENT_AI_ANALYSIS_KEY,
+        DOCUMENT_AI_FILE_NAME_KEY,
+        DOCUMENT_AI_FIELDS_KEY,
+        DOCUMENT_AI_VERIFIED_FIELDS_KEY,
+        DOCUMENT_AI_PREDICTED_TEXT_KEY,
+      ]);
+      setAnalysis(null);
+      setFields(null);
+      setVerifiedFields([]);
+      setPredictedText("");
     }
 
     if (Array.isArray(storedVerifiedFields)) {
       setVerifiedFields(storedVerifiedFields);
     }
 
-    if (storedPredictedText) {
+    if (storedPredictedText && (!storedAnalysis || storedAnalysisIsCurrent)) {
       setPredictedText(storedPredictedText);
     }
 

@@ -45,6 +45,7 @@ import {
   type LayoutAiHealth,
   type LayoutAiStatus,
 } from "@/lib/layoutAiService";
+import { mergeLayoutXlmWithCandidateEngine } from "@/lib/layoutAiHybridMerge";
 import { cn } from "@/lib/utils";
 import {
   clearLayoutAiSession,
@@ -223,13 +224,53 @@ export function LayoutAiAnalysis({
       const nextHealth = await checkLayoutAiHealth();
       setHealth(nextHealth);
 
-      const nextResult = await analyzeLayoutWithBackend({
+      const backendResult = await analyzeLayoutWithBackend({
         file: selectedFile,
         ocrText: activeAnalysis.extractedText,
         ocrWords: activeAnalysis.ocrWords,
         documentAiFields: activeFields,
         verifiedFields,
       });
+
+      const hybrid = mergeLayoutXlmWithCandidateEngine({
+        candidateFields: activeFields,
+        candidateConfidences: activeAnalysis.confidences,
+        layoutFields: backendResult.fields,
+        layoutConfidences: fieldOrder.reduce(
+          (confidences, field) => {
+            confidences[field] = backendResult.field_details[field]?.confidence ?? 0;
+            return confidences;
+          },
+          {} as Partial<Record<DocumentAiFieldKey, number>>,
+        ),
+        layoutMethods: fieldOrder.reduce(
+          (methods, field) => {
+            methods[field] = backendResult.field_details[field]?.method ?? "";
+            return methods;
+          },
+          {} as Partial<Record<DocumentAiFieldKey, string>>,
+        ),
+      });
+      const nextResult: LayoutAiBackendResponse = {
+        ...backendResult,
+        fields: hybrid.fields,
+        field_details: fieldOrder.reduce(
+          (details, field) => {
+            const backendDetail = backendResult.field_details[field];
+            details[field] = {
+              ...backendDetail,
+              value: hybrid.fields[field],
+              confidence: hybrid.confidences[field],
+              method:
+                hybrid.sources[field] === "candidate_engine"
+                  ? "Candidate engine + LayoutXLM validation"
+                  : backendDetail.method,
+            };
+            return details;
+          },
+          {} as Record<DocumentAiFieldKey, LayoutAiFieldDetail>,
+        ),
+      };
 
       setResult(nextResult);
 

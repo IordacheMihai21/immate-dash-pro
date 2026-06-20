@@ -225,23 +225,25 @@ function Dashboard() {
           }
         />
         <CommandKpiCard
-          title="Activitate lunara"
-          value={`${model.latestMonth?.invoices ?? 0} facturi`}
+          title="Activitate lunară"
+          value={`${model.monthlyProcessedDocuments} documente`}
           description={
             model.latestMonth
-              ? `${model.latestMonth.documents} documente in ${model.latestMonth.month}`
-              : "Nu exista inca activitate lunara"
+              ? model.monthlyProcessedDocuments > 0
+                ? `Documente procesate în ${model.latestMonth.month.replace(/\.$/, "")}.`
+                : `Fără documente procesate în ${model.latestMonth.month.replace(/\.$/, "")}.`
+              : "Nu există încă activitate lunară."
           }
           badge={model.activityTrend}
           icon={<Activity className="h-5 w-5" />}
           tone="blue"
           onClick={() =>
             setFocusedKpi({
-              title: "Activitate lunara",
-              value: `${model.latestMonth?.invoices ?? 0} facturi`,
+              title: "Activitate lunară",
+              value: `${model.monthlyProcessedDocuments} documente`,
               icon: <Activity className="h-6 w-6" />,
               explanation:
-                "Activitatea lunara urmareste volumul de documente si facturi, nu venitul sau profitul.",
+                "Activitatea lunară urmărește numărul documentelor procesate în perioada curentă.",
               businessMeaning:
                 "Arata daca ritmul operational este suficient pentru o vizibilitate financiara relevanta.",
             })
@@ -630,7 +632,7 @@ function CommandKpiCard({
   title: string;
   value: string;
   description: string;
-  badge: string;
+  badge?: string | null;
   icon: ReactNode;
   tone: Tone;
   onClick: () => void;
@@ -643,11 +645,16 @@ function CommandKpiCard({
     >
       <div className="flex items-start justify-between gap-4">
         <div className={cn("rounded-2xl p-3", toneClasses[tone].icon)}>{icon}</div>
-        <span
-          className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", toneClasses[tone].badge)}
-        >
-          {badge}
-        </span>
+        {badge && (
+          <span
+            className={cn(
+              "rounded-full px-2.5 py-1 text-xs font-semibold",
+              toneClasses[tone].badge,
+            )}
+          >
+            {badge}
+          </span>
+        )}
       </div>
       <p className="mt-5 text-sm font-medium text-slate-500">{title}</p>
       <p className="mt-2 break-words text-2xl font-semibold text-slate-950">{value}</p>
@@ -736,7 +743,7 @@ function ActivityDigest({ model }: { model: ReturnType<typeof buildExecutiveOver
     },
     {
       label: "Tendinta activitatii",
-      value: model.activityTrend,
+      value: model.activityTrend ?? "Fără comparație",
       icon: <TrendingUp className="h-4 w-4" />,
     },
     {
@@ -1101,6 +1108,7 @@ function buildExecutiveOverview(dashboardData: DashboardData, selectedPeriod: Pe
   const latestMonth = monthlyData[monthlyData.length - 1] ?? null;
   const previousMonth = monthlyData[monthlyData.length - 2] ?? null;
   const activityTrend = getActivityTrend(latestMonth, previousMonth);
+  const monthlyProcessedDocuments = latestMonth?.documents ?? 0;
   const averageMonthlyInvoices =
     monthlyData.length > 0
       ? Math.round(monthlyData.reduce((sum, point) => sum + point.invoices, 0) / monthlyData.length)
@@ -1142,6 +1150,7 @@ function buildExecutiveOverview(dashboardData: DashboardData, selectedPeriod: Pe
           : "Stabil",
     latestActivityDate: getLatestActivityDate(dashboardData),
     latestMonth,
+    monthlyProcessedDocuments,
     averageMonthlyInvoices,
     activityTrend,
     classifiedInvoiceCount: dashboardData.classifiedInvoiceCount,
@@ -1465,12 +1474,21 @@ function getActivityTrend(
   previous: MonthlyOverviewPoint | null,
 ) {
   if (!latest || !previous) {
-    return "Baza noua";
+    return null;
   }
 
-  const currentActivity = latest.invoices + latest.documents;
-  const previousActivity = previous.invoices + previous.documents;
-  const change = getPercentChange(currentActivity, previousActivity);
+  const currentActivity = Math.max(latest.documents, 0);
+  const previousActivity = Math.max(previous.documents, 0);
+
+  if (previousActivity < 10) {
+    return null;
+  }
+
+  const change = ((currentActivity - previousActivity) / previousActivity) * 100;
+
+  if (!Number.isFinite(change) || Math.abs(change) > 100) {
+    return null;
+  }
 
   if (change > 5) {
     return `+${change.toFixed(1)}%`;
@@ -1551,14 +1569,6 @@ function formatDate(value: string | null | undefined) {
     month: "short",
     year: "numeric",
   });
-}
-
-function getPercentChange(current: number, previous: number) {
-  if (previous === 0) {
-    return current > 0 ? 100 : 0;
-  }
-
-  return ((current - previous) / previous) * 100;
 }
 
 function formatPercent(value: number) {

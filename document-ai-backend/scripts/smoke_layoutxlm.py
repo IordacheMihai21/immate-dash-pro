@@ -42,12 +42,16 @@ def main() -> int:
     print(json.dumps(summary, indent=2))
 
     real_inference = (
-        summary["runtime_mode"] in {"layoutxlm_backbone", "full_layoutxlm"}
+        summary["runtime_mode"]
+        in {"layoutxlm_backbone", "full_layoutxlm", "fine_tuned_layoutxlm"}
         and summary["layout_model_available"] is True
         and summary["model_inference_executed"] is True
     )
     if not real_inference:
-        print("SMOKE TEST FAILED: real LayoutXLM inference is not available.", file=sys.stderr)
+        print(
+            "SMOKE TEST FAILED: real LayoutXLM inference is not available.",
+            file=sys.stderr,
+        )
         return 1
 
     print("SMOKE TEST PASSED: real LayoutXLM inference executed successfully.")

@@ -20,11 +20,21 @@ export type DocumentAiFieldKey =
 
 export type DocumentAiFieldValue = string | number | null;
 
-export type DocumentAiExtractionMethod = "OCR" | "Regex" | "Layout heuristic" | "User verified";
+export type DocumentAiExtractionMethod =
+  | "OCR"
+  | "Regex"
+  | "Layout heuristic"
+  | "Hybrid LayoutXLM + candidate engine"
+  | "User verified";
 
 export type DocumentAiExtractedFields = Record<DocumentAiFieldKey, DocumentAiFieldValue>;
 
 export type DocumentAiConfidenceMap = Record<DocumentAiFieldKey, number>;
+
+export type DocumentAiProfile =
+  | "romanian_efactura"
+  | "generic_invoice"
+  | "fatura_dataset";
 
 export type DocumentAiFieldDetail = {
   value: DocumentAiFieldValue;
@@ -92,6 +102,10 @@ export type DocumentAiAnalysis = {
   extractedText: string;
   ocrConfidence: number;
   overallConfidence: number;
+  visibleOverallConfidence?: number;
+  documentProfile?: DocumentAiProfile;
+  applicableConfidenceFields?: DocumentAiFieldKey[];
+  coreFieldsDetected?: number;
   fields: DocumentAiExtractedFields;
   confidences: DocumentAiConfidenceMap;
   fieldDetails: DocumentAiFieldDetails;
@@ -101,6 +115,8 @@ export type DocumentAiAnalysis = {
   warnings: string[];
   classification: InvoiceClassification;
   companyCui: string;
+  inferenceMode?: "candidate_engine_baseline" | "hybrid_layoutxlm_candidate_engine";
+  uiPipelineVersion?: number;
 };
 
 export type OcrProgress = {

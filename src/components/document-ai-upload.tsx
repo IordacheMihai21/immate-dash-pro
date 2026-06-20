@@ -30,6 +30,11 @@ import {
 } from "@/lib/documentAiService";
 import { saveDocumentAiInvoice } from "@/lib/invoiceService";
 import { recordDocumentAiCorrection } from "@/lib/documentAiCorrectionService";
+import {
+  finalizeDocumentAiWithHybrid,
+  getManualReviewMessage,
+} from "@/lib/documentAiHybridService";
+import { buildUiSafeDocumentRelations } from "@/lib/documentAiRelations";
 import { classifyInvoiceByCui, type InvoiceClassification } from "@/lib/cuiUtils";
 import { cn } from "@/lib/utils";
 
@@ -61,6 +66,28 @@ const fieldOrder: DocumentAiFieldKey[] = [
   "totalAmount",
   "currency",
 ];
+
+const genericMainFieldOrder: DocumentAiFieldKey[] = [
+  "invoiceNumber",
+  "invoiceDate",
+  "supplierName",
+  "customerName",
+  "totalAmount",
+  "currency",
+];
+
+const genericFieldLabels: Partial<Record<DocumentAiFieldKey, string>> = {
+  invoiceNumber: "Număr factură",
+  invoiceDate: "Data facturii",
+  supplierName: "Furnizor",
+  customerName: "Client",
+  totalAmount: "Total",
+  currency: "Monedă",
+  supplierCui: "Tax ID / GSTIN furnizor",
+  customerCui: "Tax ID / GSTIN client",
+  subtotal: "Subtotal / Valoare fără taxe",
+  vatAmount: "Tax / VAT / GST",
+};
 
 const numericFields = new Set<DocumentAiFieldKey>(["subtotal", "vatAmount", "totalAmount"]);
 
@@ -113,11 +140,15 @@ export function DocumentAiUpload({
     !isSaving,
   );
   const readyForSave = Boolean(
-    analysis && editableFields?.invoiceNumber.trim() && toNumber(editableFields?.totalAmount) > 0,
+    analysis &&
+    !requiresManualReview(analysis) &&
+    editableFields?.invoiceNumber.trim() &&
+    toNumber(editableFields?.totalAmount) > 0,
   );
   const hasDetectedEntities = Boolean(
     analysis && Object.values(analysis.fields).some((value) => value !== null && value !== ""),
   );
+  const visibleWarnings = analysis ? getVisibleDocumentWarnings(analysis) : [];
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] ?? null;
@@ -134,11 +165,7 @@ export function DocumentAiUpload({
       return;
     }
 
-    onClearAnalysis();
-    setIsSaved(false);
-    setProgress(0);
-    setProgressLabel("");
-    setSelectedFile(file);
+    prepareDocumentFile(file);
   }
 
   async function handleAnalyze() {
@@ -147,16 +174,32 @@ export function DocumentAiUpload({
       return;
     }
 
+    await analyzeSelectedFile(selectedFile);
+  }
+
+  function prepareDocumentFile(file: File) {
+    onClearAnalysis();
+    setIsSaved(false);
+    setProgress(0);
+    setProgressLabel("");
+    correctionStartValuesRef.current = {};
+    setSelectedFile(file);
+  }
+
+  async function analyzeSelectedFile(file: File) {
     try {
       setIsProcessing(true);
       setIsSaved(false);
       setProgress(5);
       setProgressLabel("Se pregateste documentul");
 
-      const result = await analyzeInvoiceDocument(selectedFile, (nextProgress) => {
+      const candidateResult = await analyzeInvoiceDocument(file, (nextProgress) => {
         setProgress(Math.round(nextProgress.progress * 100));
         setProgressLabel(nextProgress.status);
       });
+      setProgress(94);
+      setProgressLabel("Validăm rezultatul cu modul hibrid LayoutXLM");
+      const result = await finalizeDocumentAiWithHybrid(file, candidateResult);
 
       onAnalysisChange(result);
       onEditableFieldsChange(toDocumentAiEditableFields(result.fields));
@@ -164,7 +207,9 @@ export function DocumentAiUpload({
       setProgress(100);
       setProgressLabel("Analiza finalizata");
 
-      if (result.warnings.length > 0) {
+      if (requiresManualReview(result)) {
+        toast.warning("Documentul necesită verificare manuală înainte de utilizare.");
+      } else if (result.warnings.length > 0) {
         toast.warning("Documentul a fost analizat. Verifica datele marcate inainte de salvare.");
       } else {
         toast.success("Documentul a fost analizat si este pregatit pentru verificare.");
@@ -432,11 +477,29 @@ export function DocumentAiUpload({
           <div className="space-y-4">
             {analysis ? (
               <>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge
+                    data-testid="document-ai-inference-mode"
+                    variant="outline"
+                    className={cn(
+                      "rounded-full",
+                      analysis.inferenceMode === "hybrid_layoutxlm_candidate_engine"
+                        ? "border-blue-200 bg-blue-50 text-blue-700"
+                        : "border-amber-200 bg-amber-50 text-amber-700",
+                    )}
+                  >
+                    {analysis.inferenceMode === "hybrid_layoutxlm_candidate_engine"
+                      ? "Mod hibrid activ: OCR + LayoutXLM fine-tuned + validare"
+                      : "Candidate engine – verificare necesară"}
+                  </Badge>
+                </div>
                 <div className="grid gap-3 sm:grid-cols-3">
                   <ScoreCard
                     label="Încredere generală"
-                    value={`${analysis.overallConfidence}%`}
+                    value={`${getVisibleOverallConfidence(analysis)}%`}
                     icon={<Sparkles className="h-4 w-4" />}
+                    description="Scor calibrat pe câmpurile principale aplicabile acestui tip de document."
+                    testId="document-ai-visible-confidence"
                   />
                   <ScoreCard
                     label="Calitate text"
@@ -464,10 +527,15 @@ export function DocumentAiUpload({
 
         {analysis && (
           <div className="mt-6 space-y-5 border-t border-slate-100 pt-6">
-            {analysis.warnings.length > 0 && (
+            {requiresManualReview(analysis) && (
+              <InfoBanner tone="amber" icon={<AlertTriangle className="h-4 w-4" />}>
+                <span data-testid="document-ai-manual-review">{getManualReviewMessage()}</span>
+              </InfoBanner>
+            )}
+            {visibleWarnings.length > 0 && (
               <InfoBanner tone="amber" icon={<AlertTriangle className="h-4 w-4" />}>
                 <div className="space-y-1">
-                  {analysis.warnings.map((warning) => (
+                  {visibleWarnings.map((warning) => (
                     <p key={warning}>{warning}</p>
                   ))}
                 </div>
@@ -527,10 +595,16 @@ function PipelineStatusGrid({
   fields: DocumentAiEditableFields | null;
   readyForSave: boolean;
 }) {
+  const genericProfile = Boolean(analysis && isGenericDocumentProfile(analysis));
   const detectedFields = analysis
-    ? Object.values(analysis.fields).filter((value) => value !== null && value !== "").length
+    ? (genericProfile ? genericMainFieldOrder : fieldOrder).filter((field) =>
+        hasTextValue(analysis.fields[field]),
+      ).length
     : 0;
+  const expectedDetectedFields = genericProfile ? 4 : 8;
   const cuiFieldsPresent = Boolean(fields?.supplierCui.trim() && fields.customerCui.trim());
+  const partiesPresent = Boolean(fields?.supplierName.trim() && fields.customerName.trim());
+  const lowOverallConfidence = Boolean(analysis && requiresManualReview(analysis));
   const pipelineSteps: {
     title: string;
     status: PipelineStatus;
@@ -545,7 +619,7 @@ function PipelineStatusGrid({
       title: "Structură analizată",
       status: !analysis
         ? "incomplet"
-        : analysis.layout.hasLayoutData
+        : analysis.layout.hasLayoutData && !lowOverallConfidence
           ? "finalizat"
           : analysis.extractedText.trim()
             ? "necesită verificare"
@@ -556,7 +630,7 @@ function PipelineStatusGrid({
       title: "Entități detectate",
       status: !analysis
         ? "incomplet"
-        : detectedFields >= 8
+        : detectedFields >= expectedDetectedFields && !lowOverallConfidence
           ? "finalizat"
           : detectedFields > 0
             ? "necesită verificare"
@@ -564,15 +638,18 @@ function PipelineStatusGrid({
       description: "Datele importante sunt localizate.",
     },
     {
-      title: "CUI verificat",
-      status: !analysis
-        ? "incomplet"
-        : cuiFieldsPresent && analysis.companyCui
-          ? "finalizat"
-          : cuiFieldsPresent
-            ? "necesită verificare"
-            : "incomplet",
-      description: "Părțile facturii sunt verificate.",
+      title: genericProfile ? "Părți verificate" : "CUI verificat",
+      status: getPartiesPipelineStatus({
+        hasAnalysis: Boolean(analysis),
+        genericProfile,
+        partiesPresent,
+        cuiFieldsPresent,
+        hasCompanyCui: Boolean(analysis?.companyCui),
+        lowOverallConfidence,
+      }),
+      description: genericProfile
+        ? "Furnizorul și clientul sunt validați."
+        : "Părțile facturii sunt verificate.",
     },
     {
       title: "Date pregătite",
@@ -635,14 +712,53 @@ function getPipelineStatus(done: boolean, started: boolean): PipelineStatus {
   return started ? "necesită verificare" : "incomplet";
 }
 
-function ScoreCard({ label, value, icon }: { label: string; value: string; icon: ReactNode }) {
+function getPartiesPipelineStatus({
+  hasAnalysis,
+  genericProfile,
+  partiesPresent,
+  cuiFieldsPresent,
+  hasCompanyCui,
+  lowOverallConfidence,
+}: {
+  hasAnalysis: boolean;
+  genericProfile: boolean;
+  partiesPresent: boolean;
+  cuiFieldsPresent: boolean;
+  hasCompanyCui: boolean;
+  lowOverallConfidence: boolean;
+}): PipelineStatus {
+  if (!hasAnalysis) return "incomplet";
+  const requiredPartiesPresent = genericProfile
+    ? partiesPresent
+    : cuiFieldsPresent && hasCompanyCui;
+  if (requiredPartiesPresent && !lowOverallConfidence) return "finalizat";
+  if (genericProfile ? partiesPresent : cuiFieldsPresent) return "necesită verificare";
+  return "incomplet";
+}
+
+function ScoreCard({
+  label,
+  value,
+  icon,
+  description,
+  testId,
+}: {
+  label: string;
+  value: string;
+  icon: ReactNode;
+  description?: string;
+  testId?: string;
+}) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-500">
         <span className="rounded-lg bg-blue-50 p-1.5 text-blue-600">{icon}</span>
         {label}
       </div>
-      <p className="mt-3 text-lg font-semibold text-slate-950">{value}</p>
+      <p data-testid={testId} className="mt-3 text-lg font-semibold text-slate-950">
+        {value}
+      </p>
+      {description && <p className="mt-2 text-xs leading-4 text-slate-500">{description}</p>}
     </div>
   );
 }
@@ -787,6 +903,21 @@ function StructuredPreview({
     return null;
   }
 
+  const genericProfile = isGenericDocumentProfile(analysis);
+  const mainFields = genericProfile
+    ? genericMainFieldOrder.filter(
+        (field) => field !== "currency" || Boolean(fields.currency.trim()),
+      )
+    : fieldOrder;
+  const optionalFields = genericProfile
+    ? (["supplierCui", "customerCui", "subtotal", "vatAmount"] as DocumentAiFieldKey[]).filter(
+        (field) => isConfidentOptionalField(field, fields, analysis),
+      )
+    : [];
+  const optionalAddresses = genericProfile
+    ? extractExplicitPartyAddresses(analysis.extractedText)
+    : [];
+
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -802,66 +933,156 @@ function StructuredPreview({
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        {fieldOrder.map((field) => {
-          const isVerified = verifiedFields.has(field);
-          const fieldDetail = analysis.fieldDetails[field];
-          const displayMethod = isVerified ? "User verified" : fieldDetail.method;
-          const missing = !fields[field]?.trim();
-          const lowConfidence = !missing && fieldDetail.confidence < 0.55;
-
-          return (
-            <div
-              key={field}
-              className={cn(
-                "space-y-2 rounded-2xl border bg-slate-50/70 p-3.5 transition focus-within:border-blue-300 focus-within:bg-blue-50/30",
-                missing
-                  ? "border-rose-200 bg-rose-50/70"
-                  : lowConfidence
-                    ? "border-amber-200 bg-amber-50/70"
-                    : "border-slate-100",
-              )}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <Label htmlFor={`document-ai-${field}`} className="text-xs text-slate-500">
-                  {fieldLabels[field]}
-                </Label>
-                <span
-                  className={cn(
-                    "rounded-full px-2 py-0.5 text-xs font-semibold",
-                    getConfidenceTone(isVerified ? 1 : fieldDetail.confidence),
-                  )}
-                >
-                  {formatConfidence(isVerified ? 1 : fieldDetail.confidence)}
-                </span>
-              </div>
-
-              <Input
-                id={`document-ai-${field}`}
-                value={fields[field]}
-                inputMode={numericFields.has(field) ? "decimal" : "text"}
-                onChange={(event) => onUpdate(field, event.target.value)}
-                onBlur={(event) => onCommit(field, event.target.value)}
-                placeholder="Nedetectat"
-                className="bg-white"
-              />
-
-              <div className="flex flex-wrap items-center gap-2 text-xs">
-                <Badge
-                  variant="outline"
-                  className="rounded-full border-slate-200 bg-white text-[10px] font-medium text-slate-500"
-                >
-                  {formatExtractionMethod(displayMethod)}
-                </Badge>
-                {(missing || lowConfidence || fieldDetail.warning) && (
-                  <span className={missing ? "text-rose-600" : "text-amber-700"}>
-                    {missing ? "Câmp lipsă" : "Verifică valoarea"}
-                  </span>
-                )}
-              </div>
-            </div>
-          );
-        })}
+        {mainFields.map((field) => (
+          <StructuredFieldCard
+            key={field}
+            field={field}
+            label={genericProfile ? genericFieldLabels[field] ?? fieldLabels[field] : fieldLabels[field]}
+            analysis={analysis}
+            fields={fields}
+            verifiedFields={verifiedFields}
+            onUpdate={onUpdate}
+            onCommit={onCommit}
+          />
+        ))}
       </div>
+
+      {genericProfile && (optionalFields.length > 0 || optionalAddresses.length > 0) && (
+        <div className="mt-5 border-t border-slate-100 pt-5" data-testid="document-ai-optional-fields">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <h4 className="text-sm font-semibold text-slate-950">Detalii opționale detectate</h4>
+            <Badge variant="outline" className="rounded-full bg-slate-50 text-slate-600">
+              Opțional
+            </Badge>
+          </div>
+          <p className="mb-4 text-xs leading-5 text-slate-500">
+            Identificatori fiscali și valori suplimentare afișate numai când sunt detectate cu
+            suficientă încredere.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {optionalFields.map((field) => (
+              <StructuredFieldCard
+                key={field}
+                field={field}
+                label={genericFieldLabels[field] ?? fieldLabels[field]}
+                analysis={analysis}
+                fields={fields}
+                verifiedFields={verifiedFields}
+                onUpdate={onUpdate}
+                onCommit={onCommit}
+                optional
+              />
+            ))}
+            {optionalAddresses.map((address) => (
+              <OptionalTextDetail key={address.kind} {...address} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StructuredFieldCard({
+  field,
+  label,
+  analysis,
+  fields,
+  verifiedFields,
+  onUpdate,
+  onCommit,
+  optional = false,
+}: {
+  field: DocumentAiFieldKey;
+  label: string;
+  analysis: DocumentAiAnalysis;
+  fields: DocumentAiEditableFields;
+  verifiedFields: Set<DocumentAiFieldKey>;
+  onUpdate: (field: DocumentAiFieldKey, value: string) => void;
+  onCommit: (field: DocumentAiFieldKey, value: string) => void;
+  optional?: boolean;
+}) {
+  const isVerified = verifiedFields.has(field);
+  const fieldDetail = analysis.fieldDetails[field];
+  const displayMethod = isVerified ? "User verified" : fieldDetail.method;
+  const missing = !fields[field]?.trim();
+  const lowConfidence = !missing && fieldDetail.confidence < 0.6;
+
+  return (
+    <div
+      data-testid={`document-ai-field-${field}`}
+      className={cn(
+        "space-y-2 rounded-2xl border bg-slate-50/70 p-3.5 transition focus-within:border-blue-300 focus-within:bg-blue-50/30",
+        missing
+          ? "border-rose-200 bg-rose-50/70"
+          : lowConfidence
+            ? "border-amber-200 bg-amber-50/70"
+            : "border-slate-100",
+      )}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <Label htmlFor={`document-ai-${field}`} className="text-xs text-slate-500">
+          {label}
+        </Label>
+        <span
+          className={cn(
+            "rounded-full px-2 py-0.5 text-xs font-semibold",
+            getConfidenceTone(isVerified ? 1 : fieldDetail.confidence),
+          )}
+        >
+          {formatConfidence(isVerified ? 1 : fieldDetail.confidence)}
+        </span>
+      </div>
+
+      <Input
+        id={`document-ai-${field}`}
+        value={fields[field]}
+        inputMode={numericFields.has(field) ? "decimal" : "text"}
+        onChange={(event) => onUpdate(field, event.target.value)}
+        onBlur={(event) => onCommit(field, event.target.value)}
+        placeholder={optional ? "Detaliu opțional" : "Nedetectat"}
+        className="bg-white"
+      />
+
+      <div className="flex flex-wrap items-center gap-2 text-xs">
+        <Badge
+          variant="outline"
+          className="rounded-full border-slate-200 bg-white text-[10px] font-medium text-slate-500"
+        >
+          {formatExtractionMethod(displayMethod)}
+        </Badge>
+        {(missing || lowConfidence || fieldDetail.warning) && (
+          <span className={missing ? "text-rose-600" : "text-amber-700"}>
+            {missing ? "Câmp lipsă" : "Necesită verificare manuală"}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function OptionalTextDetail({
+  kind,
+  label,
+  value,
+}: {
+  kind: "supplierAddress" | "customerAddress";
+  label: string;
+  value: string;
+}) {
+  return (
+    <div
+      data-testid={`document-ai-optional-${kind}`}
+      className="space-y-2 rounded-2xl border border-slate-100 bg-slate-50/70 p-3.5"
+    >
+      <p className="text-xs text-slate-500">{label}</p>
+      <p className="text-sm font-medium leading-5 text-slate-900">{value}</p>
+      <Badge
+        variant="outline"
+        className="rounded-full border-slate-200 bg-white text-[10px] font-medium text-slate-500"
+      >
+        OCR – adresă etichetată
+      </Badge>
     </div>
   );
 }
@@ -937,7 +1158,10 @@ function DetectedRelationshipsCard({
   const relationships = buildDetectedRelationships(analysis, fields, classification);
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div
+      data-testid="document-ai-relations"
+      className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+    >
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="font-semibold text-slate-950">Relații detectate</h3>
@@ -952,30 +1176,37 @@ function DetectedRelationshipsCard({
       </div>
 
       <div className="grid gap-3">
-        {relationships.map((relationship) => (
-          <div
-            key={`${relationship.source}-${relationship.relation}-${relationship.target}`}
-            className="grid gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-3 sm:grid-cols-[1fr_auto_1fr_auto]"
-          >
-            <RelationshipNode label="Sursa" value={relationship.source} />
-            <div className="flex items-center justify-center">
-              <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm">
-                {relationship.relation}
-              </span>
-            </div>
-            <RelationshipNode label="Tinta" value={relationship.target} />
-            <div className="flex items-center justify-end">
-              <span
-                className={cn(
-                  "rounded-full px-2.5 py-1 text-xs font-semibold",
-                  getConfidenceTone(relationship.confidence),
-                )}
-              >
-                {formatConfidence(relationship.confidence)}
-              </span>
-            </div>
+        {relationships.length === 0 ? (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            Relațiile cu încredere sub 60% sau bazate pe entități invalide sunt ascunse până la
+            verificarea manuală.
           </div>
-        ))}
+        ) : (
+          relationships.map((relationship) => (
+            <div
+              key={`${relationship.source}-${relationship.relation}-${relationship.target}`}
+              className="grid gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-3 sm:grid-cols-[1fr_auto_1fr_auto]"
+            >
+              <RelationshipNode label="Sursa" value={relationship.source} />
+              <div className="flex items-center justify-center">
+                <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm">
+                  {relationship.relation}
+                </span>
+              </div>
+              <RelationshipNode label="Tinta" value={relationship.target} />
+              <div className="flex items-center justify-end">
+                <span
+                  className={cn(
+                    "rounded-full px-2.5 py-1 text-xs font-semibold",
+                    getConfidenceTone(relationship.confidence),
+                  )}
+                >
+                  {formatConfidence(relationship.confidence)}
+                </span>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
@@ -1098,62 +1329,12 @@ function buildDetectedRelationships(
   fields: DocumentAiEditableFields | null,
   classification: InvoiceClassification,
 ) {
-  const invoiceLabel = fields?.invoiceNumber?.trim()
-    ? `Factura ${fields.invoiceNumber.trim()}`
-    : "Factura";
-  const supplierLabel = fields?.supplierName?.trim() || fields?.supplierCui?.trim() || "Furnizor";
-  const customerLabel = fields?.customerName?.trim() || fields?.customerCui?.trim() || "Client";
-  const totalConfidence = Math.max(
-    analysis.confidences.totalAmount,
-    analysis.confidences.vatAmount,
-  );
-  const partyConfidence = Math.max(
-    analysis.confidences.supplierCui,
-    analysis.confidences.customerCui,
-  );
-  const companyTarget: Record<InvoiceClassification, string> = {
-    revenue: "Venit",
-    expense: "Cheltuială",
-    unclassified: "Neclasificat",
-  };
-  const companyRelation: Record<InvoiceClassification, string> = {
-    revenue: "este furnizor",
-    expense: "este client",
-    unclassified: "necesită asociere",
-  };
-
-  return [
-    {
-      source: supplierLabel,
-      relation: "emite",
-      target: invoiceLabel,
-      confidence: Math.max(analysis.confidences.supplierName, analysis.confidences.supplierCui),
-    },
-    {
-      source: customerLabel,
-      relation: "primește",
-      target: invoiceLabel,
-      confidence: Math.max(analysis.confidences.customerName, analysis.confidences.customerCui),
-    },
-    {
-      source: invoiceLabel,
-      relation: "conține",
-      target: "Linii factură",
-      confidence: Math.max(0.45, analysis.overallConfidence / 100 - 0.1),
-    },
-    {
-      source: invoiceLabel,
-      relation: "include",
-      target: "TVA",
-      confidence: totalConfidence,
-    },
-    {
-      source: "Companie curentă",
-      relation: companyRelation[classification],
-      target: companyTarget[classification],
-      confidence: classification === "unclassified" ? 0.35 : Math.max(0.65, partyConfidence),
-    },
-  ];
+  return buildUiSafeDocumentRelations({
+    fields,
+    confidences: analysis.confidences,
+    overallConfidence: analysis.overallConfidence,
+    classification,
+  });
 }
 
 function toNumber(value: string | null | undefined) {
@@ -1165,6 +1346,82 @@ function toNumber(value: string | null | undefined) {
   const parsed = Number(normalized);
 
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function getVisibleOverallConfidence(analysis: DocumentAiAnalysis) {
+  return analysis.visibleOverallConfidence ?? analysis.overallConfidence;
+}
+
+function isGenericDocumentProfile(analysis: DocumentAiAnalysis) {
+  return (
+    analysis.documentProfile === "generic_invoice" ||
+    analysis.documentProfile === "fatura_dataset"
+  );
+}
+
+function getVisibleDocumentWarnings(analysis: DocumentAiAnalysis) {
+  const warnings = analysis.warnings.filter((warning) => warning !== getManualReviewMessage());
+  if (!isGenericDocumentProfile(analysis)) return warnings;
+
+  return warnings.filter(
+    (warning) =>
+      !/^Completeaza CUI-ul companiei/i.test(warning) &&
+      !/^(?:CUI furnizor|CUI client|Valoare fara TVA|TVA|Moneda):/i.test(warning),
+  );
+}
+
+function isConfidentOptionalField(
+  field: DocumentAiFieldKey,
+  fields: DocumentAiEditableFields,
+  analysis: DocumentAiAnalysis,
+) {
+  const value = fields[field].trim();
+  if (!value || analysis.fieldDetails[field].confidence < 0.6) return false;
+  if (field === "supplierCui" || field === "customerCui") {
+    const normalized = value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    return normalized.length >= 6 && normalized.length <= 24 && /\d/.test(normalized);
+  }
+  if (field === "subtotal" || field === "vatAmount") return toNumber(value) > 0;
+  return false;
+}
+
+function extractExplicitPartyAddresses(extractedText: string) {
+  const patterns: Array<{
+    kind: "supplierAddress" | "customerAddress";
+    label: string;
+    pattern: RegExp;
+  }> = [
+    {
+      kind: "supplierAddress",
+      label: "Adresă furnizor",
+      pattern: /^(?:supplier|seller|vendor)\s+address\s*[:\-]\s*(.{6,140})$/i,
+    },
+    {
+      kind: "customerAddress",
+      label: "Adresă client",
+      pattern: /^(?:customer|buyer|billing)\s+address\s*[:\-]\s*(.{6,140})$/i,
+    },
+  ];
+  const lines = extractedText
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  return patterns.flatMap(({ kind, label, pattern }) => {
+    const value = lines.map((line) => line.match(pattern)?.[1]?.trim()).find(Boolean);
+    return value ? [{ kind, label, value }] : [];
+  });
+}
+
+function hasTextValue(value: unknown) {
+  return value !== null && value !== undefined && String(value).trim().length > 0;
+}
+
+function requiresManualReview(analysis: DocumentAiAnalysis) {
+  return (
+    getVisibleOverallConfidence(analysis) < 50 ||
+    (analysis.coreFieldsDetected !== undefined && analysis.coreFieldsDetected < 3)
+  );
 }
 
 function formatConfidence(value: number) {
@@ -1180,7 +1437,7 @@ function getConfidenceTone(value: number) {
     return "bg-emerald-50 text-emerald-700";
   }
 
-  if (value >= 0.55) {
+  if (value >= 0.6) {
     return "bg-amber-50 text-amber-700";
   }
 
@@ -1192,6 +1449,7 @@ function formatExtractionMethod(value: DocumentAiExtractionMethod | "User verifi
     OCR: "OCR",
     Regex: "Regex",
     "Layout heuristic": "Layout heuristic",
+    "Hybrid LayoutXLM + candidate engine": "Hibrid LayoutXLM + candidate engine",
     "User verified": "User verified",
   };
 

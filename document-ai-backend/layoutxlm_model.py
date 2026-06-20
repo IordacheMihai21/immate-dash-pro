@@ -6,6 +6,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 
 RuntimeMode = str
+FINE_TUNED_MODEL_ID = "local_fine_tuned_layoutxlm"
+FINE_TUNED_RUNTIME_MODE = "fine_tuned_layoutxlm"
 
 
 class LayoutXlmModelManager:
@@ -19,8 +21,9 @@ class LayoutXlmModelManager:
         self.fine_tuned_model_path = os.path.abspath(
             os.getenv("LAYOUTXLM_FINE_TUNED_MODEL_PATH", default_classifier)
         )
-        self.fine_tuned_model_available = os.path.isfile(
-            os.path.join(self.fine_tuned_model_path, "config.json")
+        self.fine_tuned_model_available = all(
+            os.path.isfile(os.path.join(self.fine_tuned_model_path, filename))
+            for filename in ("config.json", "model.safetensors")
         )
         dataset_root = os.path.join(os.path.dirname(__file__), "datasets", "fatura")
         self.layoutxlm_training_ready = all(
@@ -32,8 +35,13 @@ class LayoutXlmModelManager:
             ]
         )
         self.fine_tuned_model_used = False
-        self.model_id = (
+        self.model_source = (
             self.fine_tuned_model_path
+            if self.fine_tuned_model_available
+            else self.base_model_id
+        )
+        self.model_id = (
+            FINE_TUNED_MODEL_ID
             if self.fine_tuned_model_available
             else self.base_model_id
         )
@@ -82,9 +90,13 @@ class LayoutXlmModelManager:
                 try:
                     self._load_with_cache_policy(loaders)
                     self.fine_tuned_model_used = self.fine_tuned_model_available
+                    if self.fine_tuned_model_used:
+                        self.model_id = FINE_TUNED_MODEL_ID
+                        self.runtime_mode = FINE_TUNED_RUNTIME_MODE
                 except Exception as fine_tuned_error:
                     if not self.fine_tuned_model_available:
                         raise
+                    self.model_source = self.base_model_id
                     self.model_id = self.base_model_id
                     self.fine_tuned_model_used = False
                     self._load_with_cache_policy(loaders)
@@ -139,17 +151,17 @@ class LayoutXlmModelManager:
         except Exception as local_error:
             if (
                 self.local_files_only
-                or os.path.isdir(self.model_id)
+                or os.path.isdir(self.model_source)
                 or not _is_cache_miss(local_error)
             ):
                 raise
             self._load_components(loaders, local_files_only=False)
 
     def _load_components(self, loaders: Dict[str, Any], local_files_only: bool) -> None:
-        source = self.model_id
+        source = self.model_source
         if local_files_only and not os.path.isdir(source):
             source = loaders["snapshot_download"](
-                self.model_id,
+                self.model_source,
                 local_files_only=True,
             )
 
@@ -259,7 +271,7 @@ class LayoutXlmModelManager:
                     "model_inference_executed": True,
                     "field_extraction_method": (
                         "LayoutXLM token classification"
-                        if self.runtime_mode == "full_layoutxlm"
+                        if _is_token_classification_runtime(self.runtime_mode)
                         else "LayoutXLM-assisted layout-aware extraction"
                     ),
                     "fallback_reason": None,
@@ -325,7 +337,9 @@ class LayoutXlmModelManager:
             "token_predictions": [],
         }
 
-        if self.runtime_mode == "full_layoutxlm" and hasattr(outputs, "logits"):
+        if _is_token_classification_runtime(self.runtime_mode) and hasattr(
+            outputs, "logits"
+        ):
             probabilities = self._torch.softmax(outputs.logits, dim=-1)
             confidences, label_ids = probabilities.max(dim=-1)
             result["model_confidence"] = round(float(confidences.mean().item()), 4)
@@ -357,6 +371,10 @@ def _has_token_classification_head(config: Any) -> bool:
         label for label in labels if not re.fullmatch(r"LABEL_\d+", str(label))
     ]
     return len(meaningful_labels) > 1
+
+
+def _is_token_classification_runtime(runtime_mode: RuntimeMode) -> bool:
+    return runtime_mode in {"full_layoutxlm", FINE_TUNED_RUNTIME_MODE}
 
 
 def _ensure_document_image(image: Any) -> Any:

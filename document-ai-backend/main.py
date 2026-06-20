@@ -100,6 +100,7 @@ class AnalyzeLayoutResponse(BaseModel):
     model_id: str
     status: Literal["ok", "unavailable"]
     runtime_mode: Literal[
+        "fine_tuned_layoutxlm",
         "full_layoutxlm",
         "layoutxlm_backbone",
         "fallback_layout_aware",
