@@ -12,9 +12,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, FileCode2, Info, Loader2 } from "lucide-react";
+import { ArrowLeft, Download, FileCode2, Info, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { formatRON } from "@/lib/mock-data";
 import { getInvoiceDetails } from "@/lib/invoiceService";
+import { generateUblInvoiceXml } from "@/lib/ublInvoiceGenerator";
 
 export const Route = createFileRoute("/app/e-facturi/$id")({
   head: ({ params }) => ({ meta: [{ title: `Factura ${params.id} — IMMapp` }] }),
@@ -156,10 +158,58 @@ function InvoiceDetail() {
   }
 
   const invoice = data.invoice;
+  const lines = data.lines;
   const supplier = getParty(invoice.suppliers as PartyRelation);
   const customer = getParty(invoice.customers as PartyRelation);
   const document = getDocument(invoice.documents as DocumentRelation);
   const isDocumentAiDocument = document?.document_type === "document-ai";
+
+  function handleDownloadXml() {
+    try {
+      const xml = generateUblInvoiceXml({
+        invoiceNumber: invoice.invoice_number,
+        issueDate: invoice.issue_date ?? "",
+        dueDate: invoice.due_date,
+        currency: invoice.currency ?? "RON",
+        taxExclusiveAmount: Number(invoice.tax_exclusive_amount ?? 0),
+        taxAmount: Number(invoice.tax_amount ?? 0),
+        taxInclusiveAmount: Number(invoice.tax_inclusive_amount ?? 0),
+        payableAmount: Number(invoice.payable_amount ?? 0),
+        supplier: {
+          name: supplier?.name ?? "",
+          cui: supplier?.cui ?? "",
+          address: supplier?.address ?? "",
+          city: supplier?.city ?? "",
+          country: supplier?.country ?? "RO",
+        },
+        customer: {
+          name: customer?.name ?? "",
+          cui: customer?.cui ?? "",
+          address: customer?.address ?? "",
+          city: customer?.city ?? "",
+          country: customer?.country ?? "RO",
+        },
+        lines: lines.map((line) => ({
+          lineNumber: line.line_number ?? "1",
+          description: line.description ?? "",
+          quantity: Number(line.quantity ?? 0),
+          unitCode: line.unit_code ?? "buc",
+          unitPrice: Number(line.unit_price ?? 0),
+          lineTotal: Number(line.line_total ?? 0),
+        })),
+      });
+
+      const blob = new Blob([xml], { type: "application/xml" });
+      const url = URL.createObjectURL(blob);
+      const link = window.document.createElement("a");
+      link.href = url;
+      link.download = `${invoice.invoice_number}.xml`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "XML-ul UBL nu a putut fi generat.");
+    }
+  }
 
   return (
     <div>
@@ -172,7 +222,15 @@ function InvoiceDetail() {
       <PageHeader
         title={`Factura ${invoice.invoice_number}`}
         description={`Emisa la ${invoice.issue_date ?? "-"}`}
-        actions={<StatusBadge status={normalizeStatus(invoice.status)} />}
+        actions={
+          <>
+            <Button variant="outline" size="sm" className="gap-2" onClick={handleDownloadXml}>
+              <Download className="h-4 w-4" />
+              Descarca XML e-Factura
+            </Button>
+            <StatusBadge status={normalizeStatus(invoice.status)} />
+          </>
+        }
       />
 
       <div className="mb-4 flex items-start gap-2 rounded-md border border-info/30 bg-info/10 p-3 text-sm">
