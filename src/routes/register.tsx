@@ -200,12 +200,7 @@ function RegisterPage() {
                   </div>
                   <div className="space-y-2 sm:col-span-2">
                     <Label htmlFor="companyName">Denumire firmă</Label>
-                    <Input
-                      id="companyName"
-                      name="companyName"
-                      disabled={isSubmitting}
-                      required
-                    />
+                    <Input id="companyName" name="companyName" disabled={isSubmitting} required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="regCom">Nr. Registrul Comerțului</Label>

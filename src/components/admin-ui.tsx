@@ -22,12 +22,8 @@ export function AdminPanel({
     <Card className={cn("border-slate-200 bg-white shadow-sm", className)}>
       <CardHeader className="flex flex-col gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <CardTitle className="text-base font-semibold text-slate-900">
-            {title}
-          </CardTitle>
-          {description && (
-            <p className="mt-1 text-sm text-slate-500">{description}</p>
-          )}
+          <CardTitle className="text-base font-semibold text-slate-900">{title}</CardTitle>
+          {description && <p className="mt-1 text-sm text-slate-500">{description}</p>}
         </div>
         {action}
       </CardHeader>
@@ -75,9 +71,7 @@ export function StatCard({
       <div className="mt-5">
         <p className="text-sm font-medium text-slate-500">{title}</p>
         <p className="mt-2 text-2xl font-semibold text-slate-900">{value}</p>
-        {description && (
-          <p className="mt-1 text-xs leading-5 text-slate-500">{description}</p>
-        )}
+        {description && <p className="mt-1 text-xs leading-5 text-slate-500">{description}</p>}
       </div>
     </>
   );

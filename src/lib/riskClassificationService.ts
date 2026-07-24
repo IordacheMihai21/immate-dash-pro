@@ -49,8 +49,7 @@ function getVolatility(values: number[]) {
     return 0;
   }
 
-  const variance =
-    values.reduce((sum, value) => sum + (value - average) ** 2, 0) / values.length;
+  const variance = values.reduce((sum, value) => sum + (value - average) ** 2, 0) / values.length;
 
   return Math.sqrt(variance) / average;
 }
@@ -149,8 +148,7 @@ function buildConfusionMatrix(pairs: { actual: RiskClass; predicted: RiskClass }
     RISK_CLASSES.map((predicted) => ({
       actual,
       predicted,
-      count: pairs.filter((pair) => pair.actual === actual && pair.predicted === predicted)
-        .length,
+      count: pairs.filter((pair) => pair.actual === actual && pair.predicted === predicted).length,
     })),
   );
 }
@@ -175,9 +173,7 @@ function calculateClassificationMetrics(pairs: { actual: RiskClass; predicted: R
       (pair) => pair.actual !== label && pair.predicted === label,
     ).length;
 
-    return truePositive + falsePositive > 0
-      ? truePositive / (truePositive + falsePositive)
-      : 0;
+    return truePositive + falsePositive > 0 ? truePositive / (truePositive + falsePositive) : 0;
   });
   const recallValues = RISK_CLASSES.map((label) => {
     const truePositive = pairs.filter(
@@ -187,9 +183,7 @@ function calculateClassificationMetrics(pairs: { actual: RiskClass; predicted: R
       (pair) => pair.actual === label && pair.predicted !== label,
     ).length;
 
-    return truePositive + falseNegative > 0
-      ? truePositive / (truePositive + falseNegative)
-      : 0;
+    return truePositive + falseNegative > 0 ? truePositive / (truePositive + falseNegative) : 0;
   });
 
   const precision = getAverage(precisionValues);
@@ -226,7 +220,11 @@ export function buildRiskClassification(
   const paymentScore =
     (recentGrowthRate < -20 ? 38 : recentGrowthRate < -10 ? 24 : 8) +
     (volatility > 0.45 ? 30 : volatility > 0.25 ? 18 : 6) +
-    (forecast.paymentDelayRisk === "Ridicat" ? 28 : forecast.paymentDelayRisk === "Mediu" ? 15 : 4) +
+    (forecast.paymentDelayRisk === "Ridicat"
+      ? 28
+      : forecast.paymentDelayRisk === "Mediu"
+        ? 15
+        : 4) +
     (totalInvoiceCount < 6 ? 10 : 0);
 
   const cashFlowScore =

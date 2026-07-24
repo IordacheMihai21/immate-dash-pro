@@ -121,9 +121,7 @@ export async function saveAiTrainingRun({
     .single();
 
   if (trainingError) {
-    throw new Error(
-      `Eroare la salvarea antrenarii AI: ${trainingError.message}`,
-    );
+    throw new Error(`Eroare la salvarea antrenarii AI: ${trainingError.message}`);
   }
 
   const { data: predictionResult, error: predictionError } = await supabase
@@ -151,9 +149,7 @@ export async function saveAiTrainingRun({
     .single();
 
   if (predictionError) {
-    throw new Error(
-      `Eroare la salvarea predictiei AI: ${predictionError.message}`,
-    );
+    throw new Error(`Eroare la salvarea predictiei AI: ${predictionError.message}`);
   }
 
   return {
@@ -253,7 +249,8 @@ async function getMonthlyActualsFromInvoices() {
 
   const { data: invoicesData, error } = await supabase
     .from("invoices")
-    .select(`
+    .select(
+      `
       id,
       issue_date,
       created_at,
@@ -267,7 +264,8 @@ async function getMonthlyActualsFromInvoices() {
         name,
         cui
       )
-    `)
+    `,
+    )
     .eq("company_id", companyId);
 
   if (error) {
@@ -324,9 +322,7 @@ export async function evaluateSavedPredictions() {
     .order("created_at", { ascending: true });
 
   if (predictionsError) {
-    throw new Error(
-      `Eroare la citirea predictiilor in asteptare: ${predictionsError.message}`,
-    );
+    throw new Error(`Eroare la citirea predictiilor in asteptare: ${predictionsError.message}`);
   }
 
   let evaluatedCount = 0;
@@ -355,9 +351,7 @@ export async function evaluateSavedPredictions() {
       .eq("id", prediction.id);
 
     if (updateError) {
-      throw new Error(
-        `Eroare la evaluarea predictiei ${prediction.id}: ${updateError.message}`,
-      );
+      throw new Error(`Eroare la evaluarea predictiei ${prediction.id}: ${updateError.message}`);
     }
 
     evaluatedCount += 1;

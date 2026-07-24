@@ -228,7 +228,7 @@ for (const field of DOCUMENT_AI_EVALUATION_FIELDS) {
     const comparison = document.fields.find((item) => item.field === field);
     return comparison && (comparison.missing || comparison.incorrect)
       ? [
-          `${document.documentId}: \"${comparison.predicted || "<missing>"}\" vs \"${comparison.expected}\"`,
+          `${document.documentId}: "${comparison.predicted || "<missing>"}" vs "${comparison.expected}"`,
         ]
       : [];
   });
@@ -446,7 +446,7 @@ function requiredArg(values: Record<string, string>, key: string) {
   const value = values[key];
   if (!value) {
     throw new Error(
-      `Lipsește --${key}. Exemplu: npm run document-ai:evaluate -- --images \"/cale/JPG\" --annotations \"/cale/JSON\"`,
+      `Lipsește --${key}. Exemplu: npm run document-ai:evaluate -- --images "/cale/JPG" --annotations "/cale/JSON"`,
     );
   }
   return value;

@@ -22,9 +22,7 @@ export function KpiCard({ label, value, hint, icon, trend }: KpiCardProps) {
             <p className="mt-2 text-2xl font-semibold text-foreground">{value}</p>
             {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
           </div>
-          {icon && (
-            <div className="rounded-lg bg-secondary p-2 text-primary">{icon}</div>
-          )}
+          {icon && <div className="rounded-lg bg-secondary p-2 text-primary">{icon}</div>}
         </div>
         {trend && (
           <p

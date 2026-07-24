@@ -34,12 +34,36 @@ export const Route = createFileRoute("/")({
 });
 
 const features = [
-  { icon: FileCode2, title: "Import e-Factură XML", desc: "Încarcă fișiere XML conforme ANAF și extrage automat toate datele." },
-  { icon: FileText, title: "Procesare documente financiare", desc: "PDF, XLSX, CSV — toate documentele firmei într-un singur loc." },
-  { icon: LayoutDashboard, title: "Dashboard financiar", desc: "Indicatori și grafice actualizate în timp real, pentru deciziile tale." },
-  { icon: Percent, title: "Analiză TVA", desc: "Evidență clară a TVA colectată și deductibilă, lunar și anual." },
-  { icon: Truck, title: "Monitorizare furnizori și clienți", desc: "Top parteneri, volume, valori și istoric pentru fiecare entitate." },
-  { icon: Users, title: "Rapoarte pentru management", desc: "Rapoarte exportabile, gata pentru contabil sau pentru board." },
+  {
+    icon: FileCode2,
+    title: "Import e-Factură XML",
+    desc: "Încarcă fișiere XML conforme ANAF și extrage automat toate datele.",
+  },
+  {
+    icon: FileText,
+    title: "Procesare documente financiare",
+    desc: "PDF, XLSX, CSV — toate documentele firmei într-un singur loc.",
+  },
+  {
+    icon: LayoutDashboard,
+    title: "Dashboard financiar",
+    desc: "Indicatori și grafice actualizate în timp real, pentru deciziile tale.",
+  },
+  {
+    icon: Percent,
+    title: "Analiză TVA",
+    desc: "Evidență clară a TVA colectată și deductibilă, lunar și anual.",
+  },
+  {
+    icon: Truck,
+    title: "Monitorizare furnizori și clienți",
+    desc: "Top parteneri, volume, valori și istoric pentru fiecare entitate.",
+  },
+  {
+    icon: Users,
+    title: "Rapoarte pentru management",
+    desc: "Rapoarte exportabile, gata pentru contabil sau pentru board.",
+  },
 ];
 
 const steps = [
@@ -50,9 +74,40 @@ const steps = [
 ];
 
 const plans = [
-  { name: "Basic", price: "49 RON", per: "/ lună", features: ["1 firmă", "100 documente / lună", "Dashboard standard", "Suport email"], cta: "Începe gratuit" },
-  { name: "Professional", price: "149 RON", per: "/ lună", popular: true, features: ["3 firme", "1.000 documente / lună", "Rapoarte avansate", "Integrare e-Factură ANAF", "Suport prioritar"], cta: "Alege Professional" },
-  { name: "Enterprise", price: "Personalizat", per: "", features: ["Firme nelimitate", "Documente nelimitate", "API & integrări custom", "Manager dedicat", "SLA garantat"], cta: "Contactează-ne" },
+  {
+    name: "Basic",
+    price: "49 RON",
+    per: "/ lună",
+    features: ["1 firmă", "100 documente / lună", "Dashboard standard", "Suport email"],
+    cta: "Începe gratuit",
+  },
+  {
+    name: "Professional",
+    price: "149 RON",
+    per: "/ lună",
+    popular: true,
+    features: [
+      "3 firme",
+      "1.000 documente / lună",
+      "Rapoarte avansate",
+      "Integrare e-Factură ANAF",
+      "Suport prioritar",
+    ],
+    cta: "Alege Professional",
+  },
+  {
+    name: "Enterprise",
+    price: "Personalizat",
+    per: "",
+    features: [
+      "Firme nelimitate",
+      "Documente nelimitate",
+      "API & integrări custom",
+      "Manager dedicat",
+      "SLA garantat",
+    ],
+    cta: "Contactează-ne",
+  },
 ];
 
 function Landing() {
@@ -68,9 +123,15 @@ function Landing() {
             <span className="text-lg font-semibold tracking-tight">IMMapp</span>
           </Link>
           <nav className="hidden items-center gap-6 text-sm md:flex">
-            <a href="#functionalitati" className="text-muted-foreground hover:text-foreground">Funcționalități</a>
-            <a href="#cum-functioneaza" className="text-muted-foreground hover:text-foreground">Cum funcționează</a>
-            <a href="#preturi" className="text-muted-foreground hover:text-foreground">Prețuri</a>
+            <a href="#functionalitati" className="text-muted-foreground hover:text-foreground">
+              Funcționalități
+            </a>
+            <a href="#cum-functioneaza" className="text-muted-foreground hover:text-foreground">
+              Cum funcționează
+            </a>
+            <a href="#preturi" className="text-muted-foreground hover:text-foreground">
+              Prețuri
+            </a>
           </nav>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" asChild>
@@ -95,8 +156,8 @@ function Landing() {
               Platformă SaaS de Business Intelligence pentru IMM-uri
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-balance text-base text-muted-foreground sm:text-lg">
-              Importă documente financiare, extrage automat informații și urmărește
-              indicatorii companiei într-un dashboard interactiv.
+              Importă documente financiare, extrage automat informații și urmărește indicatorii
+              companiei într-un dashboard interactiv.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Button size="lg" asChild>
@@ -142,7 +203,9 @@ function Landing() {
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-semibold tracking-tight">Cum funcționează</h2>
-            <p className="mt-3 text-muted-foreground">4 pași simpli până la primul tău raport BI.</p>
+            <p className="mt-3 text-muted-foreground">
+              4 pași simpli până la primul tău raport BI.
+            </p>
           </div>
           <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {steps.map((s) => (
@@ -163,7 +226,9 @@ function Landing() {
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-semibold tracking-tight">Planuri simple, fără surprize</h2>
-            <p className="mt-3 text-muted-foreground">Alege planul potrivit dimensiunii firmei tale.</p>
+            <p className="mt-3 text-muted-foreground">
+              Alege planul potrivit dimensiunii firmei tale.
+            </p>
           </div>
           <div className="mt-12 grid gap-6 lg:grid-cols-3">
             {plans.map((p) => (

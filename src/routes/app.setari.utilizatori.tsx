@@ -1,6 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, type ReactNode } from "react";
-import { Clock, KeyRound, MoreHorizontal, Search, ShieldCheck, UserPlus, Users } from "lucide-react";
+import {
+  Clock,
+  KeyRound,
+  MoreHorizontal,
+  Search,
+  ShieldCheck,
+  UserPlus,
+  Users,
+} from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -145,7 +153,10 @@ function UsersSettingsPage() {
 
           <CardContent className="p-0">
             <div className="border-b border-slate-100 p-5">
-              <Tabs value={roleFilter} onValueChange={(value) => setRoleFilter(value as RoleFilter)}>
+              <Tabs
+                value={roleFilter}
+                onValueChange={(value) => setRoleFilter(value as RoleFilter)}
+              >
                 <TabsList>
                   <TabsTrigger value="all">Toti</TabsTrigger>
                   <TabsTrigger value="Administratori">Administratori</TabsTrigger>
@@ -205,8 +216,8 @@ function UsersSettingsPage() {
             </div>
             <h2 className="text-base font-semibold text-slate-900">Controlul accesului</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Rolurile vor ajuta la separarea responsabilitatilor intre administratori, contabili
-              si utilizatori cu acces de vizualizare.
+              Rolurile vor ajuta la separarea responsabilitatilor intre administratori, contabili si
+              utilizatori cu acces de vizualizare.
             </p>
           </CardContent>
         </Card>

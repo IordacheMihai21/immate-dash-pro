@@ -26,9 +26,22 @@ function ClientsPage() {
     <div>
       <PageHeader title="Clienți" description="Lista clienților și valoarea vânzărilor." />
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <KpiCard label="Total clienți" value={clients.length} icon={<Users className="h-4 w-4" />} />
-        <KpiCard label="Client principal" value={top.name} icon={<TrendingUp className="h-4 w-4" />} hint={formatRON(top.total)} />
-        <KpiCard label="Valoare totală vânzări" value={formatRON(totalValue)} icon={<Wallet className="h-4 w-4" />} />
+        <KpiCard
+          label="Total clienți"
+          value={clients.length}
+          icon={<Users className="h-4 w-4" />}
+        />
+        <KpiCard
+          label="Client principal"
+          value={top.name}
+          icon={<TrendingUp className="h-4 w-4" />}
+          hint={formatRON(top.total)}
+        />
+        <KpiCard
+          label="Valoare totală vânzări"
+          value={formatRON(totalValue)}
+          icon={<Wallet className="h-4 w-4" />}
+        />
       </div>
       <Card>
         <CardContent className="p-0">
@@ -51,7 +64,9 @@ function ClientsPage() {
                   <TableCell className="text-right">{c.invoices}</TableCell>
                   <TableCell className="text-right tabular-nums">{formatRON(c.total)}</TableCell>
                   <TableCell>{c.lastInvoice}</TableCell>
-                  <TableCell><StatusBadge status={c.status} /></TableCell>
+                  <TableCell>
+                    <StatusBadge status={c.status} />
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

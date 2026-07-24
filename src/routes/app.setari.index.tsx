@@ -2,13 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { Building2, Loader2, Save } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -185,9 +179,7 @@ function SettingsPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="border-slate-200 bg-white shadow-sm lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-base text-slate-900">
-              Profil companie
-            </CardTitle>
+            <CardTitle className="text-base text-slate-900">Profil companie</CardTitle>
             <CardDescription>
               Completeaza datele firmei pentru afisarea corecta in dashboard si rapoarte.
             </CardDescription>
@@ -220,9 +212,7 @@ function SettingsPage() {
                   Salveaza modificarile
                 </Button>
                 {isLoading ? (
-                  <span className="text-sm text-slate-500">
-                    Se incarca profilul companiei...
-                  </span>
+                  <span className="text-sm text-slate-500">Se incarca profilul companiei...</span>
                 ) : null}
               </div>
             </form>
@@ -231,9 +221,7 @@ function SettingsPage() {
 
         <Card className="border-slate-200 bg-white shadow-sm">
           <CardHeader>
-            <CardTitle className="text-base text-slate-900">
-              Identificare firma
-            </CardTitle>
+            <CardTitle className="text-base text-slate-900">Identificare firma</CardTitle>
             <CardDescription>
               Aceste date apar in zona de profil si pot fi refolosite in fluxurile viitoare.
             </CardDescription>
@@ -244,9 +232,7 @@ function SettingsPage() {
                 <Building2 className="h-5 w-5" />
               </div>
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-slate-900">
-                  {companyName}
-                </p>
+                <p className="truncate text-sm font-semibold text-slate-900">{companyName}</p>
                 <p className="truncate text-xs text-slate-500">
                   {cui} / {registrationNumber}
                 </p>

@@ -78,17 +78,37 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "IMMApp" },
-      { name: "description", content: "IMMapp Insights is a SaaS BI platform for Romanian SMEs to process financial documents and view interactive dashboards." },
+      {
+        name: "description",
+        content:
+          "IMMapp Insights is a SaaS BI platform for Romanian SMEs to process financial documents and view interactive dashboards.",
+      },
       { name: "author", content: "Lovable" },
       { property: "og:title", content: "IMMApp" },
-      { property: "og:description", content: "IMMapp Insights is a SaaS BI platform for Romanian SMEs to process financial documents and view interactive dashboards." },
+      {
+        property: "og:description",
+        content:
+          "IMMapp Insights is a SaaS BI platform for Romanian SMEs to process financial documents and view interactive dashboards.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "IMMApp" },
-      { name: "twitter:description", content: "IMMapp Insights is a SaaS BI platform for Romanian SMEs to process financial documents and view interactive dashboards." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b00f8ef0-cead-4de3-a32d-882acadb0a68/id-preview-92798887--75451b34-c37b-4447-9b2b-4d4b075aaf13.lovable.app-1780501264494.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b00f8ef0-cead-4de3-a32d-882acadb0a68/id-preview-92798887--75451b34-c37b-4447-9b2b-4d4b075aaf13.lovable.app-1780501264494.png" },
+      {
+        name: "twitter:description",
+        content:
+          "IMMapp Insights is a SaaS BI platform for Romanian SMEs to process financial documents and view interactive dashboards.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b00f8ef0-cead-4de3-a32d-882acadb0a68/id-preview-92798887--75451b34-c37b-4447-9b2b-4d4b075aaf13.lovable.app-1780501264494.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b00f8ef0-cead-4de3-a32d-882acadb0a68/id-preview-92798887--75451b34-c37b-4447-9b2b-4d4b075aaf13.lovable.app-1780501264494.png",
+      },
     ],
     links: [
       {

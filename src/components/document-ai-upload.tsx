@@ -937,7 +937,11 @@ function StructuredPreview({
           <StructuredFieldCard
             key={field}
             field={field}
-            label={genericProfile ? genericFieldLabels[field] ?? fieldLabels[field] : fieldLabels[field]}
+            label={
+              genericProfile
+                ? (genericFieldLabels[field] ?? fieldLabels[field])
+                : fieldLabels[field]
+            }
             analysis={analysis}
             fields={fields}
             verifiedFields={verifiedFields}
@@ -948,7 +952,10 @@ function StructuredPreview({
       </div>
 
       {genericProfile && (optionalFields.length > 0 || optionalAddresses.length > 0) && (
-        <div className="mt-5 border-t border-slate-100 pt-5" data-testid="document-ai-optional-fields">
+        <div
+          className="mt-5 border-t border-slate-100 pt-5"
+          data-testid="document-ai-optional-fields"
+        >
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <h4 className="text-sm font-semibold text-slate-950">Detalii opționale detectate</h4>
             <Badge variant="outline" className="rounded-full bg-slate-50 text-slate-600">
@@ -1354,8 +1361,7 @@ function getVisibleOverallConfidence(analysis: DocumentAiAnalysis) {
 
 function isGenericDocumentProfile(analysis: DocumentAiAnalysis) {
   return (
-    analysis.documentProfile === "generic_invoice" ||
-    analysis.documentProfile === "fatura_dataset"
+    analysis.documentProfile === "generic_invoice" || analysis.documentProfile === "fatura_dataset"
   );
 }
 
@@ -1394,12 +1400,12 @@ function extractExplicitPartyAddresses(extractedText: string) {
     {
       kind: "supplierAddress",
       label: "Adresă furnizor",
-      pattern: /^(?:supplier|seller|vendor)\s+address\s*[:\-]\s*(.{6,140})$/i,
+      pattern: /^(?:supplier|seller|vendor)\s+address\s*[:-]\s*(.{6,140})$/i,
     },
     {
       kind: "customerAddress",
       label: "Adresă client",
-      pattern: /^(?:customer|buyer|billing)\s+address\s*[:\-]\s*(.{6,140})$/i,
+      pattern: /^(?:customer|buyer|billing)\s+address\s*[:-]\s*(.{6,140})$/i,
     },
   ];
   const lines = extractedText

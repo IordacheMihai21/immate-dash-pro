@@ -13,9 +13,7 @@ export function ChartCard({ title, description, children, className }: ChartCard
     <Card className={className}>
       <CardHeader className="border-b border-slate-100 pb-4">
         <CardTitle className="text-base font-semibold text-slate-900">{title}</CardTitle>
-        {description && (
-          <p className="text-sm text-slate-500">{description}</p>
-        )}
+        {description && <p className="text-sm text-slate-500">{description}</p>}
       </CardHeader>
       <CardContent className="pt-5">{children}</CardContent>
     </Card>

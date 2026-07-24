@@ -7,10 +7,7 @@ import {
   buildRiskClassification,
   type RiskClassificationResult,
 } from "./riskClassificationService";
-import {
-  parseClientDataset,
-  type ClientDatasetParseResult,
-} from "./clientDatasetParser";
+import { parseClientDataset, type ClientDatasetParseResult } from "./clientDatasetParser";
 
 export type DatasetColumnMap = {
   date?: string;

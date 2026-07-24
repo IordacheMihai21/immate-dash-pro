@@ -13,10 +13,7 @@ function AppLayout() {
 
   return (
     <div className="min-h-screen w-full bg-[#f6f8fb] text-foreground">
-      <AppSidebar
-        mobileOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
+      <AppSidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="min-h-screen md:pl-72">
         <AppHeader onSidebarToggle={() => setSidebarOpen((open) => !open)} />

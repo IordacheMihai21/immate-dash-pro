@@ -51,6 +51,12 @@ models/
 .wrangler/
 .dev.vars
 
+# Archives and office scratch files left in working tree
+*.zip
+*.docx
+*.doc
+~$*
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

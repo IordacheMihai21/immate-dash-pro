@@ -88,9 +88,7 @@ function LoginPage() {
         <Card>
           <CardContent className="p-6">
             <h1 className="text-xl font-semibold">Autentificare</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Conectează-te la contul IMMapp.
-            </p>
+            <p className="mt-1 text-sm text-muted-foreground">Conectează-te la contul IMMapp.</p>
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               {errorMessage ? (
                 <Alert variant="destructive">
@@ -112,10 +110,7 @@ function LoginPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Parolă</Label>
-                  <Link
-                    to="/forgot-password"
-                    className="text-xs text-primary hover:underline"
-                  >
+                  <Link to="/forgot-password" className="text-xs text-primary hover:underline">
                     Ai uitat parola?
                   </Link>
                 </div>

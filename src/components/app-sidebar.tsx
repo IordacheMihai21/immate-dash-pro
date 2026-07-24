@@ -18,6 +18,7 @@ import {
   Settings,
   TrendingUp,
   Users,
+  Wallet,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -88,6 +89,8 @@ const menuGroups: SidebarGroup[] = [
     icon: BarChart3,
     items: [
       { label: "Cash-flow", to: "/app/rapoarte/cash-flow", icon: LineChart },
+      { label: "Venituri", to: "/app/rapoarte/revenue", icon: TrendingUp },
+      { label: "Cheltuieli", to: "/app/rapoarte/expenses", icon: Wallet },
       { label: "TVA", to: "/app/rapoarte/tva", icon: ReceiptText },
       { label: "Profitabilitate", to: "/app/rapoarte/profitabilitate", icon: BarChart3 },
       { label: "Activitate lunara", to: "/app/rapoarte/activitate-lunara", icon: Gauge },

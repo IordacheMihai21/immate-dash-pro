@@ -1,7 +1,4 @@
-import {
-  getAuthUserDisplayName,
-  getCurrentAuthUser,
-} from "./appUserService";
+import { getAuthUserDisplayName, getCurrentAuthUser } from "./appUserService";
 import { supabase } from "./supabaseClient";
 
 export type CompanyProfile = {
@@ -53,10 +50,7 @@ const profileColumns = `
   updated_at
 `;
 
-function getStringMetadata(
-  metadata: Record<string, unknown> | null | undefined,
-  key: string,
-) {
+function getStringMetadata(metadata: Record<string, unknown> | null | undefined, key: string) {
   const value = metadata?.[key];
 
   return typeof value === "string" ? value.trim() : "";
@@ -118,9 +112,7 @@ export async function getCompanyProfile(): Promise<CompanyProfile | null> {
   return (data as CompanyProfile | null) ?? null;
 }
 
-export async function upsertCompanyProfile(
-  profile: CompanyProfileInput,
-): Promise<CompanyProfile> {
+export async function upsertCompanyProfile(profile: CompanyProfileInput): Promise<CompanyProfile> {
   const authUser = await getCurrentAuthUser();
 
   if (!authUser) {

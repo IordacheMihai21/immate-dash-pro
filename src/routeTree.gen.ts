@@ -9,17 +9,12 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
-import { Route as ReportsRevenueRouteImport } from './routes/reports.revenue'
-import { Route as ReportsProfitabilityRouteImport } from './routes/reports.profitability'
-import { Route as ReportsExpensesRouteImport } from './routes/reports.expenses'
-import { Route as ReportsCashFlowRouteImport } from './routes/reports.cash-flow'
 import { Route as AppSetariRouteImport } from './routes/app.setari'
 import { Route as AppRapoarteRouteImport } from './routes/app.rapoarte'
 import { Route as AppGhidUtilizareRouteImport } from './routes/app.ghid-utilizare'
@@ -37,7 +32,6 @@ import { Route as AppSetariUtilizatoriRouteImport } from './routes/app.setari.ut
 import { Route as AppSetariPreferinteRouteImport } from './routes/app.setari.preferinte'
 import { Route as AppRapoarteTvaRouteImport } from './routes/app.rapoarte.tva'
 import { Route as AppRapoarteRevenueRouteImport } from './routes/app.rapoarte.revenue'
-import { Route as AppRapoarteProfitabilityRouteImport } from './routes/app.rapoarte.profitability'
 import { Route as AppRapoarteProfitabilitateRouteImport } from './routes/app.rapoarte.profitabilitate'
 import { Route as AppRapoarteExpensesRouteImport } from './routes/app.rapoarte.expenses'
 import { Route as AppRapoarteCashFlowRouteImport } from './routes/app.rapoarte.cash-flow'
@@ -48,11 +42,6 @@ import { Route as AppAiCenterLayoutAiRouteImport } from './routes/app.ai-center.
 import { Route as AppAiCenterEvaluareAiRouteImport } from './routes/app.ai-center.evaluare-ai'
 import { Route as AppAiCenterDocumentAiRouteImport } from './routes/app.ai-center.document-ai'
 
-const ReportsRoute = ReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
@@ -82,26 +71,6 @@ const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppRoute,
-} as any)
-const ReportsRevenueRoute = ReportsRevenueRouteImport.update({
-  id: '/revenue',
-  path: '/revenue',
-  getParentRoute: () => ReportsRoute,
-} as any)
-const ReportsProfitabilityRoute = ReportsProfitabilityRouteImport.update({
-  id: '/profitability',
-  path: '/profitability',
-  getParentRoute: () => ReportsRoute,
-} as any)
-const ReportsExpensesRoute = ReportsExpensesRouteImport.update({
-  id: '/expenses',
-  path: '/expenses',
-  getParentRoute: () => ReportsRoute,
-} as any)
-const ReportsCashFlowRoute = ReportsCashFlowRouteImport.update({
-  id: '/cash-flow',
-  path: '/cash-flow',
-  getParentRoute: () => ReportsRoute,
 } as any)
 const AppSetariRoute = AppSetariRouteImport.update({
   id: '/setari',
@@ -188,12 +157,6 @@ const AppRapoarteRevenueRoute = AppRapoarteRevenueRouteImport.update({
   path: '/revenue',
   getParentRoute: () => AppRapoarteRoute,
 } as any)
-const AppRapoarteProfitabilityRoute =
-  AppRapoarteProfitabilityRouteImport.update({
-    id: '/profitability',
-    path: '/profitability',
-    getParentRoute: () => AppRapoarteRoute,
-  } as any)
 const AppRapoarteProfitabilitateRoute =
   AppRapoarteProfitabilitateRouteImport.update({
     id: '/profitabilitate',
@@ -249,7 +212,6 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/reports': typeof ReportsRouteWithChildren
   '/app/ai-center': typeof AppAiCenterRouteWithChildren
   '/app/ai-forecast': typeof AppAiForecastRoute
   '/app/ajutor': typeof AppAjutorRoute
@@ -259,10 +221,6 @@ export interface FileRoutesByFullPath {
   '/app/ghid-utilizare': typeof AppGhidUtilizareRoute
   '/app/rapoarte': typeof AppRapoarteRouteWithChildren
   '/app/setari': typeof AppSetariRouteWithChildren
-  '/reports/cash-flow': typeof ReportsCashFlowRoute
-  '/reports/expenses': typeof ReportsExpensesRoute
-  '/reports/profitability': typeof ReportsProfitabilityRoute
-  '/reports/revenue': typeof ReportsRevenueRoute
   '/app/': typeof AppIndexRoute
   '/app/ai-center/document-ai': typeof AppAiCenterDocumentAiRoute
   '/app/ai-center/evaluare-ai': typeof AppAiCenterEvaluareAiRoute
@@ -273,7 +231,6 @@ export interface FileRoutesByFullPath {
   '/app/rapoarte/cash-flow': typeof AppRapoarteCashFlowRoute
   '/app/rapoarte/expenses': typeof AppRapoarteExpensesRoute
   '/app/rapoarte/profitabilitate': typeof AppRapoarteProfitabilitateRoute
-  '/app/rapoarte/profitability': typeof AppRapoarteProfitabilityRoute
   '/app/rapoarte/revenue': typeof AppRapoarteRevenueRoute
   '/app/rapoarte/tva': typeof AppRapoarteTvaRoute
   '/app/setari/preferinte': typeof AppSetariPreferinteRoute
@@ -288,17 +245,12 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/reports': typeof ReportsRouteWithChildren
   '/app/ai-forecast': typeof AppAiForecastRoute
   '/app/ajutor': typeof AppAjutorRoute
   '/app/clienti': typeof AppClientiRoute
   '/app/documente': typeof AppDocumenteRoute
   '/app/furnizori': typeof AppFurnizoriRoute
   '/app/ghid-utilizare': typeof AppGhidUtilizareRoute
-  '/reports/cash-flow': typeof ReportsCashFlowRoute
-  '/reports/expenses': typeof ReportsExpensesRoute
-  '/reports/profitability': typeof ReportsProfitabilityRoute
-  '/reports/revenue': typeof ReportsRevenueRoute
   '/app': typeof AppIndexRoute
   '/app/ai-center/document-ai': typeof AppAiCenterDocumentAiRoute
   '/app/ai-center/evaluare-ai': typeof AppAiCenterEvaluareAiRoute
@@ -309,7 +261,6 @@ export interface FileRoutesByTo {
   '/app/rapoarte/cash-flow': typeof AppRapoarteCashFlowRoute
   '/app/rapoarte/expenses': typeof AppRapoarteExpensesRoute
   '/app/rapoarte/profitabilitate': typeof AppRapoarteProfitabilitateRoute
-  '/app/rapoarte/profitability': typeof AppRapoarteProfitabilityRoute
   '/app/rapoarte/revenue': typeof AppRapoarteRevenueRoute
   '/app/rapoarte/tva': typeof AppRapoarteTvaRoute
   '/app/setari/preferinte': typeof AppSetariPreferinteRoute
@@ -326,7 +277,6 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/reports': typeof ReportsRouteWithChildren
   '/app/ai-center': typeof AppAiCenterRouteWithChildren
   '/app/ai-forecast': typeof AppAiForecastRoute
   '/app/ajutor': typeof AppAjutorRoute
@@ -336,10 +286,6 @@ export interface FileRoutesById {
   '/app/ghid-utilizare': typeof AppGhidUtilizareRoute
   '/app/rapoarte': typeof AppRapoarteRouteWithChildren
   '/app/setari': typeof AppSetariRouteWithChildren
-  '/reports/cash-flow': typeof ReportsCashFlowRoute
-  '/reports/expenses': typeof ReportsExpensesRoute
-  '/reports/profitability': typeof ReportsProfitabilityRoute
-  '/reports/revenue': typeof ReportsRevenueRoute
   '/app/': typeof AppIndexRoute
   '/app/ai-center/document-ai': typeof AppAiCenterDocumentAiRoute
   '/app/ai-center/evaluare-ai': typeof AppAiCenterEvaluareAiRoute
@@ -350,7 +296,6 @@ export interface FileRoutesById {
   '/app/rapoarte/cash-flow': typeof AppRapoarteCashFlowRoute
   '/app/rapoarte/expenses': typeof AppRapoarteExpensesRoute
   '/app/rapoarte/profitabilitate': typeof AppRapoarteProfitabilitateRoute
-  '/app/rapoarte/profitability': typeof AppRapoarteProfitabilityRoute
   '/app/rapoarte/revenue': typeof AppRapoarteRevenueRoute
   '/app/rapoarte/tva': typeof AppRapoarteTvaRoute
   '/app/setari/preferinte': typeof AppSetariPreferinteRoute
@@ -368,7 +313,6 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
-    | '/reports'
     | '/app/ai-center'
     | '/app/ai-forecast'
     | '/app/ajutor'
@@ -378,10 +322,6 @@ export interface FileRouteTypes {
     | '/app/ghid-utilizare'
     | '/app/rapoarte'
     | '/app/setari'
-    | '/reports/cash-flow'
-    | '/reports/expenses'
-    | '/reports/profitability'
-    | '/reports/revenue'
     | '/app/'
     | '/app/ai-center/document-ai'
     | '/app/ai-center/evaluare-ai'
@@ -392,7 +332,6 @@ export interface FileRouteTypes {
     | '/app/rapoarte/cash-flow'
     | '/app/rapoarte/expenses'
     | '/app/rapoarte/profitabilitate'
-    | '/app/rapoarte/profitability'
     | '/app/rapoarte/revenue'
     | '/app/rapoarte/tva'
     | '/app/setari/preferinte'
@@ -407,17 +346,12 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
-    | '/reports'
     | '/app/ai-forecast'
     | '/app/ajutor'
     | '/app/clienti'
     | '/app/documente'
     | '/app/furnizori'
     | '/app/ghid-utilizare'
-    | '/reports/cash-flow'
-    | '/reports/expenses'
-    | '/reports/profitability'
-    | '/reports/revenue'
     | '/app'
     | '/app/ai-center/document-ai'
     | '/app/ai-center/evaluare-ai'
@@ -428,7 +362,6 @@ export interface FileRouteTypes {
     | '/app/rapoarte/cash-flow'
     | '/app/rapoarte/expenses'
     | '/app/rapoarte/profitabilitate'
-    | '/app/rapoarte/profitability'
     | '/app/rapoarte/revenue'
     | '/app/rapoarte/tva'
     | '/app/setari/preferinte'
@@ -444,7 +377,6 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
-    | '/reports'
     | '/app/ai-center'
     | '/app/ai-forecast'
     | '/app/ajutor'
@@ -454,10 +386,6 @@ export interface FileRouteTypes {
     | '/app/ghid-utilizare'
     | '/app/rapoarte'
     | '/app/setari'
-    | '/reports/cash-flow'
-    | '/reports/expenses'
-    | '/reports/profitability'
-    | '/reports/revenue'
     | '/app/'
     | '/app/ai-center/document-ai'
     | '/app/ai-center/evaluare-ai'
@@ -468,7 +396,6 @@ export interface FileRouteTypes {
     | '/app/rapoarte/cash-flow'
     | '/app/rapoarte/expenses'
     | '/app/rapoarte/profitabilitate'
-    | '/app/rapoarte/profitability'
     | '/app/rapoarte/revenue'
     | '/app/rapoarte/tva'
     | '/app/setari/preferinte'
@@ -485,18 +412,10 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
-  ReportsRoute: typeof ReportsRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/reports': {
-      id: '/reports'
-      path: '/reports'
-      fullPath: '/reports'
-      preLoaderRoute: typeof ReportsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/register': {
       id: '/register'
       path: '/register'
@@ -538,34 +457,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/'
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
-    }
-    '/reports/revenue': {
-      id: '/reports/revenue'
-      path: '/revenue'
-      fullPath: '/reports/revenue'
-      preLoaderRoute: typeof ReportsRevenueRouteImport
-      parentRoute: typeof ReportsRoute
-    }
-    '/reports/profitability': {
-      id: '/reports/profitability'
-      path: '/profitability'
-      fullPath: '/reports/profitability'
-      preLoaderRoute: typeof ReportsProfitabilityRouteImport
-      parentRoute: typeof ReportsRoute
-    }
-    '/reports/expenses': {
-      id: '/reports/expenses'
-      path: '/expenses'
-      fullPath: '/reports/expenses'
-      preLoaderRoute: typeof ReportsExpensesRouteImport
-      parentRoute: typeof ReportsRoute
-    }
-    '/reports/cash-flow': {
-      id: '/reports/cash-flow'
-      path: '/cash-flow'
-      fullPath: '/reports/cash-flow'
-      preLoaderRoute: typeof ReportsCashFlowRouteImport
-      parentRoute: typeof ReportsRoute
     }
     '/app/setari': {
       id: '/app/setari'
@@ -686,13 +577,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRapoarteRevenueRouteImport
       parentRoute: typeof AppRapoarteRoute
     }
-    '/app/rapoarte/profitability': {
-      id: '/app/rapoarte/profitability'
-      path: '/profitability'
-      fullPath: '/app/rapoarte/profitability'
-      preLoaderRoute: typeof AppRapoarteProfitabilityRouteImport
-      parentRoute: typeof AppRapoarteRoute
-    }
     '/app/rapoarte/profitabilitate': {
       id: '/app/rapoarte/profitabilitate'
       path: '/profitabilitate'
@@ -784,7 +668,6 @@ interface AppRapoarteRouteChildren {
   AppRapoarteCashFlowRoute: typeof AppRapoarteCashFlowRoute
   AppRapoarteExpensesRoute: typeof AppRapoarteExpensesRoute
   AppRapoarteProfitabilitateRoute: typeof AppRapoarteProfitabilitateRoute
-  AppRapoarteProfitabilityRoute: typeof AppRapoarteProfitabilityRoute
   AppRapoarteRevenueRoute: typeof AppRapoarteRevenueRoute
   AppRapoarteTvaRoute: typeof AppRapoarteTvaRoute
   AppRapoarteIndexRoute: typeof AppRapoarteIndexRoute
@@ -795,7 +678,6 @@ const AppRapoarteRouteChildren: AppRapoarteRouteChildren = {
   AppRapoarteCashFlowRoute: AppRapoarteCashFlowRoute,
   AppRapoarteExpensesRoute: AppRapoarteExpensesRoute,
   AppRapoarteProfitabilitateRoute: AppRapoarteProfitabilitateRoute,
-  AppRapoarteProfitabilityRoute: AppRapoarteProfitabilityRoute,
   AppRapoarteRevenueRoute: AppRapoarteRevenueRoute,
   AppRapoarteTvaRoute: AppRapoarteTvaRoute,
   AppRapoarteIndexRoute: AppRapoarteIndexRoute,
@@ -853,30 +735,12 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
-interface ReportsRouteChildren {
-  ReportsCashFlowRoute: typeof ReportsCashFlowRoute
-  ReportsExpensesRoute: typeof ReportsExpensesRoute
-  ReportsProfitabilityRoute: typeof ReportsProfitabilityRoute
-  ReportsRevenueRoute: typeof ReportsRevenueRoute
-}
-
-const ReportsRouteChildren: ReportsRouteChildren = {
-  ReportsCashFlowRoute: ReportsCashFlowRoute,
-  ReportsExpensesRoute: ReportsExpensesRoute,
-  ReportsProfitabilityRoute: ReportsProfitabilityRoute,
-  ReportsRevenueRoute: ReportsRevenueRoute,
-}
-
-const ReportsRouteWithChildren =
-  ReportsRoute._addFileChildren(ReportsRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
-  ReportsRoute: ReportsRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

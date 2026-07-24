@@ -1,7 +1,4 @@
-import {
-  classifyInvoiceForCompany,
-  type InvoiceClassification,
-} from "./cuiUtils";
+import { classifyInvoiceForCompany, type InvoiceClassification } from "./cuiUtils";
 
 export type RelationParty =
   | {
@@ -224,9 +221,7 @@ export function buildMonthlyReportPoints(
   invoices.forEach((invoice) => {
     if (
       options.classifications &&
-      !options.classifications.includes(
-        getInvoiceClassification(invoice, options.companyCui),
-      )
+      !options.classifications.includes(getInvoiceClassification(invoice, options.companyCui))
     ) {
       return;
     }

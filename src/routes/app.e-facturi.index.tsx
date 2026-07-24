@@ -78,14 +78,8 @@ function EInvoicesPage() {
   const [errorMessage, setErrorMessage] = useState("");
 
   const stats = useMemo(() => {
-    const total = invoices.reduce(
-      (sum, invoice) => sum + Number(invoice.payable_amount ?? 0),
-      0,
-    );
-    const vat = invoices.reduce(
-      (sum, invoice) => sum + Number(invoice.tax_amount ?? 0),
-      0,
-    );
+    const total = invoices.reduce((sum, invoice) => sum + Number(invoice.payable_amount ?? 0), 0);
+    const vat = invoices.reduce((sum, invoice) => sum + Number(invoice.tax_amount ?? 0), 0);
     const processed = invoices.filter(
       (invoice) => normalizeStatus(invoice.status) === "Activ",
     ).length;
@@ -94,8 +88,7 @@ function EInvoicesPage() {
       total,
       vat,
       processed,
-      processingRate:
-        invoices.length > 0 ? Math.round((processed / invoices.length) * 100) : 0,
+      processingRate: invoices.length > 0 ? Math.round((processed / invoices.length) * 100) : 0,
     };
   }, [invoices]);
 
@@ -105,9 +98,7 @@ function EInvoicesPage() {
     }
 
     if (activeTab === "recent") {
-      return invoices.filter((invoice) =>
-        isRecentDate(invoice.issue_date ?? invoice.created_at),
-      );
+      return invoices.filter((invoice) => isRecentDate(invoice.issue_date ?? invoice.created_at));
     }
 
     return invoices;
@@ -192,8 +183,8 @@ function EInvoicesPage() {
       </div>
 
       <InfoBanner icon={<FileCode2 className="h-4 w-4" />}>
-        Facturile listate aici provin din XML e-Factura si alimenteaza dashboard-ul,
-        documentele financiare si predictiile pe date reale.
+        Facturile listate aici provin din XML e-Factura si alimenteaza dashboard-ul, documentele
+        financiare si predictiile pe date reale.
       </InfoBanner>
 
       {errorMessage && (
@@ -285,7 +276,9 @@ function EInvoicesPage() {
                         </TableCell>
                         <TableCell>{supplier?.name ?? "Furnizor necunoscut"}</TableCell>
                         <TableCell>{customer?.name ?? "Client necunoscut"}</TableCell>
-                        <TableCell>{formatDate(invoice.issue_date ?? invoice.created_at)}</TableCell>
+                        <TableCell>
+                          {formatDate(invoice.issue_date ?? invoice.created_at)}
+                        </TableCell>
                         <TableCell className="text-right font-semibold tabular-nums">
                           {formatRON(Number(invoice.payable_amount ?? 0))}
                         </TableCell>
@@ -356,20 +349,12 @@ function getRelationParty(party: RelationParty) {
   return party;
 }
 
-function normalizeStatus(status: string | null | undefined) {
-  if (!status) {
-    return "Activ" as any;
-  }
-
-  if (status === "procesata" || status === "procesat" || status === "Procesat") {
-    return "Activ" as any;
-  }
-
+function normalizeStatus(status: string | null | undefined): "Activ" | "Inactiv" {
   if (status === "eroare" || status === "Eroare") {
-    return "Inactiv" as any;
+    return "Inactiv";
   }
 
-  return "Activ" as any;
+  return "Activ";
 }
 
 function formatDate(value: string | null | undefined) {

@@ -38,7 +38,9 @@ function ForgotPage() {
                 <Label htmlFor="email">Email</Label>
                 <Input id="email" type="email" required />
               </div>
-              <Button type="submit" className="w-full">Trimite link de resetare</Button>
+              <Button type="submit" className="w-full">
+                Trimite link de resetare
+              </Button>
             </form>
             <p className="mt-6 text-center text-sm text-muted-foreground">
               <Link to="/login" className="font-medium text-primary hover:underline">

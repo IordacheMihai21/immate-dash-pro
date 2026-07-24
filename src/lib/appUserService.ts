@@ -39,10 +39,7 @@ function isMissingAppUsersTable(error: { code?: string; message?: string }) {
   );
 }
 
-function getStringMetadata(
-  metadata: SupabaseUser["user_metadata"],
-  key: string,
-) {
+function getStringMetadata(metadata: SupabaseUser["user_metadata"], key: string) {
   const value = metadata?.[key];
 
   return typeof value === "string" ? value.trim() : "";
@@ -57,11 +54,9 @@ export function getAuthUserMetadataName(authUser: SupabaseUser | null) {
   const fullName = getStringMetadata(metadata, "full_name");
   const name = getStringMetadata(metadata, "name");
   const firstName =
-    getStringMetadata(metadata, "first_name") ||
-    getStringMetadata(metadata, "firstName");
+    getStringMetadata(metadata, "first_name") || getStringMetadata(metadata, "firstName");
   const lastName =
-    getStringMetadata(metadata, "last_name") ||
-    getStringMetadata(metadata, "lastName");
+    getStringMetadata(metadata, "last_name") || getStringMetadata(metadata, "lastName");
   const combinedName = `${firstName} ${lastName}`.trim();
 
   return fullName || name || combinedName;

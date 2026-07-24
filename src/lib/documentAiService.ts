@@ -31,10 +31,7 @@ export type DocumentAiExtractedFields = Record<DocumentAiFieldKey, DocumentAiFie
 
 export type DocumentAiConfidenceMap = Record<DocumentAiFieldKey, number>;
 
-export type DocumentAiProfile =
-  | "romanian_efactura"
-  | "generic_invoice"
-  | "fatura_dataset";
+export type DocumentAiProfile = "romanian_efactura" | "generic_invoice" | "fatura_dataset";
 
 export type DocumentAiFieldDetail = {
   value: DocumentAiFieldValue;
@@ -390,7 +387,7 @@ async function extractText(
   onProgress?.({ status: "Se pregateste preprocesarea imaginii", progress: 0.05 });
 
   const tesseractModule = await import("tesseract.js");
-  const tesseract = tesseractModule.default as TesseractLike;
+  const tesseract = tesseractModule.default as unknown as TesseractLike;
   const variants = await createImageOcrVariants(file);
   const results: OcrVariantResult[] = [];
   const failedAttempts: DocumentAiOcrAttempt[] = [];
@@ -1324,13 +1321,13 @@ function extractAmountAfterTaxLabel(line: string) {
   }
 
   const patterns = [
-    /\bGST\s*\(\s*\d+(?:[,.]\d+)?\s*%\s*\)\s*[:\-]?\s*(.+)$/i,
-    /\bGST\b\s*[:\-]?\s*(.+)$/i,
-    /\bVAT\s+amount\b\s*[:\-]?\s*(.+)$/i,
-    /\bTax\s+amount\b\s*[:\-]?\s*(.+)$/i,
-    /\bVAT\b\s*[:\-]?\s*(.+)$/i,
-    /\bTax\b\s*[:\-]?\s*(.+)$/i,
-    /\bTVA\b(?:\s+\d+(?:[,.]\d+)?\s*%)?\s*[:\-]?\s*(.+)$/i,
+    /\bGST\s*\(\s*\d+(?:[,.]\d+)?\s*%\s*\)\s*[:-]?\s*(.+)$/i,
+    /\bGST\b\s*[:-]?\s*(.+)$/i,
+    /\bVAT\s+amount\b\s*[:-]?\s*(.+)$/i,
+    /\bTax\s+amount\b\s*[:-]?\s*(.+)$/i,
+    /\bVAT\b\s*[:-]?\s*(.+)$/i,
+    /\bTax\b\s*[:-]?\s*(.+)$/i,
+    /\bTVA\b(?:\s+\d+(?:[,.]\d+)?\s*%)?\s*[:-]?\s*(.+)$/i,
   ];
 
   for (const pattern of patterns) {
@@ -1504,7 +1501,7 @@ function findFaturaSupplierNameCandidate(
     textCandidate ? cleanupPartyName(textCandidate) : null,
     textCandidate ? 0.64 : 0,
     "Regex",
-    textCandidate,
+    textCandidate ?? undefined,
   );
 }
 
@@ -1613,7 +1610,7 @@ function findCustomerNameCandidate(
     textCandidate ? cleanupPartyName(textCandidate) : null,
     textCandidate ? 0.66 : 0,
     "Regex",
-    textCandidate,
+    textCandidate ?? undefined,
   );
 }
 
@@ -1742,7 +1739,7 @@ function cleanupCompanyName(value: string) {
 function cleanupPartyName(value: string) {
   return value
     .replace(
-      /^(client|customer|buyer|bill\s+to|sold\s+to|cumparator|cumpărător|beneficiar)\s*[:#\-]?\s*/i,
+      /^(client|customer|buyer|bill\s+to|sold\s+to|cumparator|cumpărător|beneficiar)\s*[:#-]?\s*/i,
       "",
     )
     .replace(/\s+/g, " ")
@@ -2359,7 +2356,7 @@ function extractOcrWords(data: unknown): OcrWord[] {
             paragraph.lines?.flatMap(
               (line) =>
                 line.words
-                  ?.map((word) => {
+                  ?.map((word): OcrWord | null => {
                     const text = word.text?.trim();
 
                     if (!text) {

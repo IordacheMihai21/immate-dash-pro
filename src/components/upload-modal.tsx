@@ -23,8 +23,7 @@ import { UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import { importEFacturaXml } from "@/lib/invoiceService";
 
-const XML_ONLY_MESSAGE =
-  "Acest modul accepta doar fisiere XML e-Factura.";
+const XML_ONLY_MESSAGE = "Acest modul accepta doar fisiere XML e-Factura.";
 
 function isLikelyEFacturaXml(xmlText: string) {
   const normalized = xmlText.toLowerCase();
@@ -38,20 +37,14 @@ function isLikelyEFacturaXml(xmlText: string) {
 }
 
 function getFriendlyImportErrorMessage(error: unknown) {
-  const rawMessage =
-    error instanceof Error
-      ? error.message
-      : "Documentul nu a putut fi procesat.";
+  const rawMessage = error instanceof Error ? error.message : "Documentul nu a putut fi procesat.";
   const normalizedMessage = rawMessage.toLowerCase();
 
   if (normalizedMessage.includes("exista deja")) {
     return rawMessage;
   }
 
-  if (
-    normalizedMessage.includes("autentificat") ||
-    normalizedMessage.includes("contul curent")
-  ) {
+  if (normalizedMessage.includes("autentificat") || normalizedMessage.includes("contul curent")) {
     return rawMessage;
   }
 
@@ -134,9 +127,7 @@ export function UploadModal({ trigger }: { trigger: ReactNode }) {
     }));
 
     if (invalidFiles.length > 0) {
-      toast.error(
-        `${XML_ONLY_MESSAGE} ${invalidFiles.length} fisier(e) au fost ignorate.`,
-      );
+      toast.error(`${XML_ONLY_MESSAGE} ${invalidFiles.length} fisier(e) au fost ignorate.`);
     }
 
     setSelectedFiles(xmlFiles);
@@ -156,9 +147,7 @@ export function UploadModal({ trigger }: { trigger: ReactNode }) {
     const xmlText = await file.text();
 
     if (!isLikelyEFacturaXml(xmlText)) {
-      throw new Error(
-        "Fisierul este XML, dar nu pare sa fie o e-Factura valida.",
-      );
+      throw new Error("Fisierul este XML, dar nu pare sa fie o e-Factura valida.");
     }
 
     return importEFacturaXml(file);
@@ -224,9 +213,7 @@ export function UploadModal({ trigger }: { trigger: ReactNode }) {
       }
 
       if (successCount > 0 && failures.length === 0) {
-        toast.success(
-          `Import finalizat: ${successCount} documente procesate cu succes.`,
-        );
+        toast.success(`Import finalizat: ${successCount} documente procesate cu succes.`);
 
         resetState();
         setOpen(false);
@@ -278,8 +265,7 @@ export function UploadModal({ trigger }: { trigger: ReactNode }) {
         <DialogHeader>
           <DialogTitle>Incarca e-Factura XML</DialogTitle>
           <DialogDescription>
-            Poti incarca una sau mai multe e-Facturi XML. Fisierele vor fi
-            procesate pe rand.
+            Poti incarca una sau mai multe e-Facturi XML. Fisierele vor fi procesate pe rand.
           </DialogDescription>
         </DialogHeader>
 
@@ -344,9 +330,7 @@ export function UploadModal({ trigger }: { trigger: ReactNode }) {
                 <div className="mt-2 space-y-2">
                   {failedImports.map((failure) => (
                     <div key={failure.fileName}>
-                      <p className="font-medium text-foreground">
-                        {failure.fileName}
-                      </p>
+                      <p className="font-medium text-foreground">{failure.fileName}</p>
                       <p className="text-muted-foreground">{failure.error}</p>
                     </div>
                   ))}
@@ -358,11 +342,7 @@ export function UploadModal({ trigger }: { trigger: ReactNode }) {
           <div className="space-y-2">
             <Label htmlFor="type">Tip document</Label>
 
-            <Select
-              value={documentType}
-              onValueChange={setDocumentType}
-              disabled={isUploading}
-            >
+            <Select value={documentType} onValueChange={setDocumentType} disabled={isUploading}>
               <SelectTrigger id="type">
                 <SelectValue />
               </SelectTrigger>
@@ -375,12 +355,7 @@ export function UploadModal({ trigger }: { trigger: ReactNode }) {
 
           <div className="space-y-2">
             <Label htmlFor="notes">Note optional</Label>
-            <Textarea
-              id="notes"
-              placeholder="Adauga o nota..."
-              rows={3}
-              disabled={isUploading}
-            />
+            <Textarea id="notes" placeholder="Adauga o nota..." rows={3} disabled={isUploading} />
           </div>
 
           <DialogFooter>

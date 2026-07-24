@@ -25,15 +25,18 @@ type RelationParty =
   | null
   | undefined;
 
-export type InvoiceExtractionSource = {
-  invoice_number?: string | null;
-  issue_date?: string | null;
-  currency?: string | null;
-  tax_amount?: number | string | null;
-  payable_amount?: number | string | null;
-  suppliers?: RelationParty;
-  customers?: RelationParty;
-} | null | undefined;
+export type InvoiceExtractionSource =
+  | {
+      invoice_number?: string | null;
+      issue_date?: string | null;
+      currency?: string | null;
+      tax_amount?: number | string | null;
+      payable_amount?: number | string | null;
+      suppliers?: RelationParty;
+      customers?: RelationParty;
+    }
+  | null
+  | undefined;
 
 const FIELDS = [
   "Numar factura",
@@ -125,16 +128,12 @@ export function evaluateDocumentExtraction(
     };
   });
   const extractedFields = fieldDetails.filter((field) => field.present).length;
-  const fieldCompletenessRate = Number(
-    ((extractedFields / fieldDetails.length) * 100).toFixed(1),
-  );
+  const fieldCompletenessRate = Number(((extractedFields / fieldDetails.length) * 100).toFixed(1));
 
   return {
     totalFields: fieldDetails.length,
     extractedFields,
-    missingFields: fieldDetails
-      .filter((field) => !field.present)
-      .map((field) => field.field),
+    missingFields: fieldDetails.filter((field) => !field.present).map((field) => field.field),
     fieldCompletenessRate,
     extractionQualityLabel: getQualityLabel(fieldCompletenessRate),
     fieldDetails,

@@ -68,9 +68,7 @@ export function detectDocumentAiProfile({
     /\b(?:cac|cbc):[A-Za-z]+\b/,
   ].filter((pattern) => pattern.test(text)).length;
 
-  return normalizedType === "xml" || romanianSignals >= 2
-    ? "romanian_efactura"
-    : "generic_invoice";
+  return normalizedType === "xml" || romanianSignals >= 2 ? "romanian_efactura" : "generic_invoice";
 }
 
 export function calculateVisibleDocumentConfidence({
@@ -95,7 +93,8 @@ export function calculateVisibleDocumentConfidence({
         ];
 
   const weightedConfidence = rules.reduce(
-    (sum, { field, weight }) => sum + normalizedConfidence(fields[field], confidences[field]) * weight,
+    (sum, { field, weight }) =>
+      sum + normalizedConfidence(fields[field], confidences[field]) * weight,
     0,
   );
   const totalWeight = rules.reduce((sum, { weight }) => sum + weight, 0);
@@ -269,7 +268,9 @@ function isValidCurrency(value: unknown) {
 }
 
 function isValidTaxIdentifier(value: unknown) {
-  const normalized = stringify(value).toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const normalized = stringify(value)
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
   return normalized.length >= 6 && normalized.length <= 24 && /\d/.test(normalized);
 }
 

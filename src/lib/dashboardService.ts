@@ -1,9 +1,6 @@
 import { getOrCreateCompanyProfile } from "./companyService";
 import { supabase } from "./supabaseClient";
-import {
-  buildAiFinancialForecast,
-  type MonthlyFinancialPoint,
-} from "./predictionService";
+import { buildAiFinancialForecast, type MonthlyFinancialPoint } from "./predictionService";
 import { classifyInvoiceForCompany, normalizeCui } from "./cuiUtils";
 import { evaluateDocumentExtraction } from "./extractionEvaluationService";
 import { buildRiskClassification } from "./riskClassificationService";
@@ -102,7 +99,8 @@ export async function getDashboardData() {
 
   const { data: invoicesData, error: invoicesError } = await supabase
     .from("invoices")
-    .select(`
+    .select(
+      `
       id,
       invoice_number,
       issue_date,
@@ -126,14 +124,13 @@ export async function getDashboardData() {
         document_type,
         uploaded_at
       )
-    `)
+    `,
+    )
     .eq("company_id", companyId)
     .order("created_at", { ascending: false });
 
   if (invoicesError) {
-    throw new Error(
-      `Eroare la citirea datelor pentru dashboard: ${invoicesError.message}`,
-    );
+    throw new Error(`Eroare la citirea datelor pentru dashboard: ${invoicesError.message}`);
   }
 
   const { data: documentsData, error: documentsError } = await supabase
@@ -161,12 +158,8 @@ export async function getDashboardData() {
       vat: toNumber(invoice.tax_amount),
     };
   });
-  const revenueInvoices = classifiedInvoices.filter(
-    (item) => item.classification === "revenue",
-  );
-  const expenseInvoices = classifiedInvoices.filter(
-    (item) => item.classification === "expense",
-  );
+  const revenueInvoices = classifiedInvoices.filter((item) => item.classification === "revenue");
+  const expenseInvoices = classifiedInvoices.filter((item) => item.classification === "expense");
   const unclassifiedInvoices = classifiedInvoices.filter(
     (item) => item.classification === "unclassified",
   );
@@ -180,10 +173,7 @@ export async function getDashboardData() {
   const classifiedInvoiceCount = revenueInvoices.length + expenseInvoices.length;
   const classifiedInvoiceValue = totalRevenue + totalExpenses;
   const unclassifiedInvoiceCount = unclassifiedInvoices.length;
-  const unclassifiedInvoiceValue = unclassifiedInvoices.reduce(
-    (sum, item) => sum + item.value,
-    0,
-  );
+  const unclassifiedInvoiceValue = unclassifiedInvoices.reduce((sum, item) => sum + item.value, 0);
 
   const totalVat = [...revenueInvoices, ...expenseInvoices].reduce(
     (sum, item) => sum + item.vat,
@@ -326,8 +316,8 @@ export async function getDashboardData() {
     monthlyFinancialMap.set(monthKey, current);
   });
 
-  const monthlyFinancialPoints = Array.from(monthlyFinancialMap.values()).sort(
-    (a, b) => a.monthKey.localeCompare(b.monthKey),
+  const monthlyFinancialPoints = Array.from(monthlyFinancialMap.values()).sort((a, b) =>
+    a.monthKey.localeCompare(b.monthKey),
   );
 
   const aiForecast = buildAiFinancialForecast(monthlyFinancialPoints);
@@ -360,7 +350,7 @@ export async function getDashboardData() {
       type: documentData?.document_type ?? "e-factura",
       uploadedAt: documentData?.uploaded_at
         ? documentData.uploaded_at.slice(0, 10)
-        : invoice.created_at?.slice(0, 10) ?? "-",
+        : (invoice.created_at?.slice(0, 10) ?? "-"),
       status: invoice.status ?? "procesata",
       total: toNumber(invoice.payable_amount),
     };

@@ -26,9 +26,22 @@ function SuppliersPage() {
     <div>
       <PageHeader title="Furnizori" description="Lista furnizorilor și valoarea achizițiilor." />
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <KpiCard label="Total furnizori" value={suppliers.length} icon={<Truck className="h-4 w-4" />} />
-        <KpiCard label="Furnizor principal" value={top.name} icon={<TrendingUp className="h-4 w-4" />} hint={formatRON(top.total)} />
-        <KpiCard label="Valoare totală achiziții" value={formatRON(totalValue)} icon={<Wallet className="h-4 w-4" />} />
+        <KpiCard
+          label="Total furnizori"
+          value={suppliers.length}
+          icon={<Truck className="h-4 w-4" />}
+        />
+        <KpiCard
+          label="Furnizor principal"
+          value={top.name}
+          icon={<TrendingUp className="h-4 w-4" />}
+          hint={formatRON(top.total)}
+        />
+        <KpiCard
+          label="Valoare totală achiziții"
+          value={formatRON(totalValue)}
+          icon={<Wallet className="h-4 w-4" />}
+        />
       </div>
       <Card>
         <CardContent className="p-0">
@@ -51,7 +64,9 @@ function SuppliersPage() {
                   <TableCell className="text-right">{s.invoices}</TableCell>
                   <TableCell className="text-right tabular-nums">{formatRON(s.total)}</TableCell>
                   <TableCell>{s.lastInvoice}</TableCell>
-                  <TableCell><StatusBadge status={s.status} /></TableCell>
+                  <TableCell>
+                    <StatusBadge status={s.status} />
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

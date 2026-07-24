@@ -179,9 +179,7 @@ export function ProfitabilityReportPage() {
     const topCustomer = partners.find((partner) => partner.type === "Client") ?? null;
     const topSupplier = partners.find((partner) => partner.type === "Furnizor") ?? null;
     const topPartner = partners[0] ?? null;
-    const topThreeShare = partners
-      .slice(0, 3)
-      .reduce((sum, partner) => sum + partner.share, 0);
+    const topThreeShare = partners.slice(0, 3).reduce((sum, partner) => sum + partner.share, 0);
     const searchValue = normalizeText(search);
     const filteredPartners = partners.filter((partner) => {
       const matchesTab =
@@ -241,7 +239,7 @@ export function ProfitabilityReportPage() {
 
   const hasProfitabilityData =
     Boolean(dashboardData) &&
-    dashboardData.classifiedInvoiceCount > 0 &&
+    (dashboardData?.classifiedInvoiceCount ?? 0) > 0 &&
     report.allMonthlyPoints.length > 0;
 
   return (
@@ -299,7 +297,9 @@ export function ProfitabilityReportPage() {
               description="Profit raportat la venituri"
               badge={getMarginBadge(report.periodMargin)}
               icon={<Percent className="h-5 w-5" />}
-              tone={report.periodMargin >= 15 ? "emerald" : report.periodMargin >= 5 ? "amber" : "rose"}
+              tone={
+                report.periodMargin >= 15 ? "emerald" : report.periodMargin >= 5 ? "amber" : "rose"
+              }
               active={activeMetric === "margin"}
               onClick={() => setActiveMetric("margin")}
             />
@@ -323,7 +323,9 @@ export function ProfitabilityReportPage() {
                   ? `${report.topPartner.type} · ${formatRON(report.topPartner.total)}`
                   : "Nu există parteneri activi"
               }
-              badge={report.topPartner ? `${formatPercent(report.topPartner.share)} din total` : "-"}
+              badge={
+                report.topPartner ? `${formatPercent(report.topPartner.share)} din total` : "-"
+              }
               icon={<Building2 className="h-5 w-5" />}
               tone="violet"
               active={activeMetric === "topPartner"}
@@ -335,9 +337,7 @@ export function ProfitabilityReportPage() {
             <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <p className="text-xs font-semibold uppercase text-emerald-600">
-                    Analiză lunară
-                  </p>
+                  <p className="text-xs font-semibold uppercase text-emerald-600">Analiză lunară</p>
                   <h2 className="mt-1 text-lg font-semibold text-slate-950">
                     Profit lunar și marjă
                   </h2>
@@ -346,7 +346,10 @@ export function ProfitabilityReportPage() {
                   </p>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                  Indicator activ: <span className="font-semibold text-slate-900">{getMetricLabel(activeMetric)}</span>
+                  Indicator activ:{" "}
+                  <span className="font-semibold text-slate-900">
+                    {getMetricLabel(activeMetric)}
+                  </span>
                 </div>
               </div>
 
@@ -400,9 +403,7 @@ export function ProfitabilityReportPage() {
           <section className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(300px,0.8fr)]">
             <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="mb-5">
-                <p className="text-xs font-semibold uppercase text-violet-600">
-                  Parteneri
-                </p>
+                <p className="text-xs font-semibold uppercase text-violet-600">Parteneri</p>
                 <h2 className="mt-1 text-lg font-semibold text-slate-950">
                   Concentrarea valorii pe parteneri
                 </h2>
@@ -470,9 +471,7 @@ export function ProfitabilityReportPage() {
             <div className="flex flex-col gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase text-blue-600">Lunar</p>
-                <h2 className="mt-1 text-lg font-semibold text-slate-950">
-                  Performanță lunară
-                </h2>
+                <h2 className="mt-1 text-lg font-semibold text-slate-950">Performanță lunară</h2>
                 <p className="mt-1 text-sm leading-6 text-slate-500">
                   Profitul lunar este calculat ca venituri minus cheltuieli.
                 </p>
@@ -524,9 +523,7 @@ export function ProfitabilityReportPage() {
           <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
             <div className="flex flex-col gap-3 border-b border-slate-100 p-5 xl:flex-row xl:items-center xl:justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase text-slate-500">
-                  Detaliu parteneri
-                </p>
+                <p className="text-xs font-semibold uppercase text-slate-500">Detaliu parteneri</p>
                 <h2 className="mt-1 text-lg font-semibold text-slate-950">
                   Performanță pe parteneri
                 </h2>
@@ -627,9 +624,7 @@ function ProfitHero({
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-200">
             Analiză interactivă a veniturilor, cheltuielilor și marjei companiei
           </p>
-          <p className="mt-6 max-w-3xl text-lg leading-8 text-white">
-            {getHeroInsight(report)}
-          </p>
+          <p className="mt-6 max-w-3xl text-lg leading-8 text-white">{getHeroInsight(report)}</p>
         </div>
 
         <div className="rounded-2xl border border-white/15 bg-white/10 p-2 backdrop-blur">
@@ -686,7 +681,12 @@ function ProfitMetricCard({
     >
       <div className="flex items-start justify-between gap-4">
         <div className={cn("rounded-2xl p-3", metricToneClasses[tone].icon)}>{icon}</div>
-        <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", metricToneClasses[tone].badge)}>
+        <span
+          className={cn(
+            "rounded-full px-2.5 py-1 text-xs font-semibold",
+            metricToneClasses[tone].badge,
+          )}
+        >
           {badge}
         </span>
       </div>
@@ -729,7 +729,12 @@ function DiagnosticPanel({
           <div key={row.title} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm font-semibold text-white">{row.title}</p>
-              <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", diagnosticToneClasses[row.tone])}>
+              <span
+                className={cn(
+                  "rounded-full px-2.5 py-1 text-xs font-semibold",
+                  diagnosticToneClasses[row.tone],
+                )}
+              >
                 {row.status}
               </span>
             </div>
@@ -847,7 +852,9 @@ function ProfitStatusBadge({ status }: { status: string }) {
           : "border-blue-200 bg-blue-50 text-blue-700";
 
   return (
-    <span className={cn("inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold", className)}>
+    <span
+      className={cn("inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold", className)}
+    >
       {status}
     </span>
   );
@@ -1121,7 +1128,8 @@ function getMarginHealth(margin: number) {
   return {
     title: "Marjă operațională",
     status: "Scăzută",
-    description: "Profitabilitatea este sensibilă la creșterea costurilor sau scăderea veniturilor.",
+    description:
+      "Profitabilitatea este sensibilă la creșterea costurilor sau scăderea veniturilor.",
     tone: "rose" as const,
   };
 }

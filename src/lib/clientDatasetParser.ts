@@ -33,11 +33,7 @@ function toNumber(value: unknown): number {
 }
 
 function normalizeKey(value: string): string {
-  return value
-    .toLowerCase()
-    .replace(/\s+/g, "")
-    .replace(/_/g, "")
-    .replace(/-/g, "");
+  return value.toLowerCase().replace(/\s+/g, "").replace(/_/g, "").replace(/-/g, "");
 }
 
 function findValue(row: RawDatasetRow, possibleKeys: string[]) {
@@ -99,10 +95,7 @@ function isCancelledInvoice(invoiceNo: unknown) {
   return String(invoiceNo).trim().toLowerCase().startsWith("c");
 }
 
-function addRowToMonthlyMap(
-  row: RawDatasetRow,
-  monthlyMap: Map<string, MonthlyFinancialPoint>,
-) {
+function addRowToMonthlyMap(row: RawDatasetRow, monthlyMap: Map<string, MonthlyFinancialPoint>) {
   const invoiceNo = findValue(row, [
     "InvoiceNo",
     "Invoice",
@@ -112,36 +105,13 @@ function addRowToMonthlyMap(
     "NumarFactura",
   ]);
 
-  const invoiceDate = findValue(row, [
-    "InvoiceDate",
-    "Date",
-    "Data",
-    "IssueDate",
-    "DataFactura",
-  ]);
+  const invoiceDate = findValue(row, ["InvoiceDate", "Date", "Data", "IssueDate", "DataFactura"]);
 
-  const quantityValue = findValue(row, [
-    "Quantity",
-    "Cantitate",
-    "Qty",
-    "quantity",
-  ]);
+  const quantityValue = findValue(row, ["Quantity", "Cantitate", "Qty", "quantity"]);
 
-  const unitPriceValue = findValue(row, [
-    "UnitPrice",
-    "Price",
-    "Pret",
-    "PretUnitar",
-    "unit_price",
-  ]);
+  const unitPriceValue = findValue(row, ["UnitPrice", "Price", "Pret", "PretUnitar", "unit_price"]);
 
-  const totalValue = findValue(row, [
-    "Total",
-    "Amount",
-    "LineTotal",
-    "Valoare",
-    "TotalFactura",
-  ]);
+  const totalValue = findValue(row, ["Total", "Amount", "LineTotal", "Valoare", "TotalFactura"]);
 
   if (isCancelledInvoice(invoiceNo)) {
     return false;
@@ -325,9 +295,7 @@ async function parseXlsx(file: File): Promise<ClientDatasetParseResult> {
   });
 }
 
-export async function parseClientDataset(
-  file: File,
-): Promise<ClientDatasetParseResult> {
+export async function parseClientDataset(file: File): Promise<ClientDatasetParseResult> {
   const extension = file.name.split(".").pop()?.toLowerCase();
 
   if (extension === "csv") {
