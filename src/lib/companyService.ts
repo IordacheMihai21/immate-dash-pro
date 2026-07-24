@@ -175,7 +175,50 @@ export async function getOrCreateCompanyProfile(): Promise<CompanyProfile> {
   });
 }
 
+function isMissingCompanyMembersSchema(error: { code?: string; message?: string }) {
+  const message = error.message?.toLowerCase() ?? "";
+  const code = error.code ?? "";
+
+  return (
+    code === "42P01" ||
+    ["PGRST200", "PGRST202", "PGRST204", "PGRST205"].includes(code) ||
+    (message.includes("company_members") && message.includes("does not exist")) ||
+    (message.includes("company_members") && message.includes("schema cache"))
+  );
+}
+
+async function getActiveMembershipCompanyId(authUserId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("company_members")
+    .select("company_id")
+    .eq("auth_user_id", authUserId)
+    .eq("status", "active")
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    if (isMissingCompanyMembersSchema(error)) {
+      return null;
+    }
+
+    throw new Error(`Apartenenta la companie nu a putut fi citita: ${error.message}`);
+  }
+
+  return data?.company_id ?? null;
+}
+
 export async function getActiveCompanyId(): Promise<string> {
+  const authUser = await getCurrentAuthUser();
+
+  if (authUser) {
+    const membershipCompanyId = await getActiveMembershipCompanyId(authUser.id);
+
+    if (membershipCompanyId) {
+      return membershipCompanyId;
+    }
+  }
+
   const profile = await getOrCreateCompanyProfile();
 
   if (!profile.id) {

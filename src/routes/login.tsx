@@ -8,6 +8,7 @@ import { Building2, Loader2 } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { ensureAppUser } from "@/lib/appUserService";
+import { claimPendingCompanyInvite } from "@/lib/companyMembersService";
 import { supabase } from "@/lib/supabaseClient";
 
 export const Route = createFileRoute("/login")({
@@ -65,7 +66,13 @@ function LoginPage() {
         console.warn("App user sync failed after login.", error);
       }
 
-      toast.success("Autentificare reusita.");
+      const claimedInvite = await claimPendingCompanyInvite();
+
+      if (claimedInvite) {
+        toast.success("Te-ai alaturat companiei la care ai fost invitat.");
+      } else {
+        toast.success("Autentificare reusita.");
+      }
       await navigate({ to: "/app", replace: true });
     } catch {
       const message = "Autentificarea nu a reusit. Incearca din nou.";

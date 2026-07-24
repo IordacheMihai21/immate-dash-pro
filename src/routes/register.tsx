@@ -8,6 +8,7 @@ import { Building2, CheckCircle2, Loader2 } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { ensureAppUser } from "@/lib/appUserService";
+import { claimPendingCompanyInvite } from "@/lib/companyMembersService";
 import { upsertCompanyProfile } from "@/lib/companyService";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -81,24 +82,31 @@ function RegisterPage() {
 
       await ensureAppUser();
 
-      try {
-        await upsertCompanyProfile({
-          company_name: companyName,
-          cui,
-          registration_number: registrationNumber,
-          address,
-          city: "",
-          county: "",
-          email,
-          phone: "",
-          contact_person: fullName,
-        });
-      } catch (error) {
-        console.warn("Company profile sync failed after registration.", error);
-        toast.warning("Contul a fost creat, dar datele companiei nu au putut fi salvate.");
+      const claimedInvite = await claimPendingCompanyInvite();
+
+      if (claimedInvite) {
+        toast.success("Cont creat cu succes. Te-ai alaturat companiei la care ai fost invitat.");
+      } else {
+        try {
+          await upsertCompanyProfile({
+            company_name: companyName,
+            cui,
+            registration_number: registrationNumber,
+            address,
+            city: "",
+            county: "",
+            email,
+            phone: "",
+            contact_person: fullName,
+          });
+        } catch (error) {
+          console.warn("Company profile sync failed after registration.", error);
+          toast.warning("Contul a fost creat, dar datele companiei nu au putut fi salvate.");
+        }
+
+        toast.success("Cont creat cu succes.");
       }
 
-      toast.success("Cont creat cu succes.");
       await navigate({ to: "/app", replace: true });
     } catch {
       const message = "Contul nu a putut fi creat. Incearca din nou.";

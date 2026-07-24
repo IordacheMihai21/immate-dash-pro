@@ -1,20 +1,39 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { Clock, KeyRound, Loader2, ShieldCheck, UserPlus, Users } from "lucide-react";
+import { toast } from "sonner";
+import { getCurrentAuthUser } from "@/lib/appUserService";
 import {
-  Clock,
-  KeyRound,
-  MoreHorizontal,
-  Search,
-  ShieldCheck,
-  UserPlus,
-  Users,
-} from "lucide-react";
+  INVITABLE_ROLES,
+  inviteCompanyMember,
+  listCompanyMembers,
+  revokeCompanyMember,
+  updateCompanyMemberRole,
+  type CompanyMember,
+  type CompanyMemberRole,
+} from "@/lib/companyMembersService";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -30,199 +49,309 @@ export const Route = createFileRoute("/app/setari/utilizatori")({
   component: UsersSettingsPage,
 });
 
-type RoleFilter = "all" | "Administratori" | "Contabili" | "Viewers";
-
-const members = [
-  {
-    name: "Administrator principal",
-    email: "administrator@companie.ro",
-    role: "Administrator",
-    status: "Activ",
-    lastActivity: "Astazi, 09:45",
-  },
-  {
-    name: "Contabil companie",
-    email: "contabil@companie.ro",
-    role: "Contabil",
-    status: "Activ",
-    lastActivity: "Ieri, 16:20",
-  },
-  {
-    name: "Manager financiar",
-    email: "financiar@companie.ro",
-    role: "Administrator",
-    status: "Activ",
-    lastActivity: "Acum 2 zile",
-  },
-  {
-    name: "Utilizator vizualizare",
-    email: "vizualizare@companie.ro",
-    role: "Viewer",
-    status: "Invitat",
-    lastActivity: "Invitatie trimisa",
-  },
-];
+const roleLabels: Record<CompanyMemberRole, string> = {
+  owner: "Owner",
+  admin: "Administrator",
+  contabil: "Contabil",
+  vizualizator: "Vizualizator",
+};
 
 function UsersSettingsPage() {
-  const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
+  const [members, setMembers] = useState<CompanyMember[]>([]);
+  const [myAuthUserId, setMyAuthUserId] = useState<string | null>(null);
+  const [myEmail, setMyEmail] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [inviteOpen, setInviteOpen] = useState(false);
 
-  const filteredMembers = useMemo(() => {
-    const searchValue = search.trim().toLowerCase();
+  async function loadMembers() {
+    try {
+      setIsLoading(true);
+      setErrorMessage("");
 
-    return members.filter((member) => {
-      const matchesRole =
-        roleFilter === "all" ||
-        (roleFilter === "Administratori" && member.role === "Administrator") ||
-        (roleFilter === "Contabili" && member.role === "Contabil") ||
-        (roleFilter === "Viewers" && member.role === "Viewer");
+      const [authUser, memberRows] = await Promise.all([
+        getCurrentAuthUser(),
+        listCompanyMembers(),
+      ]);
 
-      if (!matchesRole) {
-        return false;
-      }
+      setMyAuthUserId(authUser?.id ?? null);
+      setMyEmail(authUser?.email ?? null);
+      setMembers(memberRows.filter((member) => member.status !== "revoked"));
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Membrii companiei nu au putut fi cititi.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
-      if (!searchValue) {
-        return true;
-      }
+  useEffect(() => {
+    loadMembers();
+  }, []);
 
-      return `${member.name} ${member.email} ${member.role}`.toLowerCase().includes(searchValue);
-    });
-  }, [roleFilter, search]);
+  const myRole = useMemo(
+    () => members.find((member) => member.authUserId === myAuthUserId)?.role ?? null,
+    [members, myAuthUserId],
+  );
+  const canManage = myRole === "owner" || myRole === "admin";
+
+  const activeCount = members.filter((member) => member.status === "active").length;
+  const adminCount = members.filter(
+    (member) => member.status === "active" && (member.role === "owner" || member.role === "admin"),
+  ).length;
+  const invitedCount = members.filter((member) => member.status === "invited").length;
+  const contabilCount = members.filter(
+    (member) => member.status === "active" && member.role === "contabil",
+  ).length;
+
+  async function handleInvite(email: string, role: CompanyMemberRole) {
+    try {
+      await inviteCompanyMember({ email, role });
+      toast.success(`Invitatie trimisa catre ${email}.`);
+      setInviteOpen(false);
+      await loadMembers();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Invitatia nu a putut fi trimisa.");
+    }
+  }
+
+  async function handleRoleChange(memberId: string, role: CompanyMemberRole) {
+    try {
+      await updateCompanyMemberRole(memberId, role);
+      toast.success("Rol actualizat.");
+      await loadMembers();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Rolul nu a putut fi actualizat.");
+    }
+  }
+
+  async function handleRevoke(memberId: string) {
+    try {
+      await revokeCompanyMember(memberId);
+      toast.success("Acces revocat.");
+      await loadMembers();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Accesul nu a putut fi revocat.");
+    }
+  }
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Utilizatori"
-        description="Sectiune pregatita pentru acces de echipa si configurarea rolurilor companiei."
+        description="Membrii companiei si rolurile lor de acces."
         actions={
-          <Button disabled title="Disponibil dupa activarea accesului de echipa">
-            <UserPlus className="h-4 w-4" />
-            Acces echipa in pregatire
-          </Button>
+          canManage ? (
+            <InviteMemberDialog
+              open={inviteOpen}
+              onOpenChange={setInviteOpen}
+              onInvite={handleInvite}
+            />
+          ) : undefined
         }
       />
+
+      {errorMessage && (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+          {errorMessage}
+        </div>
+      )}
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <UserKpiCard
           title="Utilizatori activi"
-          value="3"
+          value={String(activeCount)}
           icon={<Users className="h-5 w-5" />}
           tone="blue"
         />
         <UserKpiCard
           title="Administratori"
-          value="2"
+          value={String(adminCount)}
           icon={<ShieldCheck className="h-5 w-5" />}
           tone="emerald"
         />
         <UserKpiCard
           title="Invitatii in asteptare"
-          value="1"
+          value={String(invitedCount)}
           icon={<Clock className="h-5 w-5" />}
           tone="amber"
         />
         <UserKpiCard
-          title="Roluri configurate"
-          value="3"
+          title="Contabili"
+          value={String(contabilCount)}
           icon={<KeyRound className="h-5 w-5" />}
           tone="slate"
         />
       </section>
 
-      <div className="grid gap-4 xl:grid-cols-3">
-        <Card className="border-slate-200 bg-white shadow-sm xl:col-span-2">
-          <CardHeader className="flex flex-col gap-3 border-b border-slate-100 p-5 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <CardTitle className="text-base font-semibold text-slate-900">
-                Membrii companiei
-              </CardTitle>
-              <p className="mt-1 text-sm text-slate-500">
-                Vizualizeaza structura rolurilor pregatita pentru administrarea accesului.
-              </p>
+      <Card className="border-slate-200 bg-white shadow-sm">
+        <CardHeader className="border-b border-slate-100 p-5">
+          <CardTitle className="text-base font-semibold text-slate-900">
+            Membrii companiei
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="flex items-center justify-center gap-2 p-10 text-sm text-slate-500">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Se incarca membrii...
             </div>
-            <div className="relative w-full lg:max-w-xs">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <Input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Cauta utilizator..."
-                className="pl-9"
-              />
-            </div>
-          </CardHeader>
-
-          <CardContent className="p-0">
-            <div className="border-b border-slate-100 p-5">
-              <Tabs
-                value={roleFilter}
-                onValueChange={(value) => setRoleFilter(value as RoleFilter)}
-              >
-                <TabsList>
-                  <TabsTrigger value="all">Toti</TabsTrigger>
-                  <TabsTrigger value="Administratori">Administratori</TabsTrigger>
-                  <TabsTrigger value="Contabili">Contabili</TabsTrigger>
-                  <TabsTrigger value="Viewers">Viewers</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-
+          ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nume</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Rol</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Ultima activitate</TableHead>
-                    <TableHead className="text-right">Actiuni</TableHead>
+                    {canManage && <TableHead className="text-right">Actiuni</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredMembers.length === 0 ? (
+                  {members.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="py-8 text-center text-slate-500">
-                        Nu exista utilizatori pentru filtrul selectat.
+                      <TableCell colSpan={4} className="py-8 text-center text-slate-500">
+                        Nu exista membri.
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredMembers.map((member) => (
-                      <TableRow key={member.email}>
-                        <TableCell className="font-medium text-slate-900">{member.name}</TableCell>
-                        <TableCell className="text-slate-500">{member.email}</TableCell>
-                        <TableCell>{member.role}</TableCell>
-                        <TableCell>
-                          <MemberStatusBadge status={member.status} />
-                        </TableCell>
-                        <TableCell>{member.lastActivity}</TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" aria-label={`Actiuni ${member.name}`}>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
+                    members.map((member) => {
+                      const isMe = member.authUserId === myAuthUserId;
+                      const displayEmail = member.invitedEmail ?? (isMe ? myEmail : null) ?? "—";
+
+                      return (
+                        <TableRow key={member.id}>
+                          <TableCell className="font-medium text-slate-900">
+                            {displayEmail}
+                            {isMe && <span className="ml-2 text-xs text-slate-400">(tu)</span>}
+                          </TableCell>
+                          <TableCell>
+                            {canManage && member.role !== "owner" ? (
+                              <Select
+                                value={member.role}
+                                onValueChange={(value) =>
+                                  handleRoleChange(member.id, value as CompanyMemberRole)
+                                }
+                              >
+                                <SelectTrigger className="h-8 w-40">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {INVITABLE_ROLES.map((role) => (
+                                    <SelectItem key={role} value={role}>
+                                      {roleLabels[role]}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              roleLabels[member.role]
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <MemberStatusBadge status={member.status} />
+                          </TableCell>
+                          {canManage && (
+                            <TableCell className="text-right">
+                              {member.role !== "owner" && !isMe && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-rose-600 hover:text-rose-700"
+                                  onClick={() => handleRevoke(member.id)}
+                                >
+                                  Revoca
+                                </Button>
+                              )}
+                            </TableCell>
+                          )}
+                        </TableRow>
+                      );
+                    })
                   )}
                 </TableBody>
               </Table>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-200 bg-white shadow-sm">
-          <CardContent className="p-5">
-            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-              <ShieldCheck className="h-5 w-5" />
-            </div>
-            <h2 className="text-base font-semibold text-slate-900">Controlul accesului</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Rolurile vor ajuta la separarea responsabilitatilor intre administratori, contabili si
-              utilizatori cu acces de vizualizare.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
+  );
+}
+
+function InviteMemberDialog({
+  open,
+  onOpenChange,
+  onInvite,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onInvite: (email: string, role: CompanyMemberRole) => Promise<void>;
+}) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const email = String(formData.get("email") ?? "").trim();
+    const role = String(formData.get("role") ?? "vizualizator") as CompanyMemberRole;
+
+    if (!email) return;
+
+    setIsSubmitting(true);
+    try {
+      await onInvite(email, role);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogTrigger asChild>
+        <Button>
+          <UserPlus className="h-4 w-4" />
+          Invita membru
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Invita un membru</DialogTitle>
+          <DialogDescription>
+            Persoana invitata se va alatura companiei automat cand isi creeaza cont sau se
+            autentifica cu acest email.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="invite-email">Email</Label>
+            <Input id="invite-email" name="email" type="email" required disabled={isSubmitting} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="invite-role">Rol</Label>
+            <Select name="role" defaultValue="vizualizator">
+              <SelectTrigger id="invite-role">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {INVITABLE_ROLES.map((role) => (
+                  <SelectItem key={role} value={role}>
+                    {roleLabels[role]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              Trimite invitatia
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -256,7 +385,7 @@ function UserKpiCard({
 }
 
 function MemberStatusBadge({ status }: { status: string }) {
-  const active = status === "Activ";
+  const active = status === "active";
 
   return (
     <Badge
@@ -268,7 +397,7 @@ function MemberStatusBadge({ status }: { status: string }) {
           : "border-amber-200 bg-amber-50 text-amber-700",
       )}
     >
-      {status}
+      {active ? "Activ" : "Invitat"}
     </Badge>
   );
 }
