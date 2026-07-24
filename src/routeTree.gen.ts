@@ -39,6 +39,7 @@ import { Route as AppRapoarteActivitateLunaraRouteImport } from './routes/app.ra
 import { Route as AppEFacturiNouaRouteImport } from './routes/app.e-facturi.noua'
 import { Route as AppEFacturiIdRouteImport } from './routes/app.e-facturi.$id'
 import { Route as AppAiCenterPredictiiFinanciareRouteImport } from './routes/app.ai-center.predictii-financiare'
+import { Route as AppAiCenterMonitorizareAiRouteImport } from './routes/app.ai-center.monitorizare-ai'
 import { Route as AppAiCenterLayoutAiRouteImport } from './routes/app.ai-center.layout-ai'
 import { Route as AppAiCenterEvaluareAiRouteImport } from './routes/app.ai-center.evaluare-ai'
 import { Route as AppAiCenterDocumentAiRouteImport } from './routes/app.ai-center.document-ai'
@@ -196,6 +197,12 @@ const AppAiCenterPredictiiFinanciareRoute =
     path: '/predictii-financiare',
     getParentRoute: () => AppAiCenterRoute,
   } as any)
+const AppAiCenterMonitorizareAiRoute =
+  AppAiCenterMonitorizareAiRouteImport.update({
+    id: '/monitorizare-ai',
+    path: '/monitorizare-ai',
+    getParentRoute: () => AppAiCenterRoute,
+  } as any)
 const AppAiCenterLayoutAiRoute = AppAiCenterLayoutAiRouteImport.update({
   id: '/layout-ai',
   path: '/layout-ai',
@@ -231,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/app/ai-center/document-ai': typeof AppAiCenterDocumentAiRoute
   '/app/ai-center/evaluare-ai': typeof AppAiCenterEvaluareAiRoute
   '/app/ai-center/layout-ai': typeof AppAiCenterLayoutAiRoute
+  '/app/ai-center/monitorizare-ai': typeof AppAiCenterMonitorizareAiRoute
   '/app/ai-center/predictii-financiare': typeof AppAiCenterPredictiiFinanciareRoute
   '/app/e-facturi/$id': typeof AppEFacturiIdRoute
   '/app/e-facturi/noua': typeof AppEFacturiNouaRoute
@@ -262,6 +270,7 @@ export interface FileRoutesByTo {
   '/app/ai-center/document-ai': typeof AppAiCenterDocumentAiRoute
   '/app/ai-center/evaluare-ai': typeof AppAiCenterEvaluareAiRoute
   '/app/ai-center/layout-ai': typeof AppAiCenterLayoutAiRoute
+  '/app/ai-center/monitorizare-ai': typeof AppAiCenterMonitorizareAiRoute
   '/app/ai-center/predictii-financiare': typeof AppAiCenterPredictiiFinanciareRoute
   '/app/e-facturi/$id': typeof AppEFacturiIdRoute
   '/app/e-facturi/noua': typeof AppEFacturiNouaRoute
@@ -298,6 +307,7 @@ export interface FileRoutesById {
   '/app/ai-center/document-ai': typeof AppAiCenterDocumentAiRoute
   '/app/ai-center/evaluare-ai': typeof AppAiCenterEvaluareAiRoute
   '/app/ai-center/layout-ai': typeof AppAiCenterLayoutAiRoute
+  '/app/ai-center/monitorizare-ai': typeof AppAiCenterMonitorizareAiRoute
   '/app/ai-center/predictii-financiare': typeof AppAiCenterPredictiiFinanciareRoute
   '/app/e-facturi/$id': typeof AppEFacturiIdRoute
   '/app/e-facturi/noua': typeof AppEFacturiNouaRoute
@@ -335,6 +345,7 @@ export interface FileRouteTypes {
     | '/app/ai-center/document-ai'
     | '/app/ai-center/evaluare-ai'
     | '/app/ai-center/layout-ai'
+    | '/app/ai-center/monitorizare-ai'
     | '/app/ai-center/predictii-financiare'
     | '/app/e-facturi/$id'
     | '/app/e-facturi/noua'
@@ -366,6 +377,7 @@ export interface FileRouteTypes {
     | '/app/ai-center/document-ai'
     | '/app/ai-center/evaluare-ai'
     | '/app/ai-center/layout-ai'
+    | '/app/ai-center/monitorizare-ai'
     | '/app/ai-center/predictii-financiare'
     | '/app/e-facturi/$id'
     | '/app/e-facturi/noua'
@@ -401,6 +413,7 @@ export interface FileRouteTypes {
     | '/app/ai-center/document-ai'
     | '/app/ai-center/evaluare-ai'
     | '/app/ai-center/layout-ai'
+    | '/app/ai-center/monitorizare-ai'
     | '/app/ai-center/predictii-financiare'
     | '/app/e-facturi/$id'
     | '/app/e-facturi/noua'
@@ -638,6 +651,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAiCenterPredictiiFinanciareRouteImport
       parentRoute: typeof AppAiCenterRoute
     }
+    '/app/ai-center/monitorizare-ai': {
+      id: '/app/ai-center/monitorizare-ai'
+      path: '/monitorizare-ai'
+      fullPath: '/app/ai-center/monitorizare-ai'
+      preLoaderRoute: typeof AppAiCenterMonitorizareAiRouteImport
+      parentRoute: typeof AppAiCenterRoute
+    }
     '/app/ai-center/layout-ai': {
       id: '/app/ai-center/layout-ai'
       path: '/layout-ai'
@@ -666,6 +686,7 @@ interface AppAiCenterRouteChildren {
   AppAiCenterDocumentAiRoute: typeof AppAiCenterDocumentAiRoute
   AppAiCenterEvaluareAiRoute: typeof AppAiCenterEvaluareAiRoute
   AppAiCenterLayoutAiRoute: typeof AppAiCenterLayoutAiRoute
+  AppAiCenterMonitorizareAiRoute: typeof AppAiCenterMonitorizareAiRoute
   AppAiCenterPredictiiFinanciareRoute: typeof AppAiCenterPredictiiFinanciareRoute
   AppAiCenterIndexRoute: typeof AppAiCenterIndexRoute
 }
@@ -674,6 +695,7 @@ const AppAiCenterRouteChildren: AppAiCenterRouteChildren = {
   AppAiCenterDocumentAiRoute: AppAiCenterDocumentAiRoute,
   AppAiCenterEvaluareAiRoute: AppAiCenterEvaluareAiRoute,
   AppAiCenterLayoutAiRoute: AppAiCenterLayoutAiRoute,
+  AppAiCenterMonitorizareAiRoute: AppAiCenterMonitorizareAiRoute,
   AppAiCenterPredictiiFinanciareRoute: AppAiCenterPredictiiFinanciareRoute,
   AppAiCenterIndexRoute: AppAiCenterIndexRoute,
 }

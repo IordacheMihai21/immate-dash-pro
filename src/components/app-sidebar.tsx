@@ -16,6 +16,7 @@ import {
   ReceiptText,
   ScanText,
   Settings,
+  ShieldCheck,
   TrendingUp,
   Users,
   Wallet,
@@ -76,6 +77,11 @@ const menuGroups: SidebarGroup[] = [
         label: "Evaluare AI",
         to: "/app/ai-center/evaluare-ai",
         icon: BarChart3,
+      },
+      {
+        label: "Monitorizare AI",
+        to: "/app/ai-center/monitorizare-ai",
+        icon: ShieldCheck,
       },
       {
         label: "Forecast AI",
