@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
+import time
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
@@ -11,6 +13,7 @@ from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Union
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from starlette.concurrency import run_in_threadpool
 
 from layoutxlm_model import layoutxlm_model_manager
 
@@ -127,6 +130,12 @@ class AnalyzeLayoutResponse(BaseModel):
     warnings: List[str] = Field(default_factory=list)
 
 
+logging.basicConfig(
+    level=os.environ.get("LOG_LEVEL", "INFO"),
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
+logger = logging.getLogger("immapp.document_ai")
+
 app = FastAPI(title="IMMapp Document AI Backend", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
@@ -176,6 +185,7 @@ async def analyze_layout(
     document_ai_fields: Optional[str] = Form(default=None),
     verified_fields: Optional[str] = Form(default=None),
 ) -> AnalyzeLayoutResponse:
+    request_started_at = time.monotonic()
     notes: List[str] = []
     fields = empty_fields()
     parsed_document_fields = parse_document_ai_fields(document_ai_fields, notes)
@@ -205,7 +215,23 @@ async def analyze_layout(
         )
 
     words, normalized_boxes = prepare_layout_inputs(parsed_ocr_words, text, image)
-    model_analysis = layoutxlm_model_manager.analyze(image, words, normalized_boxes)
+    inference_started_at = time.monotonic()
+    # Inferenta LayoutXLM (tokenizare + forward pass torch) e sincrona si
+    # blocanta la nivel de CPU. Rulata direct intr-un handler async, ar bloca
+    # tot event loop-ul lui Uvicorn -- inclusiv /health si alte cereri
+    # concurente -- cat dureaza un singur upload. run_in_threadpool o scoate
+    # de pe event loop, ca serverul sa ramana receptiv la cereri concurente.
+    model_analysis = await run_in_threadpool(
+        layoutxlm_model_manager.analyze, image, words, normalized_boxes
+    )
+    inference_duration_ms = round((time.monotonic() - inference_started_at) * 1000, 1)
+    logger.info(
+        "layoutxlm_inference duration_ms=%s runtime_mode=%s model_confidence=%s words=%s",
+        inference_duration_ms,
+        model_analysis.get("runtime_mode"),
+        model_analysis.get("model_confidence"),
+        len(words),
+    )
     model_fields, model_scores, model_sources = extract_model_field_proposals(
         model_analysis["token_predictions"], words
     )
@@ -267,6 +293,20 @@ async def analyze_layout(
         model_sources,
         parsed_verified_fields,
         bool(model_analysis.get("fine_tuned_model_used")),
+    )
+
+    request_duration_ms = round((time.monotonic() - request_started_at) * 1000, 1)
+    field_confidences = {
+        key: detail.confidence for key, detail in field_details.items()
+    }
+    logger.info(
+        "analyze_layout_request duration_ms=%s status=%s runtime_mode=%s "
+        "overall_confidence=%s field_confidences=%s",
+        request_duration_ms,
+        status,
+        runtime_mode,
+        confidence,
+        field_confidences,
     )
 
     return AnalyzeLayoutResponse(
