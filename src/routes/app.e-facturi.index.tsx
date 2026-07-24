@@ -140,14 +140,22 @@ function EInvoicesPage() {
         title="e-Facturi"
         description="Urmareste facturile extrase din fisiere XML e-Factura si impactul lor financiar."
         actions={
-          <UploadModal
-            trigger={
-              <Button className="gap-2">
-                <UploadCloud className="h-4 w-4" />
-                Incarca e-Factura XML
+          <>
+            <Link to="/app/e-facturi/noua">
+              <Button variant="outline" className="gap-2">
+                <FileCode2 className="h-4 w-4" />
+                Factura noua
               </Button>
-            }
-          />
+            </Link>
+            <UploadModal
+              trigger={
+                <Button className="gap-2">
+                  <UploadCloud className="h-4 w-4" />
+                  Incarca e-Factura XML
+                </Button>
+              }
+            />
+          </>
         }
       />
 

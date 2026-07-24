@@ -36,6 +36,7 @@ import { Route as AppRapoarteProfitabilitateRouteImport } from './routes/app.rap
 import { Route as AppRapoarteExpensesRouteImport } from './routes/app.rapoarte.expenses'
 import { Route as AppRapoarteCashFlowRouteImport } from './routes/app.rapoarte.cash-flow'
 import { Route as AppRapoarteActivitateLunaraRouteImport } from './routes/app.rapoarte.activitate-lunara'
+import { Route as AppEFacturiNouaRouteImport } from './routes/app.e-facturi.noua'
 import { Route as AppEFacturiIdRouteImport } from './routes/app.e-facturi.$id'
 import { Route as AppAiCenterPredictiiFinanciareRouteImport } from './routes/app.ai-center.predictii-financiare'
 import { Route as AppAiCenterLayoutAiRouteImport } from './routes/app.ai-center.layout-ai'
@@ -179,6 +180,11 @@ const AppRapoarteActivitateLunaraRoute =
     path: '/activitate-lunara',
     getParentRoute: () => AppRapoarteRoute,
   } as any)
+const AppEFacturiNouaRoute = AppEFacturiNouaRouteImport.update({
+  id: '/e-facturi/noua',
+  path: '/e-facturi/noua',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppEFacturiIdRoute = AppEFacturiIdRouteImport.update({
   id: '/e-facturi/$id',
   path: '/e-facturi/$id',
@@ -227,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/app/ai-center/layout-ai': typeof AppAiCenterLayoutAiRoute
   '/app/ai-center/predictii-financiare': typeof AppAiCenterPredictiiFinanciareRoute
   '/app/e-facturi/$id': typeof AppEFacturiIdRoute
+  '/app/e-facturi/noua': typeof AppEFacturiNouaRoute
   '/app/rapoarte/activitate-lunara': typeof AppRapoarteActivitateLunaraRoute
   '/app/rapoarte/cash-flow': typeof AppRapoarteCashFlowRoute
   '/app/rapoarte/expenses': typeof AppRapoarteExpensesRoute
@@ -257,6 +264,7 @@ export interface FileRoutesByTo {
   '/app/ai-center/layout-ai': typeof AppAiCenterLayoutAiRoute
   '/app/ai-center/predictii-financiare': typeof AppAiCenterPredictiiFinanciareRoute
   '/app/e-facturi/$id': typeof AppEFacturiIdRoute
+  '/app/e-facturi/noua': typeof AppEFacturiNouaRoute
   '/app/rapoarte/activitate-lunara': typeof AppRapoarteActivitateLunaraRoute
   '/app/rapoarte/cash-flow': typeof AppRapoarteCashFlowRoute
   '/app/rapoarte/expenses': typeof AppRapoarteExpensesRoute
@@ -292,6 +300,7 @@ export interface FileRoutesById {
   '/app/ai-center/layout-ai': typeof AppAiCenterLayoutAiRoute
   '/app/ai-center/predictii-financiare': typeof AppAiCenterPredictiiFinanciareRoute
   '/app/e-facturi/$id': typeof AppEFacturiIdRoute
+  '/app/e-facturi/noua': typeof AppEFacturiNouaRoute
   '/app/rapoarte/activitate-lunara': typeof AppRapoarteActivitateLunaraRoute
   '/app/rapoarte/cash-flow': typeof AppRapoarteCashFlowRoute
   '/app/rapoarte/expenses': typeof AppRapoarteExpensesRoute
@@ -328,6 +337,7 @@ export interface FileRouteTypes {
     | '/app/ai-center/layout-ai'
     | '/app/ai-center/predictii-financiare'
     | '/app/e-facturi/$id'
+    | '/app/e-facturi/noua'
     | '/app/rapoarte/activitate-lunara'
     | '/app/rapoarte/cash-flow'
     | '/app/rapoarte/expenses'
@@ -358,6 +368,7 @@ export interface FileRouteTypes {
     | '/app/ai-center/layout-ai'
     | '/app/ai-center/predictii-financiare'
     | '/app/e-facturi/$id'
+    | '/app/e-facturi/noua'
     | '/app/rapoarte/activitate-lunara'
     | '/app/rapoarte/cash-flow'
     | '/app/rapoarte/expenses'
@@ -392,6 +403,7 @@ export interface FileRouteTypes {
     | '/app/ai-center/layout-ai'
     | '/app/ai-center/predictii-financiare'
     | '/app/e-facturi/$id'
+    | '/app/e-facturi/noua'
     | '/app/rapoarte/activitate-lunara'
     | '/app/rapoarte/cash-flow'
     | '/app/rapoarte/expenses'
@@ -605,6 +617,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRapoarteActivitateLunaraRouteImport
       parentRoute: typeof AppRapoarteRoute
     }
+    '/app/e-facturi/noua': {
+      id: '/app/e-facturi/noua'
+      path: '/e-facturi/noua'
+      fullPath: '/app/e-facturi/noua'
+      preLoaderRoute: typeof AppEFacturiNouaRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/e-facturi/$id': {
       id: '/app/e-facturi/$id'
       path: '/e-facturi/$id'
@@ -715,6 +734,7 @@ interface AppRouteChildren {
   AppSetariRoute: typeof AppSetariRouteWithChildren
   AppIndexRoute: typeof AppIndexRoute
   AppEFacturiIdRoute: typeof AppEFacturiIdRoute
+  AppEFacturiNouaRoute: typeof AppEFacturiNouaRoute
   AppEFacturiIndexRoute: typeof AppEFacturiIndexRoute
 }
 
@@ -730,6 +750,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppSetariRoute: AppSetariRouteWithChildren,
   AppIndexRoute: AppIndexRoute,
   AppEFacturiIdRoute: AppEFacturiIdRoute,
+  AppEFacturiNouaRoute: AppEFacturiNouaRoute,
   AppEFacturiIndexRoute: AppEFacturiIndexRoute,
 }
 

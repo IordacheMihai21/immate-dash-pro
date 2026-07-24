@@ -1,6 +1,33 @@
-import { getActiveCompanyId } from "./companyService";
+import { getActiveCompanyId, getCompanyProfile } from "./companyService";
 import { ParsedInvoice, parseEFacturaXml } from "./efacturaParser";
 import { supabase } from "./supabaseClient";
+
+export type ManualInvoiceLineInput = {
+  description: string;
+  quantity: number;
+  unitCode: string;
+  unitPrice: number;
+};
+
+export type ManualInvoiceInput = {
+  invoiceNumber: string;
+  issueDate: string;
+  dueDate: string | null;
+  currency: string;
+  vatRatePercent: number;
+  customer: {
+    name: string;
+    cui: string;
+    address: string;
+    city: string;
+    country: string;
+  };
+  lines: ManualInvoiceLineInput[];
+};
+
+function round2(value: number): number {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
+}
 
 export type SavedInvoiceResult = {
   invoiceId: string;
@@ -403,6 +430,103 @@ export async function saveDocumentAiInvoice(
   await saveEntityRelations(parsedInvoice, documentId, {
     classification: input.classification,
   });
+
+  return {
+    invoiceId,
+    documentId,
+  };
+}
+
+export async function createManualInvoice(input: ManualInvoiceInput): Promise<SavedInvoiceResult> {
+  const companyId = await getActiveCompanyId();
+  const companyProfile = await getCompanyProfile();
+
+  if (!companyProfile) {
+    throw new Error("Completeaza profilul companiei inainte de a emite o factura.");
+  }
+
+  const invoiceNumber = input.invoiceNumber.trim();
+
+  if (!invoiceNumber) {
+    throw new Error("Numarul facturii este necesar.");
+  }
+
+  const lineInputs = input.lines.filter((line) => line.description.trim().length > 0);
+
+  if (lineInputs.length === 0) {
+    throw new Error("Adauga cel putin o linie facturii.");
+  }
+
+  const lines = lineInputs.map((line, index) => ({
+    lineNumber: String(index + 1),
+    description: line.description.trim(),
+    quantity: line.quantity,
+    unitCode: line.unitCode.trim() || "buc",
+    unitPrice: line.unitPrice,
+    lineTotal: round2(line.quantity * line.unitPrice),
+  }));
+
+  const taxExclusiveAmount = round2(lines.reduce((sum, line) => sum + line.lineTotal, 0));
+  const taxAmount = round2(taxExclusiveAmount * (input.vatRatePercent / 100));
+  const taxInclusiveAmount = round2(taxExclusiveAmount + taxAmount);
+
+  const parsedInvoice: ParsedInvoice = {
+    invoiceNumber,
+    issueDate: input.issueDate,
+    dueDate: input.dueDate,
+    currency: input.currency || "RON",
+    supplier: {
+      name: companyProfile.company_name || "Compania mea",
+      cui: companyProfile.cui,
+      address: companyProfile.address,
+      city: companyProfile.city,
+      country: "RO",
+    },
+    customer: {
+      name: input.customer.name.trim() || "Client necunoscut",
+      cui: input.customer.cui.trim(),
+      address: input.customer.address,
+      city: input.customer.city,
+      country: input.customer.country || "RO",
+    },
+    taxExclusiveAmount,
+    taxAmount,
+    taxInclusiveAmount,
+    payableAmount: taxInclusiveAmount,
+    lines,
+  };
+
+  const { data: existingInvoice, error: existingError } = await supabase
+    .from("invoices")
+    .select("id")
+    .eq("company_id", companyId)
+    .eq("invoice_number", parsedInvoice.invoiceNumber)
+    .maybeSingle();
+
+  if (existingError) {
+    throw new Error(`Eroare la verificarea facturii existente: ${existingError.message}`);
+  }
+
+  if (existingInvoice) {
+    throw new Error(`Factura ${parsedInvoice.invoiceNumber} exista deja in aplicatie.`);
+  }
+
+  const documentId = await saveDocument({
+    fileName: `${invoiceNumber}.json`,
+    originalContent: JSON.stringify(parsedInvoice),
+    companyId,
+    fileType: "manual",
+    documentType: "factura-emisa",
+  });
+  const supplierId = await upsertSupplier(parsedInvoice, companyId);
+  const customerId = await upsertCustomer(parsedInvoice, companyId);
+  const invoiceId = await saveInvoice(parsedInvoice, documentId, supplierId, customerId, companyId);
+
+  await saveInvoiceLines(parsedInvoice, invoiceId);
+  await saveExtractedEntities(parsedInvoice, documentId, invoiceId, {
+    extractionMethod: "manual_entry",
+  });
+  await saveEntityRelations(parsedInvoice, documentId, { classification: "revenue" });
 
   return {
     invoiceId,
