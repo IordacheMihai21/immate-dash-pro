@@ -10,7 +10,8 @@ from decimal import Decimal, InvalidOperation
 from io import BytesIO
 from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Union
 
-from fastapi import FastAPI, File, Form, UploadFile
+import requests
+from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
@@ -166,6 +167,59 @@ app.add_middleware(
 )
 
 
+SUPABASE_URL = os.environ.get("SUPABASE_URL") or os.environ.get("VITE_SUPABASE_URL")
+SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY") or os.environ.get(
+    "VITE_SUPABASE_ANON_KEY"
+)
+SUPABASE_AUTH_TIMEOUT_SECONDS = 5
+
+if not SUPABASE_URL or not SUPABASE_ANON_KEY:
+    logger.warning(
+        "SUPABASE_URL/SUPABASE_ANON_KEY nu sunt configurate pentru backend. "
+        "/analyze-layout ruleaza fara verificare de autentificare -- nu folosi asa in productie."
+    )
+
+
+def require_authenticated_user(authorization: Optional[str] = Header(default=None)) -> None:
+    """Cere un token Supabase valid (sesiunea utilizatorului logat in IMMapp).
+
+    Endpointul ruleaza inferenta LayoutXLM, costisitoare ca timp de calcul;
+    fara aceasta verificare, oricine poate apela direct backend-ul (CORS nu
+    opreste cereri facute in afara unui browser) si rula inferenta gratuit.
+    Daca Supabase nu e configurat (ex. un checkout local fara .env complet),
+    verificarea e sarita ca sa nu blocheze dezvoltarea locala.
+    """
+    if not SUPABASE_URL or not SUPABASE_ANON_KEY:
+        return
+
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Autentificare necesara.",
+        )
+
+    token = authorization.split(" ", 1)[1].strip()
+
+    try:
+        response = requests.get(
+            f"{SUPABASE_URL}/auth/v1/user",
+            headers={"Authorization": f"Bearer {token}", "apikey": SUPABASE_ANON_KEY},
+            timeout=SUPABASE_AUTH_TIMEOUT_SECONDS,
+        )
+    except requests.RequestException:
+        logger.warning("Verificarea sesiunii Supabase a esuat (retea/timeout).")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Verificarea autentificarii nu a putut fi finalizata.",
+        )
+
+    if response.status_code != 200:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Sesiune invalida sau expirata.",
+        )
+
+
 @app.get("/health")
 def health() -> Dict[str, Any]:
     model_health = layoutxlm_model_manager.health()
@@ -177,7 +231,11 @@ def health() -> Dict[str, Any]:
     }
 
 
-@app.post("/analyze-layout", response_model=AnalyzeLayoutResponse)
+@app.post(
+    "/analyze-layout",
+    response_model=AnalyzeLayoutResponse,
+    dependencies=[Depends(require_authenticated_user)],
+)
 async def analyze_layout(
     file: Optional[UploadFile] = File(default=None),
     ocr_text: Optional[str] = Form(default=None),

@@ -1,5 +1,5 @@
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { networkInterfaces } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -110,7 +110,7 @@ function startBackend({ reload }) {
 
   backend = spawn(python, args, {
     cwd: backendDir,
-    env: process.env,
+    env: { ...loadRootEnvFile(), ...process.env },
     stdio: "inherit",
   });
 
@@ -199,6 +199,44 @@ function getLanBackendUrls() {
   }
 
   return urls;
+}
+
+function loadRootEnvFile() {
+  const envPath = join(projectRoot, ".env");
+
+  if (!existsSync(envPath)) {
+    return {};
+  }
+
+  const values = {};
+
+  for (const line of readFileSync(envPath, "utf8").split("\n")) {
+    const trimmed = line.trim();
+
+    if (!trimmed || trimmed.startsWith("#")) {
+      continue;
+    }
+
+    const separatorIndex = trimmed.indexOf("=");
+
+    if (separatorIndex === -1) {
+      continue;
+    }
+
+    const key = trimmed.slice(0, separatorIndex).trim();
+    let value = trimmed.slice(separatorIndex + 1).trim();
+
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+
+    values[key] = value;
+  }
+
+  return values;
 }
 
 function resolvePython() {

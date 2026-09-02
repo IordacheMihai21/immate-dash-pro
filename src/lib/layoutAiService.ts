@@ -4,6 +4,7 @@ import {
   isInvalidPartyCandidate,
   normalizeInvoiceNumber,
 } from "@/lib/invoiceCandidateEngine";
+import { supabase } from "@/lib/supabaseClient";
 
 const fieldKeys: DocumentAiFieldKey[] = [
   "invoiceNumber",
@@ -186,11 +187,18 @@ export async function analyzeLayoutWithBackend(
   }
 
   const endpoint = "/analyze-layout";
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
   const response = await fetchLayoutAi(
     endpoint,
     {
       method: "POST",
       body: formData,
+      headers: session?.access_token
+        ? { Authorization: `Bearer ${session.access_token}` }
+        : undefined,
     },
     ANALYZE_TIMEOUT_MS,
   );
