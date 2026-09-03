@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermeniRouteImport } from './routes/termeni'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as PreturiRouteImport } from './routes/preturi'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as ConfidentialitateRouteImport } from './routes/confidentialitate'
@@ -55,6 +56,11 @@ const TermeniRoute = TermeniRouteImport.update({
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PreturiRoute = PreturiRouteImport.update({
+  id: '/preturi',
+  path: '/preturi',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -243,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/confidentialitate': typeof ConfidentialitateRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/preturi': typeof PreturiRoute
   '/register': typeof RegisterRoute
   '/termeni': typeof TermeniRoute
   '/app/ai-center': typeof AppAiCenterRouteWithChildren
@@ -281,6 +288,7 @@ export interface FileRoutesByTo {
   '/confidentialitate': typeof ConfidentialitateRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/preturi': typeof PreturiRoute
   '/register': typeof RegisterRoute
   '/termeni': typeof TermeniRoute
   '/app/ai-forecast': typeof AppAiForecastRoute
@@ -318,6 +326,7 @@ export interface FileRoutesById {
   '/confidentialitate': typeof ConfidentialitateRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/preturi': typeof PreturiRoute
   '/register': typeof RegisterRoute
   '/termeni': typeof TermeniRoute
   '/app/ai-center': typeof AppAiCenterRouteWithChildren
@@ -359,6 +368,7 @@ export interface FileRouteTypes {
     | '/confidentialitate'
     | '/forgot-password'
     | '/login'
+    | '/preturi'
     | '/register'
     | '/termeni'
     | '/app/ai-center'
@@ -397,6 +407,7 @@ export interface FileRouteTypes {
     | '/confidentialitate'
     | '/forgot-password'
     | '/login'
+    | '/preturi'
     | '/register'
     | '/termeni'
     | '/app/ai-forecast'
@@ -433,6 +444,7 @@ export interface FileRouteTypes {
     | '/confidentialitate'
     | '/forgot-password'
     | '/login'
+    | '/preturi'
     | '/register'
     | '/termeni'
     | '/app/ai-center'
@@ -473,6 +485,7 @@ export interface RootRouteChildren {
   ConfidentialitateRoute: typeof ConfidentialitateRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
+  PreturiRoute: typeof PreturiRoute
   RegisterRoute: typeof RegisterRoute
   TermeniRoute: typeof TermeniRoute
 }
@@ -491,6 +504,13 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/preturi': {
+      id: '/preturi'
+      path: '/preturi'
+      fullPath: '/preturi'
+      preLoaderRoute: typeof PreturiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -845,6 +865,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConfidentialitateRoute: ConfidentialitateRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
+  PreturiRoute: PreturiRoute,
   RegisterRoute: RegisterRoute,
   TermeniRoute: TermeniRoute,
 }

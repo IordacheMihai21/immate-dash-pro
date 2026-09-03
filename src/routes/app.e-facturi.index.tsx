@@ -33,6 +33,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { downloadCsv, todayForFilename } from "@/lib/csvExport";
 import { getInvoices } from "@/lib/invoiceService";
 import { formatRON } from "@/lib/mock-data";
 import { toast } from "sonner";
@@ -103,6 +104,49 @@ function EInvoicesPage() {
 
     return invoices;
   }, [activeTab, invoices]);
+
+  function handleExportCsv() {
+    if (filteredInvoices.length === 0) {
+      toast.info("Nu exista facturi de exportat pentru filtrul curent.");
+      return;
+    }
+
+    const headers = [
+      "Numar factura",
+      "Data emiterii",
+      "Furnizor",
+      "CUI furnizor",
+      "Client",
+      "CUI client",
+      "Valoare fara TVA",
+      "TVA",
+      "Total de plata",
+      "Moneda",
+      "Status",
+    ];
+
+    const rows = filteredInvoices.map((invoice) => {
+      const supplier = getRelationParty(invoice.suppliers);
+      const customer = getRelationParty(invoice.customers);
+
+      return [
+        invoice.invoice_number,
+        formatDate(invoice.issue_date),
+        supplier?.name ?? "",
+        supplier?.cui ?? "",
+        customer?.name ?? "",
+        customer?.cui ?? "",
+        Number(invoice.tax_exclusive_amount ?? 0).toFixed(2),
+        Number(invoice.tax_amount ?? 0).toFixed(2),
+        Number(invoice.payable_amount ?? 0).toFixed(2),
+        invoice.currency ?? "RON",
+        normalizeStatus(invoice.status),
+      ];
+    });
+
+    downloadCsv(`facturi-immapp-${todayForFilename()}.csv`, headers, rows);
+    toast.success(`${filteredInvoices.length} facturi exportate.`);
+  }
 
   async function loadInvoices() {
     try {
@@ -196,7 +240,7 @@ function EInvoicesPage() {
       </InfoBanner>
 
       {errorMessage && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+        <div className="rounded-xl border border-destructive/30 bg-destructive/15 p-4 text-sm text-destructive">
           {errorMessage}
         </div>
       )}
@@ -209,26 +253,21 @@ function EInvoicesPage() {
             <Button
               variant="outline"
               size="sm"
-              className="bg-white"
+              className="bg-card"
               onClick={() => toast.info("Filtre avansate disponibile in curand.")}
             >
               <Filter className="h-4 w-4" />
               Filtru
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-white"
-              onClick={() => toast.info("Exportul va fi disponibil in curand.")}
-            >
+            <Button variant="outline" size="sm" className="bg-card" onClick={handleExportCsv}>
               <Download className="h-4 w-4" />
-              Export
+              Export CSV
             </Button>
           </div>
         }
         contentClassName="p-0"
       >
-        <div className="border-b border-slate-100 p-5">
+        <div className="border-b border-border p-5">
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as InvoiceTab)}>
             <TabsList>
               <TabsTrigger value="all">Toate</TabsTrigger>
@@ -239,7 +278,7 @@ function EInvoicesPage() {
         </div>
 
         {isLoading ? (
-          <div className="flex min-h-[280px] items-center justify-center gap-2 text-slate-500">
+          <div className="flex min-h-[280px] items-center justify-center gap-2 text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             Se incarca facturile...
           </div>
@@ -268,7 +307,7 @@ function EInvoicesPage() {
               <TableBody>
                 {filteredInvoices.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="py-8 text-center text-slate-500">
+                    <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
                       Nu exista facturi pentru filtrul selectat.
                     </TableCell>
                   </TableRow>
@@ -279,7 +318,7 @@ function EInvoicesPage() {
 
                     return (
                       <TableRow key={invoice.id}>
-                        <TableCell className="font-medium text-slate-900">
+                        <TableCell className="font-medium text-foreground">
                           {invoice.invoice_number}
                         </TableCell>
                         <TableCell>{supplier?.name ?? "Furnizor necunoscut"}</TableCell>
