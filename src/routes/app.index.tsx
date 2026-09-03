@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { motion, useReducedMotion } from "motion/react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -15,7 +16,6 @@ import {
   Loader2,
   ReceiptText,
   ShieldCheck,
-  Sparkles,
   TrendingUp,
   UploadCloud,
   Users,
@@ -52,6 +52,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/status-badge";
+import { TrendBadge } from "@/components/trend-badge";
+import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { getDashboardData } from "@/lib/dashboardService";
 import { formatRON } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
@@ -64,7 +66,7 @@ export const Route = createFileRoute("/app/")({
 type DashboardData = Awaited<ReturnType<typeof getDashboardData>>;
 type OverviewTab = "status" | "activity" | "risks" | "actions";
 type PeriodFilter = "30" | "90" | "all";
-type Tone = "blue" | "emerald" | "amber" | "rose" | "slate" | "violet";
+type Tone = "blue" | "emerald" | "amber" | "rose" | "slate";
 
 type FocusedKpi = {
   title: string;
@@ -131,45 +133,18 @@ const periodOptions: { value: PeriodFilter; label: string }[] = [
   { value: "all", label: "Toate datele" },
 ];
 
-const relationshipColors = ["#2563eb", "#10b981", "#f59e0b", "#8b5cf6"];
+const relationshipColors = [
+  "var(--color-chart-1)",
+  "var(--color-chart-2)",
+  "var(--color-success)",
+  "var(--color-warning)",
+];
 
 function Dashboard() {
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
+  const { data: dashboardData, isLoading, error } = useDashboardData();
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodFilter>("90");
   const [overviewTab, setOverviewTab] = useState<OverviewTab>("status");
   const [focusedKpi, setFocusedKpi] = useState<FocusedKpi>(null);
-
-  async function loadDashboard() {
-    try {
-      setIsLoading(true);
-      setErrorMessage("");
-
-      const data = await getDashboardData();
-      setDashboardData(data);
-    } catch {
-      setErrorMessage("Nu s-au putut incarca datele pentru panoul principal.");
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadDashboard();
-
-    const handleDataChanged = () => {
-      loadDashboard();
-    };
-
-    window.addEventListener("immapp:invoice-imported", handleDataChanged);
-    window.addEventListener("immapp:invoice-deleted", handleDataChanged);
-
-    return () => {
-      window.removeEventListener("immapp:invoice-imported", handleDataChanged);
-      window.removeEventListener("immapp:invoice-deleted", handleDataChanged);
-    };
-  }, []);
 
   const model = useMemo(() => {
     if (!dashboardData) {
@@ -181,17 +156,19 @@ function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[420px] items-center justify-center gap-2 text-slate-500">
+      <div className="flex min-h-[420px] items-center justify-center gap-2 text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
         Se incarca privirea financiara...
       </div>
     );
   }
 
-  if (errorMessage || !dashboardData || !model) {
+  if (error || !dashboardData || !model) {
     return (
-      <div className="rounded-3xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-700">
-        {errorMessage || "Nu s-au putut incarca datele pentru overview."}
+      <div className="rounded-3xl border border-destructive/30 bg-destructive/15 p-5 text-sm text-destructive">
+        {error
+          ? "Nu s-au putut incarca datele pentru panoul principal."
+          : "Nu s-au putut incarca datele pentru overview."}
       </div>
     );
   }
@@ -204,8 +181,11 @@ function Dashboard() {
         onSelectPeriod={setSelectedPeriod}
       />
 
+      <OnboardingChecklist dashboardData={dashboardData} />
+
       <section className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
         <CommandKpiCard
+          index={0}
           title="Scor de sanatate financiara"
           value={`${model.healthScore}%`}
           description="Semnal rapid despre stabilitate, risc si activitatea curenta."
@@ -225,6 +205,7 @@ function Dashboard() {
           }
         />
         <CommandKpiCard
+          index={1}
           title="Activitate lunară"
           value={`${model.monthlyProcessedDocuments} documente`}
           description={
@@ -250,6 +231,7 @@ function Dashboard() {
           }
         />
         <CommandKpiCard
+          index={2}
           title="Documente procesate"
           value={String(dashboardData.documentsProcessed)}
           description="Fisiere e-Factura XML incluse in analiza companiei."
@@ -269,6 +251,7 @@ function Dashboard() {
           }
         />
         <CommandKpiCard
+          index={3}
           title="Calitatea datelor"
           value={`${dashboardData.documentExtractionEvaluation.fieldCompletenessRate.toFixed(1)}%`}
           description="Completitudinea campurilor importante din documentele analizate."
@@ -288,6 +271,7 @@ function Dashboard() {
           }
         />
         <CommandKpiCard
+          index={4}
           title="Concentrare clienti"
           value={formatPercent(model.topCustomerShare)}
           description={
@@ -297,7 +281,7 @@ function Dashboard() {
           }
           badge={getConcentrationLabel(model.topCustomerShare)}
           icon={<Users className="h-5 w-5" />}
-          tone={model.topCustomerShare > 50 ? "amber" : "violet"}
+          tone={model.topCustomerShare > 50 ? "amber" : "emerald"}
           onClick={() =>
             setFocusedKpi({
               title: "Concentrare clienti",
@@ -311,6 +295,7 @@ function Dashboard() {
           }
         />
         <CommandKpiCard
+          index={5}
           title="Stabilitate furnizori"
           value={formatPercent(model.topSupplierShare)}
           description={
@@ -337,7 +322,7 @@ function Dashboard() {
 
       <Tabs value={overviewTab} onValueChange={(value) => setOverviewTab(value as OverviewTab)}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <TabsList className="grid h-auto w-full grid-cols-2 rounded-2xl bg-slate-100 p-1 sm:w-auto sm:grid-cols-4">
+          <TabsList className="grid h-auto w-full grid-cols-2 rounded-2xl bg-muted p-1 sm:w-auto sm:grid-cols-4">
             <TabsTrigger value="status" className="rounded-xl">
               Status
             </TabsTrigger>
@@ -352,7 +337,7 @@ function Dashboard() {
             </TabsTrigger>
           </TabsList>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
+          <div className="rounded-2xl border border-border bg-card p-1 shadow-sm">
             <div className="grid grid-cols-3 gap-1">
               {periodOptions.map((option) => (
                 <button
@@ -362,8 +347,8 @@ function Dashboard() {
                   className={cn(
                     "rounded-xl px-3 py-2 text-xs font-semibold transition",
                     selectedPeriod === option.value
-                      ? "bg-slate-950 text-white"
-                      : "text-slate-500 hover:bg-slate-100",
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted",
                   )}
                 >
                   {option.label}
@@ -382,9 +367,23 @@ function Dashboard() {
             >
               <ResponsiveContainer width="100%" height={320}>
                 <BarChart data={model.pipelineStages} margin={{ left: 8, right: 12, top: 12 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                  <XAxis dataKey="stage" stroke="#64748b" fontSize={12} tickLine={false} />
-                  <YAxis stroke="#64748b" fontSize={12} allowDecimals={false} tickLine={false} />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="var(--color-border)"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="stage"
+                    stroke="var(--color-muted-foreground)"
+                    fontSize={12}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    stroke="var(--color-muted-foreground)"
+                    fontSize={12}
+                    allowDecimals={false}
+                    tickLine={false}
+                  />
                   <Tooltip content={<PipelineTooltip />} />
                   <Bar dataKey="value" name="Documente" radius={[12, 12, 0, 0]}>
                     {model.pipelineStages.map((stage) => (
@@ -411,14 +410,28 @@ function Dashboard() {
               ) : (
                 <ResponsiveContainer width="100%" height={340}>
                   <ComposedChart data={model.pulseData} margin={{ left: 8, right: 12, top: 12 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                    <XAxis dataKey="month" stroke="#64748b" fontSize={12} tickLine={false} />
-                    <YAxis yAxisId="count" stroke="#64748b" fontSize={12} allowDecimals={false} />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="var(--color-border)"
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="month"
+                      stroke="var(--color-muted-foreground)"
+                      fontSize={12}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      yAxisId="count"
+                      stroke="var(--color-muted-foreground)"
+                      fontSize={12}
+                      allowDecimals={false}
+                    />
                     <YAxis
                       yAxisId="index"
                       orientation="right"
                       domain={[0, 100]}
-                      stroke="#64748b"
+                      stroke="var(--color-muted-foreground)"
                       fontSize={12}
                     />
                     <Tooltip content={<PulseTooltip />} />
@@ -427,7 +440,7 @@ function Dashboard() {
                       yAxisId="count"
                       dataKey="documents"
                       name="Documente"
-                      fill="#93c5fd"
+                      fill="var(--color-chart-2)"
                       radius={[8, 8, 0, 0]}
                       maxBarSize={36}
                     />
@@ -435,7 +448,7 @@ function Dashboard() {
                       yAxisId="count"
                       dataKey="invoices"
                       name="Facturi"
-                      fill="#10b981"
+                      fill="var(--color-success)"
                       radius={[8, 8, 0, 0]}
                       maxBarSize={36}
                     />
@@ -444,7 +457,7 @@ function Dashboard() {
                       type="monotone"
                       dataKey="activityIndex"
                       name="Pulsul afacerii"
-                      stroke="#111827"
+                      stroke="var(--color-foreground)"
                       strokeWidth={3}
                       dot={{ r: 3 }}
                       activeDot={{ r: 6 }}
@@ -473,12 +486,16 @@ function Dashboard() {
                   layout="vertical"
                   margin={{ left: 12, right: 48, top: 12, bottom: 8 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
-                  <XAxis type="number" stroke="#64748b" fontSize={12} />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="var(--color-border)"
+                    horizontal={false}
+                  />
+                  <XAxis type="number" stroke="var(--color-muted-foreground)" fontSize={12} />
                   <YAxis
                     type="category"
                     dataKey="label"
-                    stroke="#64748b"
+                    stroke="var(--color-muted-foreground)"
                     width={138}
                     fontSize={12}
                   />
@@ -518,18 +535,17 @@ function OverviewHero({
   selectedPeriod: PeriodFilter;
   onSelectPeriod: (period: PeriodFilter) => void;
 }) {
+  const healthTone =
+    model.healthScore >= 70 ? "success" : model.healthScore >= 40 ? "warning" : "destructive";
+
   return (
-    <section className="overflow-hidden rounded-3xl border border-slate-800 bg-[linear-gradient(135deg,#0f172a_0%,#134e4a_55%,#166534_100%)] p-6 text-white shadow-sm lg:p-7">
+    <section className="overflow-hidden rounded-3xl border border-sidebar-border bg-sidebar p-6 text-sidebar-foreground shadow-sm lg:p-7">
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-stretch">
         <div>
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-emerald-50">
-            <Sparkles className="h-3.5 w-3.5" />
-            Centru executiv de control
-          </div>
-          <h1 className="text-3xl font-semibold tracking-normal text-white lg:text-4xl">
+          <h1 className="text-3xl font-normal tracking-tight text-white lg:text-4xl">
             Overview financiar
           </h1>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-200">
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-sidebar-foreground/80">
             O vedere rapida asupra sanatatii financiare, activitatii documentelor, riscurilor
             comerciale si actiunilor recomandate de AI.
           </p>
@@ -549,7 +565,7 @@ function OverviewHero({
           </div>
 
           <div className="mt-6 flex flex-wrap gap-3">
-            <Button asChild className="rounded-full bg-white text-slate-950 hover:bg-slate-100">
+            <Button asChild className="rounded-full bg-card text-foreground hover:bg-white/90">
               <Link to="/app/documente">
                 <UploadCloud className="h-4 w-4" />
                 Importa documente
@@ -558,7 +574,7 @@ function OverviewHero({
             <Button
               asChild
               variant="outline"
-              className="rounded-full border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+              className="rounded-full border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/70 hover:text-white"
             >
               <Link to="/app/rapoarte/cash-flow">
                 <BarChart3 className="h-4 w-4" />
@@ -568,7 +584,7 @@ function OverviewHero({
             <Button
               asChild
               variant="outline"
-              className="rounded-full border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+              className="rounded-full border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/70 hover:text-white"
             >
               <Link to="/app/ai-forecast">
                 <BrainCircuit className="h-4 w-4" />
@@ -578,25 +594,42 @@ function OverviewHero({
           </div>
         </div>
 
-        <div className="rounded-3xl border border-white/15 bg-white/10 p-5 backdrop-blur">
+        <div className="rounded-3xl border border-sidebar-border bg-sidebar-accent/40 p-5">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-sm font-medium text-slate-200">Scor de sanatate financiara</p>
-              <p className="mt-3 text-5xl font-semibold text-white">{model.healthScore}</p>
-              <p className="mt-2 text-sm text-slate-300">din 100</p>
+              <p className="text-sm font-medium text-sidebar-foreground/80">
+                Scor de sanatate financiara
+              </p>
+              <p
+                className={cn(
+                  "mt-3 text-5xl font-semibold",
+                  healthTone === "success"
+                    ? "text-success"
+                    : healthTone === "warning"
+                      ? "text-warning"
+                      : "text-destructive",
+                )}
+              >
+                {model.healthScore}
+              </p>
+              <p className="mt-2 text-sm text-sidebar-foreground/70">din 100</p>
             </div>
-            <div
-              className="relative grid h-28 w-28 shrink-0 place-items-center rounded-full"
-              style={{
-                background: `conic-gradient(#34d399 ${model.healthScore * 3.6}deg, rgba(255,255,255,0.14) 0deg)`,
-              }}
-            >
-              <div className="grid h-20 w-20 place-items-center rounded-full bg-slate-950/80">
-                <ShieldCheck className="h-7 w-7 text-emerald-300" />
-              </div>
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white/10">
+              <ShieldCheck
+                className={cn(
+                  "h-6 w-6",
+                  healthTone === "success"
+                    ? "text-success"
+                    : healthTone === "warning"
+                      ? "text-warning"
+                      : "text-destructive",
+                )}
+              />
             </div>
           </div>
-          <p className="mt-5 text-sm leading-6 text-slate-200">{model.status.description}</p>
+          <p className="mt-5 text-sm leading-6 text-sidebar-foreground/80">
+            {model.status.description}
+          </p>
           <div className="mt-5 grid grid-cols-3 gap-2">
             {periodOptions.map((option) => (
               <button
@@ -604,10 +637,10 @@ function OverviewHero({
                 type="button"
                 onClick={() => onSelectPeriod(option.value)}
                 className={cn(
-                  "rounded-2xl px-3 py-2 text-xs font-semibold transition",
+                  "rounded-2xl px-3 py-2 text-xs font-semibold transition-colors",
                   selectedPeriod === option.value
-                    ? "bg-white text-slate-950"
-                    : "bg-white/10 text-slate-200 hover:bg-white/15",
+                    ? "bg-card text-foreground"
+                    : "bg-white/10 text-sidebar-foreground/80 hover:bg-white/15",
                 )}
               >
                 {option.label}
@@ -628,6 +661,7 @@ function CommandKpiCard({
   icon,
   tone,
   onClick,
+  index = 0,
 }: {
   title: string;
   value: string;
@@ -636,30 +670,48 @@ function CommandKpiCard({
   icon: ReactNode;
   tone: Tone;
   onClick: () => void;
+  index?: number;
 }) {
+  const reduce = useReducedMotion();
+
   return (
-    <button
+    <motion.button
       type="button"
       onClick={onClick}
-      className="group rounded-3xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+      className="group rounded-3xl border border-border bg-card p-5 text-left shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      initial={reduce ? false : { opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.4 }}
+      transition={{ duration: 0.35, delay: index * 0.05 }}
+      whileHover={reduce ? undefined : { y: -3 }}
+      whileTap={reduce ? undefined : { scale: 0.98 }}
     >
       <div className="flex items-start justify-between gap-4">
         <div className={cn("rounded-2xl p-3", toneClasses[tone].icon)}>{icon}</div>
-        {badge && (
-          <span
-            className={cn(
-              "rounded-full px-2.5 py-1 text-xs font-semibold",
-              toneClasses[tone].badge,
-            )}
-          >
-            {badge}
-          </span>
-        )}
+        {badge && <BadgeOrTrend badge={badge} toneClassName={toneClasses[tone].badge} />}
       </div>
-      <p className="mt-5 text-sm font-medium text-slate-500">{title}</p>
-      <p className="mt-2 break-words text-2xl font-semibold text-slate-950">{value}</p>
-      <p className="mt-2 text-xs leading-5 text-slate-500">{description}</p>
-    </button>
+      <p className="mt-5 text-sm font-medium text-muted-foreground">{title}</p>
+      <p className="mt-2 break-words text-2xl font-semibold text-foreground">{value}</p>
+      <p className="mt-2 text-xs leading-5 text-muted-foreground">{description}</p>
+    </motion.button>
+  );
+}
+
+const SIGNED_PERCENT = /^([+-])(\d+(?:\.\d+)?)%$/;
+
+/** Numeric trend badges ("+12.3%", "-5%") render as the real TrendBadge; label badges stay plain. */
+function BadgeOrTrend({ badge, toneClassName }: { badge: string; toneClassName: string }) {
+  const match = badge.match(SIGNED_PERCENT);
+
+  if (match) {
+    const signedValue = Number(`${match[1]}${match[2]}`);
+    return <TrendBadge value={signedValue} />;
+  }
+
+  return (
+    <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", toneClassName)}>
+      {badge}
+    </span>
   );
 }
 
@@ -675,11 +727,11 @@ function CommandPanel({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-3xl border border-border bg-card p-5 shadow-sm">
       <div className="mb-5">
-        <p className="text-xs font-semibold uppercase text-blue-600">{eyebrow}</p>
-        <h2 className="mt-1 text-lg font-semibold text-slate-950">{title}</h2>
-        <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
+        <p className="text-xs font-semibold uppercase text-primary">{eyebrow}</p>
+        <h2 className="mt-1 text-lg font-semibold text-foreground">{title}</h2>
+        <p className="mt-1 text-sm leading-6 text-muted-foreground">{description}</p>
       </div>
       {children}
     </section>
@@ -688,10 +740,10 @@ function CommandPanel({
 
 function HealthSnapshot({ model }: { model: ReturnType<typeof buildExecutiveOverview> }) {
   return (
-    <aside className="rounded-3xl border border-slate-200 bg-slate-950 p-5 text-white shadow-sm">
-      <p className="text-xs font-semibold uppercase text-emerald-300">Sinteza</p>
-      <h2 className="mt-1 text-lg font-semibold">Ce necesita atentie</h2>
-      <p className="mt-2 text-sm leading-6 text-slate-300">
+    <aside className="rounded-3xl border border-sidebar-border bg-sidebar p-5 text-sidebar-foreground shadow-sm">
+      <p className="text-xs font-semibold uppercase text-success">Sinteza</p>
+      <h2 className="mt-1 text-lg font-semibold text-white">Ce necesita atentie</h2>
+      <p className="mt-2 text-sm leading-6 text-sidebar-foreground/70">
         O citire scurta a pozitiei operationale curente.
       </p>
 
@@ -761,15 +813,12 @@ function ActivityDigest({ model }: { model: ReturnType<typeof buildExecutiveOver
   return (
     <aside className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
       {items.map((item) => (
-        <div
-          key={item.label}
-          className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
-        >
-          <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
+        <div key={item.label} className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+          <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-2xl bg-muted text-foreground">
             {item.icon}
           </div>
-          <p className="text-xs font-semibold uppercase text-slate-500">{item.label}</p>
-          <p className="mt-2 text-xl font-semibold text-slate-950">{item.value}</p>
+          <p className="text-xs font-semibold uppercase text-muted-foreground">{item.label}</p>
+          <p className="mt-2 text-xl font-semibold text-foreground">{item.value}</p>
         </div>
       ))}
     </aside>
@@ -778,9 +827,9 @@ function ActivityDigest({ model }: { model: ReturnType<typeof buildExecutiveOver
 
 function RiskSignalPanel({ model }: { model: ReturnType<typeof buildExecutiveOverview> }) {
   return (
-    <aside className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-xs font-semibold uppercase text-amber-600">Scanare riscuri</p>
-      <h2 className="mt-1 text-lg font-semibold text-slate-950">Privire asupra dependentelor</h2>
+    <aside className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+      <p className="text-xs font-semibold uppercase text-warning">Scanare riscuri</p>
+      <h2 className="mt-1 text-lg font-semibold text-foreground">Privire asupra dependentelor</h2>
       <div className="mt-5 space-y-4">
         <RiskMeter label="Dependenta de clientul principal" value={model.topCustomerShare} />
         <RiskMeter label="Dependenta de furnizorul principal" value={model.topSupplierShare} />
@@ -792,12 +841,12 @@ function RiskSignalPanel({ model }: { model: ReturnType<typeof buildExecutiveOve
 
 function ActionQueue({ actions }: { actions: ActionItem[] }) {
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex flex-col gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
+    <section className="rounded-3xl border border-border bg-card shadow-sm">
+      <div className="flex flex-col gap-3 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase text-emerald-600">Ghidare AI</p>
-          <h2 className="mt-1 text-lg font-semibold text-slate-950">Actiuni recomandate de AI</h2>
-          <p className="mt-1 text-sm leading-6 text-slate-500">
+          <p className="text-xs font-semibold uppercase text-success">Ghidare AI</p>
+          <h2 className="mt-1 text-lg font-semibold text-foreground">Actiuni recomandate de AI</h2>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">
             Recomandari prioritizate pe baza semnalelor curente din overview.
           </p>
         </div>
@@ -813,16 +862,16 @@ function ActionQueue({ actions }: { actions: ActionItem[] }) {
         {actions.map((action) => (
           <div
             key={action.title}
-            className="rounded-3xl border border-slate-200 bg-slate-50 p-5 transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white hover:shadow-md"
+            className="rounded-3xl border border-border bg-muted p-5 transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-card hover:shadow-md"
           >
             <div className="flex items-center justify-between gap-3">
               <PriorityBadge priority={action.priority} />
-              <Zap className="h-4 w-4 text-slate-400" />
+              <Zap className="h-4 w-4 text-muted-foreground" />
             </div>
-            <h3 className="mt-4 text-base font-semibold text-slate-950">{action.title}</h3>
-            <p className="mt-2 text-sm leading-6 text-slate-600">{action.explanation}</p>
-            <div className="mt-4 rounded-2xl bg-white p-3 text-sm leading-6 text-slate-700">
-              <span className="font-semibold text-slate-950">Pas recomandat: </span>
+            <h3 className="mt-4 text-base font-semibold text-foreground">{action.title}</h3>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">{action.explanation}</p>
+            <div className="mt-4 rounded-2xl bg-card p-3 text-sm leading-6 text-foreground">
+              <span className="font-semibold text-foreground">Pas recomandat: </span>
               {action.nextStep}
             </div>
           </div>
@@ -832,20 +881,101 @@ function ActionQueue({ actions }: { actions: ActionItem[] }) {
   );
 }
 
+function OnboardingChecklist({ dashboardData }: { dashboardData: DashboardData }) {
+  const steps = [
+    {
+      title: "Completeaza profilul companiei",
+      description: "CUI, denumire si date de contact folosite in facturi si rapoarte.",
+      done: Boolean(dashboardData.companyCui),
+      href: "/app/setari" as const,
+      icon: <Building2 className="h-4 w-4" />,
+    },
+    {
+      title: "Incarca primul document",
+      description: "O factura PDF sau imagine, analizata automat de Document AI.",
+      done: dashboardData.documentsProcessed > 0,
+      href: "/app/ai-center/document-ai" as const,
+      icon: <UploadCloud className="h-4 w-4" />,
+    },
+    {
+      title: "Importa sau creeaza prima factura",
+      description: "XML e-Factura importat sau factura noua, pentru rapoarte si cash-flow.",
+      done: dashboardData.invoiceCount > 0,
+      href: "/app/e-facturi" as const,
+      icon: <ReceiptText className="h-4 w-4" />,
+    },
+  ];
+
+  const completedCount = steps.filter((step) => step.done).length;
+
+  if (completedCount === steps.length) {
+    return null;
+  }
+
+  return (
+    <section className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase text-primary">Primii pasi</p>
+          <h2 className="mt-1 text-lg font-semibold text-foreground">
+            Pregateste compania pentru rapoarte complete
+          </h2>
+        </div>
+        <span className="text-sm font-medium text-muted-foreground">
+          {completedCount}/{steps.length} finalizati
+        </span>
+      </div>
+
+      <div className="mt-5 grid gap-3 md:grid-cols-3">
+        {steps.map((step) => (
+          <Link
+            key={step.title}
+            to={step.href}
+            className={cn(
+              "group flex flex-col gap-3 rounded-2xl border p-4 transition",
+              step.done
+                ? "border-success/30 bg-success/10"
+                : "border-border bg-background hover:border-primary/40 hover:bg-accent/40",
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <span
+                className={cn(
+                  "flex h-8 w-8 items-center justify-center rounded-full",
+                  step.done ? "bg-success/20 text-success" : "bg-accent text-primary",
+                )}
+              >
+                {step.done ? <CheckCircle2 className="h-4 w-4" /> : step.icon}
+              </span>
+              {!step.done ? (
+                <ArrowRight className="h-4 w-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />
+              ) : null}
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">{step.title}</p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">{step.description}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function RecentInvoicesTable({ invoices }: { invoices: DashboardData["latestInvoices"] }) {
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-100 p-5">
-        <p className="text-xs font-semibold uppercase text-slate-500">Activitate recenta</p>
-        <h2 className="mt-1 text-lg font-semibold text-slate-950">Ultimele facturi</h2>
-        <p className="mt-1 text-sm leading-6 text-slate-500">
+    <section className="rounded-3xl border border-border bg-card shadow-sm">
+      <div className="border-b border-border p-5">
+        <p className="text-xs font-semibold uppercase text-muted-foreground">Activitate recenta</p>
+        <h2 className="mt-1 text-lg font-semibold text-foreground">Ultimele facturi</h2>
+        <p className="mt-1 text-sm leading-6 text-muted-foreground">
           Facturile recente raman disponibile pentru verificari operationale rapide.
         </p>
       </div>
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow className="bg-slate-50/70">
+            <TableRow className="bg-muted/70">
               <TableHead>Factura</TableHead>
               <TableHead>Furnizor</TableHead>
               <TableHead>Client</TableHead>
@@ -858,14 +988,26 @@ function RecentInvoicesTable({ invoices }: { invoices: DashboardData["latestInvo
           <TableBody>
             {invoices.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="py-8 text-center text-slate-500">
-                  Nu exista facturi disponibile inca.
+                <TableCell colSpan={7} className="py-10 text-center">
+                  <p className="text-sm font-medium text-foreground">
+                    Nu ai nicio factura inregistrata inca.
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Importa un XML e-Factura sau incarca un document pentru ca facturile sa apara
+                    aici si in rapoarte.
+                  </p>
+                  <Button className="mt-4" size="sm" asChild>
+                    <Link to="/app/e-facturi">
+                      <ReceiptText className="h-4 w-4" />
+                      Incarca prima factura
+                    </Link>
+                  </Button>
                 </TableCell>
               </TableRow>
             ) : (
               invoices.map((invoice) => (
-                <TableRow key={invoice.id} className="hover:bg-slate-50/70">
-                  <TableCell className="font-medium text-slate-900">
+                <TableRow key={invoice.id} className="hover:bg-muted/70">
+                  <TableCell className="font-medium text-foreground">
                     {invoice.invoiceNumber}
                   </TableCell>
                   <TableCell>{invoice.supplierName}</TableCell>
@@ -898,11 +1040,11 @@ function RecentInvoicesTable({ invoices }: { invoices: DashboardData["latestInvo
 function KpiDialog({ data, onClose }: { data: FocusedKpi; onClose: () => void }) {
   return (
     <Dialog open={Boolean(data)} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-2xl border-slate-200 bg-white">
+      <DialogContent className="max-w-2xl border-border bg-card">
         {data && (
           <>
             <DialogHeader>
-              <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+              <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary text-primary">
                 {data.icon}
               </div>
               <DialogTitle>{data.title}</DialogTitle>
@@ -921,9 +1063,9 @@ function KpiDialog({ data, onClose }: { data: FocusedKpi; onClose: () => void })
 
 function KpiDetail({ title, value }: { title: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <p className="text-sm font-semibold text-slate-900">{title}</p>
-      <p className="mt-1 text-sm leading-6 text-slate-600">{value}</p>
+    <div className="rounded-2xl border border-border bg-muted p-4">
+      <p className="text-sm font-semibold text-foreground">{title}</p>
+      <p className="mt-1 text-sm leading-6 text-muted-foreground">{value}</p>
     </div>
   );
 }
@@ -931,7 +1073,7 @@ function KpiDetail({ title, value }: { title: string; value: string }) {
 function HeroMiniMetric({ label, value, tone }: { label: string; value: string; tone: Tone }) {
   return (
     <div className="rounded-2xl border border-white/15 bg-white/10 p-4">
-      <p className="text-xs font-semibold uppercase text-slate-300">{label}</p>
+      <p className="text-xs font-semibold uppercase text-sidebar-foreground/70">{label}</p>
       <p className={cn("mt-2 text-base font-semibold", heroToneClasses[tone])}>{value}</p>
     </div>
   );
@@ -958,14 +1100,14 @@ function RiskMeter({ label, value }: { label: string; value: number }) {
   return (
     <div>
       <div className="mb-2 flex items-center justify-between gap-3">
-        <p className="text-sm font-medium text-slate-700">{label}</p>
+        <p className="text-sm font-medium text-foreground">{label}</p>
         <span
           className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", toneClasses[tone].badge)}
         >
           {formatPercent(value)}
         </span>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+      <div className="h-2 overflow-hidden rounded-full bg-muted">
         <div
           className={cn("h-full rounded-full", meterToneClasses[tone])}
           style={{ width: `${Math.min(value, 100)}%` }}
@@ -977,9 +1119,9 @@ function RiskMeter({ label, value }: { label: string; value: number }) {
 
 function PriorityBadge({ priority }: { priority: ActionItem["priority"] }) {
   const className = {
-    High: "bg-rose-50 text-rose-700 border-rose-200",
-    Medium: "bg-amber-50 text-amber-700 border-amber-200",
-    Low: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    High: "bg-destructive/15 text-destructive border-destructive/30",
+    Medium: "bg-warning/20 text-warning border-warning/40",
+    Low: "bg-success/15 text-success border-success/30",
   }[priority];
 
   return (
@@ -1003,7 +1145,7 @@ function formatPriority(priority: ActionItem["priority"]) {
 
 function CommandEmptyState({ message }: { message: string }) {
   return (
-    <div className="flex h-[300px] items-center justify-center rounded-2xl bg-slate-50 p-6 text-center text-sm text-slate-500">
+    <div className="flex h-[300px] items-center justify-center rounded-2xl bg-muted p-6 text-center text-sm text-muted-foreground">
       {message}
     </div>
   );
@@ -1017,14 +1159,14 @@ function PulseTooltip({ active, payload }: PulseTooltipProps) {
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-xl">
-      <p className="mb-3 font-semibold text-slate-950">{point.month}</p>
-      <TooltipRow label="Documente" value={String(point.documents)} color="bg-blue-300" />
-      <TooltipRow label="Facturi" value={String(point.invoices)} color="bg-emerald-500" />
+    <div className="rounded-2xl border border-border bg-card p-4 text-sm shadow-xl">
+      <p className="mb-3 font-semibold text-foreground">{point.month}</p>
+      <TooltipRow label="Documente" value={String(point.documents)} color="bg-chart-2" />
+      <TooltipRow label="Facturi" value={String(point.invoices)} color="bg-success" />
       <TooltipRow
         label="Pulsul afacerii"
         value={`${point.activityIndex}/100`}
-        color="bg-slate-950"
+        color="bg-foreground"
       />
     </div>
   );
@@ -1038,10 +1180,10 @@ function PipelineTooltip({ active, payload }: PipelineTooltipProps) {
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-xl">
-      <p className="font-semibold text-slate-950">{stage.stage}</p>
-      <p className="mt-1 text-slate-600">{stage.value} elemente</p>
-      <p className="mt-2 max-w-xs text-xs leading-5 text-slate-500">{stage.description}</p>
+    <div className="rounded-2xl border border-border bg-card p-4 text-sm shadow-xl">
+      <p className="font-semibold text-foreground">{stage.stage}</p>
+      <p className="mt-1 text-muted-foreground">{stage.value} elemente</p>
+      <p className="mt-2 max-w-xs text-xs leading-5 text-muted-foreground">{stage.description}</p>
     </div>
   );
 }
@@ -1054,9 +1196,9 @@ function RelationshipTooltip({ active, payload }: RelationshipTooltipProps) {
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-xl">
-      <p className="font-semibold text-slate-950">{point.label}</p>
-      <p className="mt-2 text-slate-700">
+    <div className="rounded-2xl border border-border bg-card p-4 text-sm shadow-xl">
+      <p className="font-semibold text-foreground">{point.label}</p>
+      <p className="mt-2 text-foreground">
         {point.type === "percent" ? formatPercent(point.value) : String(point.value)}
       </p>
     </div>
@@ -1066,11 +1208,11 @@ function RelationshipTooltip({ active, payload }: RelationshipTooltipProps) {
 function TooltipRow({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <div className="mt-1 flex items-center justify-between gap-6">
-      <span className="flex items-center gap-2 text-slate-500">
+      <span className="flex items-center gap-2 text-muted-foreground">
         <span className={cn("h-2.5 w-2.5 rounded-full", color)} />
         {label}
       </span>
-      <span className="font-semibold text-slate-900">{value}</span>
+      <span className="font-semibold text-foreground">{value}</span>
     </div>
   );
 }
@@ -1263,26 +1405,26 @@ function buildPipelineStages(
       stage: "Importate",
       value: dashboardData.documentsProcessed,
       description: "Documente incarcate in fluxul oficial de lucru.",
-      color: "#2563eb",
+      color: "var(--color-chart-1)",
     },
     {
       stage: "Procesate",
       value: dashboardData.invoiceCount,
       description: "Facturi extrase din documentele XML incarcate.",
-      color: "#10b981",
+      color: "var(--color-chart-2)",
     },
     {
       stage: "Validate",
       value: dashboardData.classifiedInvoiceCount,
       description: "Facturi asociate clar cu firma curenta.",
-      color: "#8b5cf6",
+      color: "var(--color-success)",
     },
     {
       stage: "Necesita atentie",
       value: attentionCount,
       description:
         "Elemente care pot necesita verificarea profilului, CUI-ului sau calitatii datelor.",
-      color: "#f59e0b",
+      color: "var(--color-warning)",
     },
   ];
 }
@@ -1581,51 +1723,45 @@ function formatPercent(value: number) {
 
 const toneClasses: Record<Tone, { icon: string; badge: string }> = {
   blue: {
-    icon: "bg-blue-50 text-blue-600",
-    badge: "bg-blue-50 text-blue-700",
+    icon: "bg-secondary text-primary",
+    badge: "bg-secondary text-primary",
   },
   emerald: {
-    icon: "bg-emerald-50 text-emerald-600",
-    badge: "bg-emerald-50 text-emerald-700",
+    icon: "bg-success/15 text-success",
+    badge: "bg-success/15 text-success",
   },
   amber: {
-    icon: "bg-amber-50 text-amber-600",
-    badge: "bg-amber-50 text-amber-700",
+    icon: "bg-warning/20 text-warning",
+    badge: "bg-warning/20 text-warning",
   },
   rose: {
-    icon: "bg-rose-50 text-rose-600",
-    badge: "bg-rose-50 text-rose-700",
+    icon: "bg-destructive/15 text-destructive",
+    badge: "bg-destructive/15 text-destructive",
   },
   slate: {
-    icon: "bg-slate-100 text-slate-600",
-    badge: "bg-slate-100 text-slate-700",
-  },
-  violet: {
-    icon: "bg-violet-50 text-violet-600",
-    badge: "bg-violet-50 text-violet-700",
+    icon: "bg-muted text-muted-foreground",
+    badge: "bg-muted text-foreground",
   },
 };
 
 const heroToneClasses: Record<Tone, string> = {
-  blue: "text-blue-100",
-  emerald: "text-emerald-100",
-  amber: "text-amber-100",
-  rose: "text-rose-100",
-  slate: "text-slate-100",
-  violet: "text-violet-100",
+  blue: "text-sidebar-foreground",
+  emerald: "text-success",
+  amber: "text-warning",
+  rose: "text-destructive",
+  slate: "text-sidebar-foreground/70",
 };
 
 const darkToneClasses: Record<Tone, string> = {
-  blue: "bg-blue-300 text-blue-950",
-  emerald: "bg-emerald-300 text-emerald-950",
-  amber: "bg-amber-300 text-amber-950",
-  rose: "bg-rose-300 text-rose-950",
-  slate: "bg-slate-300 text-slate-950",
-  violet: "bg-violet-300 text-violet-950",
+  blue: "bg-sidebar-accent text-sidebar-foreground",
+  emerald: "bg-success/20 text-success",
+  amber: "bg-warning/25 text-warning",
+  rose: "bg-destructive/20 text-destructive",
+  slate: "bg-white/10 text-sidebar-foreground",
 };
 
 const meterToneClasses: Record<"emerald" | "amber" | "rose", string> = {
-  emerald: "bg-emerald-500",
-  amber: "bg-amber-500",
-  rose: "bg-rose-500",
+  emerald: "bg-success",
+  amber: "bg-warning",
+  rose: "bg-destructive",
 };
