@@ -53,6 +53,7 @@ import {
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/status-badge";
 import { TrendBadge } from "@/components/trend-badge";
+import { useRecentActivity } from "@/hooks/use-activity-log";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { getDashboardData } from "@/lib/dashboardService";
 import { formatRON } from "@/lib/mock-data";
@@ -471,6 +472,8 @@ function Dashboard() {
           </section>
 
           <RecentInvoicesTable invoices={dashboardData.latestInvoices} />
+
+          <RecentActivityPanel />
         </TabsContent>
 
         <TabsContent value="risks" className="mt-4 space-y-4">
@@ -957,6 +960,82 @@ function OnboardingChecklist({ dashboardData }: { dashboardData: DashboardData }
             </div>
           </Link>
         ))}
+      </div>
+    </section>
+  );
+}
+
+const activityEntityIcons: Record<string, ReactNode> = {
+  company_profile: <Building2 className="h-4 w-4" />,
+  invoice: <ReceiptText className="h-4 w-4" />,
+  document: <UploadCloud className="h-4 w-4" />,
+  company_member: <Users className="h-4 w-4" />,
+};
+
+function formatRelativeTime(value: string) {
+  const date = new Date(value);
+  const diffSeconds = Math.round((date.getTime() - Date.now()) / 1000);
+  const divisions: [Intl.RelativeTimeFormatUnit, number][] = [
+    ["year", 60 * 60 * 24 * 365],
+    ["month", 60 * 60 * 24 * 30],
+    ["day", 60 * 60 * 24],
+    ["hour", 60 * 60],
+    ["minute", 60],
+  ];
+  const formatter = new Intl.RelativeTimeFormat("ro", { numeric: "auto" });
+
+  for (const [unit, secondsInUnit] of divisions) {
+    if (Math.abs(diffSeconds) >= secondsInUnit) {
+      return formatter.format(Math.round(diffSeconds / secondsInUnit), unit);
+    }
+  }
+
+  return formatter.format(Math.round(diffSeconds / 1), "second");
+}
+
+function RecentActivityPanel() {
+  const { data: entries, isLoading } = useRecentActivity(6);
+
+  return (
+    <section className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+      <p className="text-xs font-semibold uppercase text-muted-foreground">Colaborare</p>
+      <h2 className="mt-1 text-lg font-semibold text-foreground">Activitate recenta</h2>
+      <p className="mt-1 text-sm leading-6 text-muted-foreground">
+        Ce a facut fiecare membru al companiei, pe scurt.
+      </p>
+
+      <div className="mt-5 space-y-1">
+        {isLoading ? (
+          <div className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Se incarca activitatea...
+          </div>
+        ) : !entries || entries.length === 0 ? (
+          <p className="py-6 text-center text-sm text-muted-foreground">
+            Nicio activitate inregistrata inca.
+          </p>
+        ) : (
+          entries.map((entry) => (
+            <div
+              key={entry.id}
+              className="flex items-start gap-3 rounded-2xl px-2 py-3 transition hover:bg-muted/60"
+            >
+              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-primary">
+                {activityEntityIcons[entry.entityType] ?? <Activity className="h-4 w-4" />}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-foreground">
+                  <span className="font-semibold">{entry.actorLabel}</span>
+                  {" — "}
+                  {entry.summary}
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {formatRelativeTime(entry.createdAt)}
+                </p>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </section>
   );

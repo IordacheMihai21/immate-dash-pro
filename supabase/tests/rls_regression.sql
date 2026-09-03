@@ -116,6 +116,35 @@ begin
 
   reset role;
 
+  -- Test 4 (2026-09-03 activity_log): the company_profiles update above
+  -- must have produced exactly one log entry, visible only to company A.
+  perform set_config('request.jwt.claims', json_build_object('sub', '00000000-aaaa-4aaa-8aaa-000000000a01', 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  select count(*) into visible_count from public.activity_log where company_id = company_a and action = 'company_profile.updated';
+  perform pg_temp.assert(visible_count = 1, 'expected exactly one company_profile.updated activity_log entry for user A''s own update');
+
+  reset role;
+
+  perform set_config('request.jwt.claims', json_build_object('sub', '00000000-bbbb-4bbb-8bbb-000000000b01', 'role', 'authenticated')::text, true);
+  set local role authenticated;
+
+  select count(*) into visible_count from public.activity_log where company_id = company_a;
+  perform pg_temp.assert(visible_count = 0, 'user B can read company A''s activity_log -- cross-company read leak on activity_log');
+
+  -- log_activity must not be directly callable, and must not be usable to
+  -- forge an entry into a company the caller does not belong to, even if
+  -- the EXECUTE grant were ever accidentally restored.
+  begin
+    perform public.log_activity(company_a, 'invoice', null, 'invoice.created', 'FORGED entry', '{}'::jsonb);
+    perform pg_temp.assert(false, 'log_activity was directly callable by user B (not a member of company A) -- EXECUTE grant regression');
+  exception
+    when insufficient_privilege then
+      null; -- expected
+  end;
+
+  reset role;
+
   raise notice 'RLS REGRESSION CHECK: all assertions passed.';
 end $$;
 
