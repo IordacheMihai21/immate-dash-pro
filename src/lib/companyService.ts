@@ -119,20 +119,54 @@ export async function upsertCompanyProfile(profile: CompanyProfileInput): Promis
     throw new Error("Trebuie sa fii autentificat pentru a salva profilul companiei.");
   }
 
-  const payload = {
-    auth_user_id: authUser.id,
-    ...cleanProfile(profile),
-    updated_at: new Date().toISOString(),
-  };
+  const cleanedProfile = cleanProfile(profile);
+  const updatedAt = new Date().toISOString();
+
+  // Nu folosim .upsert()/ON CONFLICT DO UPDATE: Postgres cere ca randul propus
+  // sa treaca simultan prin WITH CHECK-ul de INSERT si prin cel de UPDATE de
+  // fiecare data cand apare un conflict real, indiferent daca ambele policy-uri
+  // ar trece separat -- pe acest tabel, combinatia esueaza mereu cu "new row
+  // violates row-level security policy", chiar si pentru update-uri legitime
+  // ale proprietarului. Facem explicit select-apoi-insert-sau-update.
+  const { data: existing, error: existingError } = await supabase
+    .from("company_profiles")
+    .select("id")
+    .eq("auth_user_id", authUser.id)
+    .maybeSingle();
+
+  if (existingError) {
+    throw new Error(`Profilul companiei nu a putut fi citit: ${existingError.message}`);
+  }
+
+  if (existing) {
+    const { error: updateError } = await supabase
+      .from("company_profiles")
+      .update({ ...cleanedProfile, updated_at: updatedAt })
+      .eq("auth_user_id", authUser.id);
+
+    if (updateError) {
+      throw new Error(`Profilul companiei nu a putut fi salvat: ${updateError.message}`);
+    }
+  } else {
+    const { error: insertError } = await supabase.from("company_profiles").insert({
+      auth_user_id: authUser.id,
+      ...cleanedProfile,
+      updated_at: updatedAt,
+    });
+
+    if (insertError) {
+      throw new Error(`Profilul companiei nu a putut fi salvat: ${insertError.message}`);
+    }
+  }
 
   const { data, error } = await supabase
     .from("company_profiles")
-    .upsert(payload, { onConflict: "auth_user_id" })
     .select(profileColumns)
+    .eq("auth_user_id", authUser.id)
     .single();
 
   if (error) {
-    throw new Error(`Profilul companiei nu a putut fi salvat: ${error.message}`);
+    throw new Error(`Profilul companiei nu a putut fi citit dupa salvare: ${error.message}`);
   }
 
   return data as CompanyProfile;
