@@ -1,8 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import {
+  AlertTriangle,
   Bell,
   Building2,
+  CheckCircle2,
   ChevronDown,
+  Info,
   LogOut,
   Menu,
   Moon,
@@ -22,15 +25,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
+import { CommandMenu } from "@/components/command-menu";
+import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { getCompanyProfile, type CompanyProfile } from "@/lib/companyService";
 import { getCurrentUserProfile, type CurrentUserProfile } from "@/lib/authUserService";
+import { getDashboardNotifications, type AppNotification } from "@/lib/notifications";
 import { supabase } from "@/lib/supabaseClient";
+import { cn } from "@/lib/utils";
 
 const fallbackCompany = {
   name: "Compania mea",
   cui: "CUI necompletat",
 };
+
+const isMac =
+  typeof navigator !== "undefined" && /Mac|iPhone|iPad|iPod/.test(navigator.platform ?? "");
 
 function getCompanyDisplay(profile: CompanyProfile | null | undefined) {
   return {
@@ -41,6 +50,12 @@ function getCompanyDisplay(profile: CompanyProfile | null | undefined) {
 
 export function AppHeader({ onSidebarToggle }: { onSidebarToggle: () => void }) {
   const [darkMode, setDarkMode] = useState(false);
+  const [commandMenuOpen, setCommandMenuOpen] = useState(false);
+  const { data: dashboardData } = useDashboardData();
+  const notifications = getDashboardNotifications(dashboardData);
+  const hasAttentionNotification = notifications.some(
+    (notification) => notification.tone === "risk" || notification.tone === "warning",
+  );
   const [companyDisplay, setCompanyDisplay] = useState(fallbackCompany);
   const [userProfile, setUserProfile] = useState<CurrentUserProfile>({
     displayName: "Utilizator IMMapp",
@@ -133,30 +148,32 @@ export function AppHeader({ onSidebarToggle }: { onSidebarToggle: () => void }) 
   }
 
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
+    <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
       <div className="flex h-16 items-center gap-3 px-4 sm:px-6 lg:px-8">
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          className="shrink-0 rounded-lg"
+          className="shrink-0 rounded-full"
           onClick={onSidebarToggle}
           aria-label="Deschide meniul"
         >
           <Menu className="h-5 w-5" />
         </Button>
 
-        <div className="hidden min-w-0 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500 md:flex md:w-[360px] lg:w-[460px]">
+        <button
+          type="button"
+          onClick={() => setCommandMenuOpen(true)}
+          className="hidden min-w-0 items-center gap-2 rounded-full border border-border bg-muted px-4 py-2 text-sm text-muted-foreground transition hover:border-primary/30 hover:text-foreground md:flex md:w-[360px] lg:w-[460px]"
+        >
           <Search className="h-4 w-4 shrink-0" />
-          <Input
-            className="h-5 border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0"
-            placeholder="Cauta sau tasteaza comanda..."
-            aria-label="Cauta"
-          />
-          <span className="ml-auto hidden min-w-12 whitespace-nowrap rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-center text-[11px] text-slate-400 lg:inline-block">
-            Ctrl K
+          <span className="truncate">Cauta sau tasteaza o comanda...</span>
+          <span className="ml-auto hidden min-w-12 whitespace-nowrap rounded-md border border-border bg-card px-1.5 py-0.5 text-center text-[11px] text-muted-foreground lg:inline-block">
+            {isMac ? "⌘K" : "Ctrl K"}
           </span>
-        </div>
+        </button>
+
+        <CommandMenu open={commandMenuOpen} onOpenChange={setCommandMenuOpen} />
 
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
           <Button
@@ -181,44 +198,52 @@ export function AppHeader({ onSidebarToggle }: { onSidebarToggle: () => void }) 
                 aria-label="Notificari"
               >
                 <Bell className="h-4 w-4" />
-                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-blue-500 ring-2 ring-white" />
+                {notifications.length > 0 ? (
+                  <span
+                    className={cn(
+                      "absolute right-2 top-2 h-2 w-2 rounded-full ring-2 ring-background",
+                      hasAttentionNotification ? "bg-destructive" : "bg-primary",
+                    )}
+                  />
+                ) : null}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80">
               <DropdownMenuLabel>Notificari</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <NotificationItem
-                title="Predictia AI necesita actualizare"
-                description="Datele financiare s-au modificat recent."
-              />
-              <NotificationItem
-                title="Documente procesate"
-                description="Noile facturi sunt disponibile in panoul principal."
-              />
+              {notifications.length === 0 ? (
+                <p className="px-2 py-4 text-center text-sm text-muted-foreground">
+                  Nimic nou momentan.
+                </p>
+              ) : (
+                notifications.map((notification) => (
+                  <NotificationItem key={notification.id} notification={notification} />
+                ))
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link to="/app/ai-forecast">Vezi toate notificarile</Link>
+                <Link to="/app">Vezi panoul principal</Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button type="button" variant="ghost" className="h-10 gap-2 rounded-lg px-2">
+              <Button type="button" variant="ghost" className="h-10 gap-2 rounded-full px-2">
                 <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-blue-500 text-xs text-white">
+                  <AvatarFallback className="bg-primary text-xs text-primary-foreground">
                     {userProfile.initials}
                   </AvatarFallback>
                 </Avatar>
 
                 <div className="hidden min-w-0 text-left leading-tight sm:block">
-                  <p className="truncate text-sm font-semibold text-slate-900">
+                  <p className="truncate text-sm font-semibold text-foreground">
                     {userProfile.displayName}
                   </p>
-                  <p className="truncate text-xs text-slate-500">{userProfile.role}</p>
+                  <p className="truncate text-xs text-muted-foreground">{userProfile.role}</p>
                 </div>
 
-                <ChevronDown className="hidden h-3.5 w-3.5 text-slate-500 sm:block" />
+                <ChevronDown className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64">
@@ -260,14 +285,41 @@ export function AppHeader({ onSidebarToggle }: { onSidebarToggle: () => void }) 
   );
 }
 
-function NotificationItem({ title, description }: { title: string; description: string }) {
+const notificationToneStyles: Record<AppNotification["tone"], string> = {
+  risk: "bg-destructive/15 text-destructive",
+  warning: "bg-warning/20 text-warning",
+  info: "bg-primary/15 text-primary",
+  success: "bg-success/20 text-success",
+};
+
+const notificationToneIcons: Record<AppNotification["tone"], typeof Bell> = {
+  risk: AlertTriangle,
+  warning: AlertTriangle,
+  info: Info,
+  success: CheckCircle2,
+};
+
+function NotificationItem({ notification }: { notification: AppNotification }) {
+  const Icon = notificationToneIcons[notification.tone];
+
   return (
-    <DropdownMenuItem className="items-start gap-3 py-3">
-      <span className="mt-1 h-2 w-2 rounded-full bg-blue-500" />
-      <span>
-        <span className="block text-sm font-medium">{title}</span>
-        <span className="mt-0.5 block text-xs text-muted-foreground">{description}</span>
-      </span>
+    <DropdownMenuItem className="items-start gap-3 py-3" asChild>
+      <Link to={notification.href}>
+        <span
+          className={cn(
+            "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full",
+            notificationToneStyles[notification.tone],
+          )}
+        >
+          <Icon className="h-3.5 w-3.5" />
+        </span>
+        <span>
+          <span className="block text-sm font-medium">{notification.title}</span>
+          <span className="mt-0.5 block text-xs text-muted-foreground">
+            {notification.description}
+          </span>
+        </span>
+      </Link>
     </DropdownMenuItem>
   );
 }

@@ -1,122 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import {
-  BarChart3,
-  BrainCircuit,
-  Building2,
-  ChevronRight,
-  CircleHelp,
-  FileCode2,
-  FileText,
-  Gauge,
-  Handshake,
-  LayoutDashboard,
-  LineChart,
-  Menu,
-  Network,
-  ReceiptText,
-  ScanText,
-  Settings,
-  ShieldCheck,
-  TrendingUp,
-  Users,
-  Wallet,
-  X,
-} from "lucide-react";
+import { Building2, ChevronRight, Menu, X } from "lucide-react";
+import { menuGroups, supportItems, type SidebarGroup, type SidebarLink } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
-
-type SidebarLink = {
-  label: string;
-  to?: string;
-  icon: typeof LayoutDashboard;
-  exact?: boolean;
-  active?: boolean;
-  badge?: string;
-};
-
-type SidebarGroup = {
-  title: string;
-  icon: typeof LayoutDashboard;
-  items: SidebarLink[];
-};
-
-const menuGroups: SidebarGroup[] = [
-  {
-    title: "Panou principal",
-    icon: LayoutDashboard,
-    items: [{ label: "Privire generala", to: "/app", icon: Gauge, exact: true }],
-  },
-  {
-    title: "Documente",
-    icon: FileText,
-    items: [{ label: "Documente financiare", to: "/app/documente", icon: FileText }],
-  },
-  {
-    title: "e-Facturi",
-    icon: FileCode2,
-    items: [
-      { label: "Toate facturile", to: "/app/e-facturi", icon: ReceiptText },
-      { label: "Furnizori", to: "/app/furnizori", icon: Handshake },
-      { label: "Clienti", to: "/app/clienti", icon: Users },
-    ],
-  },
-  {
-    title: "AI Center",
-    icon: BrainCircuit,
-    items: [
-      {
-        label: "Document AI",
-        to: "/app/ai-center/document-ai",
-        icon: ScanText,
-      },
-      {
-        label: "Layout AI",
-        to: "/app/ai-center/layout-ai",
-        icon: Network,
-      },
-      {
-        label: "Evaluare AI",
-        to: "/app/ai-center/evaluare-ai",
-        icon: BarChart3,
-      },
-      {
-        label: "Monitorizare AI",
-        to: "/app/ai-center/monitorizare-ai",
-        icon: ShieldCheck,
-      },
-      {
-        label: "Forecast AI",
-        to: "/app/ai-center/predictii-financiare",
-        icon: TrendingUp,
-      },
-    ],
-  },
-  {
-    title: "Rapoarte",
-    icon: BarChart3,
-    items: [
-      { label: "Cash-flow", to: "/app/rapoarte/cash-flow", icon: LineChart },
-      { label: "Venituri", to: "/app/rapoarte/revenue", icon: TrendingUp },
-      { label: "Cheltuieli", to: "/app/rapoarte/expenses", icon: Wallet },
-      { label: "TVA", to: "/app/rapoarte/tva", icon: ReceiptText },
-      { label: "Profitabilitate", to: "/app/rapoarte/profitabilitate", icon: BarChart3 },
-      { label: "Activitate lunara", to: "/app/rapoarte/activitate-lunara", icon: Gauge },
-    ],
-  },
-  {
-    title: "Setari",
-    icon: Settings,
-    items: [
-      { label: "Profil companie", to: "/app/setari", icon: Building2 },
-      { label: "Utilizatori", to: "/app/setari/utilizatori", icon: Users },
-      { label: "Preferinte", to: "/app/setari/preferinte", icon: Settings },
-    ],
-  },
-];
-
-const supportItems: SidebarLink[] = [
-  { label: "Ajutor", to: "/app/ajutor", icon: CircleHelp },
-  { label: "Ghid utilizare", to: "/app/ghid-utilizare", icon: FileText },
-];
 
 export function AppSidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -125,7 +10,7 @@ export function AppSidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClo
     <>
       <div
         className={cn(
-          "fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-sm transition-opacity md:hidden",
+          "fixed inset-0 z-40 bg-background/60 backdrop-blur-sm transition-opacity md:hidden",
           mobileOpen ? "opacity-100" : "pointer-events-none opacity-0",
         )}
         onClick={onClose}
@@ -133,25 +18,25 @@ export function AppSidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClo
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-white/10 bg-[#111827] text-slate-200 shadow-2xl transition-transform duration-200 md:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-2xl transition-transform duration-200 md:translate-x-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <div className="flex h-16 items-center justify-between border-b border-white/10 px-5">
+        <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-5">
           <Link to="/app" className="flex min-w-0 items-center gap-3" onClick={onClose}>
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500 text-white shadow-lg shadow-blue-950/30">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground shadow-lg shadow-black/20">
               <Building2 className="h-4 w-4" />
             </div>
 
             <div className="min-w-0 leading-tight">
-              <p className="truncate text-sm font-semibold text-white">IMMapp</p>
-              <p className="text-[11px] uppercase text-slate-400">Sistem financiar</p>
+              <p className="truncate text-sm font-semibold text-sidebar-foreground">IMMapp</p>
+              <p className="text-[11px] uppercase text-sidebar-foreground/60">Sistem financiar</p>
             </div>
           </Link>
 
           <button
             type="button"
-            className="rounded-md p-2 text-slate-400 transition hover:bg-white/10 hover:text-white md:hidden"
+            className="rounded-md p-2 text-sidebar-foreground/60 transition hover:bg-sidebar-accent hover:text-sidebar-foreground md:hidden"
             onClick={onClose}
             aria-label="Inchide meniul"
           >
@@ -163,7 +48,9 @@ export function AppSidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClo
           <SidebarSection title="MENIU" groups={menuGroups} pathname={pathname} onClose={onClose} />
 
           <div className="mt-7">
-            <p className="mb-3 px-2 text-[11px] font-semibold uppercase text-slate-500">SUPORT</p>
+            <p className="mb-3 px-2 text-[11px] font-semibold uppercase text-sidebar-foreground/50">
+              SUPORT
+            </p>
             <ul className="space-y-1">
               {supportItems.map((item) => (
                 <SidebarItem key={item.label} item={item} pathname={pathname} onClose={onClose} />
@@ -172,13 +59,13 @@ export function AppSidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClo
           </div>
         </nav>
 
-        <div className="border-t border-white/10 p-4">
-          <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
-            <div className="mb-2 flex items-center gap-2 text-sm font-medium text-white">
-              <Menu className="h-4 w-4 text-blue-300" />
+        <div className="border-t border-sidebar-border p-4">
+          <div className="rounded-xl border border-sidebar-border bg-sidebar-accent/40 p-4">
+            <div className="mb-2 flex items-center gap-2 text-sm font-medium text-sidebar-foreground">
+              <Menu className="h-4 w-4 text-sidebar-primary" />
               Control financiar
             </div>
-            <p className="text-xs leading-5 text-slate-400">
+            <p className="text-xs leading-5 text-sidebar-foreground/60">
               Import XML, analiza cash-flow si predictii AI intr-un singur spatiu.
             </p>
           </div>
@@ -201,7 +88,9 @@ function SidebarSection({
 }) {
   return (
     <div>
-      <p className="mb-3 px-2 text-[11px] font-semibold uppercase text-slate-500">{title}</p>
+      <p className="mb-3 px-2 text-[11px] font-semibold uppercase text-sidebar-foreground/50">
+        {title}
+      </p>
 
       <div className="space-y-5">
         {groups.map((group) => {
@@ -212,8 +101,8 @@ function SidebarSection({
             <div key={group.title}>
               <div
                 className={cn(
-                  "mb-1 flex items-center gap-2 px-2 text-xs font-semibold uppercase text-slate-400",
-                  groupActive && "text-blue-200",
+                  "mb-1 flex items-center gap-2 px-2 text-xs font-semibold uppercase text-sidebar-foreground/60",
+                  groupActive && "text-sidebar-primary",
                 )}
               >
                 <GroupIcon className="h-3.5 w-3.5" />
@@ -255,7 +144,7 @@ function SidebarItem({
       <Icon className="h-4 w-4 shrink-0" />
       <span className="min-w-0 flex-1 truncate">{item.label}</span>
       {item.badge && (
-        <span className="rounded-full border border-white/10 bg-white/10 px-2 py-0.5 text-[10px] font-medium text-slate-300">
+        <span className="rounded-full border border-sidebar-border bg-sidebar-accent px-2 py-0.5 text-[10px] font-medium text-sidebar-foreground/70">
           {item.badge}
         </span>
       )}
@@ -268,7 +157,7 @@ function SidebarItem({
         <button
           type="button"
           disabled
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-slate-500"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-sidebar-foreground/40"
         >
           {content}
         </button>
@@ -282,10 +171,10 @@ function SidebarItem({
         to={item.to}
         onClick={onClose}
         className={cn(
-          "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition",
+          "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-150 ease-out",
           active
-            ? "bg-blue-500 text-white shadow-lg shadow-blue-950/25"
-            : "text-slate-300 hover:bg-white/[0.07] hover:text-white",
+            ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg shadow-black/20"
+            : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
         )}
       >
         {content}
