@@ -103,6 +103,7 @@ export const menuGroups: SidebarGroup[] = [
     items: [
       { label: "Profil companie", to: "/app/setari", icon: Building2 },
       { label: "Utilizatori", to: "/app/setari/utilizatori", icon: Users },
+      { label: "Securitate", to: "/app/setari/securitate", icon: ShieldCheck },
       { label: "Preferinte", to: "/app/setari/preferinte", icon: Settings },
     ],
   },

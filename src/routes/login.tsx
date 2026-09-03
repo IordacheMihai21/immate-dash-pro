@@ -7,8 +7,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Building2, Loader2 } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
+import { MfaVerifyForm } from "@/components/mfa-verify-form";
 import { ensureAppUser } from "@/lib/appUserService";
 import { claimPendingCompanyInvite } from "@/lib/companyMembersService";
+import { needsMfaChallenge } from "@/lib/mfaService";
 import { supabase } from "@/lib/supabaseClient";
 
 export const Route = createFileRoute("/login")({
@@ -20,6 +22,7 @@ function LoginPage() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [awaitingMfa, setAwaitingMfa] = useState(false);
 
   function getLoginErrorMessage(message: string) {
     const normalizedMessage = message.toLowerCase();
@@ -37,6 +40,29 @@ function LoginPage() {
 
     return "Autentificarea nu a reusit. Incearca din nou.";
   }
+
+  const completeLogin = async () => {
+    try {
+      await ensureAppUser();
+    } catch (error) {
+      console.warn("App user sync failed after login.", error);
+    }
+
+    const claimedInvite = await claimPendingCompanyInvite();
+
+    if (claimedInvite) {
+      toast.success("Te-ai alaturat companiei la care ai fost invitat.");
+    } else {
+      toast.success("Autentificare reusita.");
+    }
+
+    await navigate({ to: "/app", replace: true });
+  };
+
+  const handleMfaCancelled = () => {
+    setAwaitingMfa(false);
+    void supabase.auth.signOut();
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -60,20 +86,12 @@ function LoginPage() {
         return;
       }
 
-      try {
-        await ensureAppUser();
-      } catch (error) {
-        console.warn("App user sync failed after login.", error);
+      if (await needsMfaChallenge()) {
+        setAwaitingMfa(true);
+        return;
       }
 
-      const claimedInvite = await claimPendingCompanyInvite();
-
-      if (claimedInvite) {
-        toast.success("Te-ai alaturat companiei la care ai fost invitat.");
-      } else {
-        toast.success("Autentificare reusita.");
-      }
-      await navigate({ to: "/app", replace: true });
+      await completeLogin();
     } catch {
       const message = "Autentificarea nu a reusit. Incearca din nou.";
       setErrorMessage(message);
@@ -82,6 +100,10 @@ function LoginPage() {
       setIsSubmitting(false);
     }
   };
+
+  if (awaitingMfa) {
+    return <MfaVerifyForm onVerified={completeLogin} onCancel={handleMfaCancelled} />;
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-secondary/40 px-4 py-12">

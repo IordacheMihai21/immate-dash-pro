@@ -9,9 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermeniRouteImport } from './routes/termeni'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as ConfidentialitateRouteImport } from './routes/confidentialitate'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
@@ -29,6 +31,7 @@ import { Route as AppRapoarteIndexRouteImport } from './routes/app.rapoarte.inde
 import { Route as AppEFacturiIndexRouteImport } from './routes/app.e-facturi.index'
 import { Route as AppAiCenterIndexRouteImport } from './routes/app.ai-center.index'
 import { Route as AppSetariUtilizatoriRouteImport } from './routes/app.setari.utilizatori'
+import { Route as AppSetariSecuritateRouteImport } from './routes/app.setari.securitate'
 import { Route as AppSetariPreferinteRouteImport } from './routes/app.setari.preferinte'
 import { Route as AppRapoarteTvaRouteImport } from './routes/app.rapoarte.tva'
 import { Route as AppRapoarteRevenueRouteImport } from './routes/app.rapoarte.revenue'
@@ -44,6 +47,11 @@ import { Route as AppAiCenterLayoutAiRouteImport } from './routes/app.ai-center.
 import { Route as AppAiCenterEvaluareAiRouteImport } from './routes/app.ai-center.evaluare-ai'
 import { Route as AppAiCenterDocumentAiRouteImport } from './routes/app.ai-center.document-ai'
 
+const TermeniRoute = TermeniRouteImport.update({
+  id: '/termeni',
+  path: '/termeni',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
@@ -57,6 +65,11 @@ const LoginRoute = LoginRouteImport.update({
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfidentialitateRoute = ConfidentialitateRouteImport.update({
+  id: '/confidentialitate',
+  path: '/confidentialitate',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRoute = AppRouteImport.update({
@@ -144,6 +157,11 @@ const AppSetariUtilizatoriRoute = AppSetariUtilizatoriRouteImport.update({
   path: '/utilizatori',
   getParentRoute: () => AppSetariRoute,
 } as any)
+const AppSetariSecuritateRoute = AppSetariSecuritateRouteImport.update({
+  id: '/securitate',
+  path: '/securitate',
+  getParentRoute: () => AppSetariRoute,
+} as any)
 const AppSetariPreferinteRoute = AppSetariPreferinteRouteImport.update({
   id: '/preferinte',
   path: '/preferinte',
@@ -222,9 +240,11 @@ const AppAiCenterDocumentAiRoute = AppAiCenterDocumentAiRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/confidentialitate': typeof ConfidentialitateRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/termeni': typeof TermeniRoute
   '/app/ai-center': typeof AppAiCenterRouteWithChildren
   '/app/ai-forecast': typeof AppAiForecastRoute
   '/app/ajutor': typeof AppAjutorRoute
@@ -249,6 +269,7 @@ export interface FileRoutesByFullPath {
   '/app/rapoarte/revenue': typeof AppRapoarteRevenueRoute
   '/app/rapoarte/tva': typeof AppRapoarteTvaRoute
   '/app/setari/preferinte': typeof AppSetariPreferinteRoute
+  '/app/setari/securitate': typeof AppSetariSecuritateRoute
   '/app/setari/utilizatori': typeof AppSetariUtilizatoriRoute
   '/app/ai-center/': typeof AppAiCenterIndexRoute
   '/app/e-facturi/': typeof AppEFacturiIndexRoute
@@ -257,9 +278,11 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/confidentialitate': typeof ConfidentialitateRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/termeni': typeof TermeniRoute
   '/app/ai-forecast': typeof AppAiForecastRoute
   '/app/ajutor': typeof AppAjutorRoute
   '/app/clienti': typeof AppClientiRoute
@@ -281,6 +304,7 @@ export interface FileRoutesByTo {
   '/app/rapoarte/revenue': typeof AppRapoarteRevenueRoute
   '/app/rapoarte/tva': typeof AppRapoarteTvaRoute
   '/app/setari/preferinte': typeof AppSetariPreferinteRoute
+  '/app/setari/securitate': typeof AppSetariSecuritateRoute
   '/app/setari/utilizatori': typeof AppSetariUtilizatoriRoute
   '/app/ai-center': typeof AppAiCenterIndexRoute
   '/app/e-facturi': typeof AppEFacturiIndexRoute
@@ -291,9 +315,11 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/confidentialitate': typeof ConfidentialitateRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/termeni': typeof TermeniRoute
   '/app/ai-center': typeof AppAiCenterRouteWithChildren
   '/app/ai-forecast': typeof AppAiForecastRoute
   '/app/ajutor': typeof AppAjutorRoute
@@ -318,6 +344,7 @@ export interface FileRoutesById {
   '/app/rapoarte/revenue': typeof AppRapoarteRevenueRoute
   '/app/rapoarte/tva': typeof AppRapoarteTvaRoute
   '/app/setari/preferinte': typeof AppSetariPreferinteRoute
+  '/app/setari/securitate': typeof AppSetariSecuritateRoute
   '/app/setari/utilizatori': typeof AppSetariUtilizatoriRoute
   '/app/ai-center/': typeof AppAiCenterIndexRoute
   '/app/e-facturi/': typeof AppEFacturiIndexRoute
@@ -329,9 +356,11 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/app'
+    | '/confidentialitate'
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/termeni'
     | '/app/ai-center'
     | '/app/ai-forecast'
     | '/app/ajutor'
@@ -356,6 +385,7 @@ export interface FileRouteTypes {
     | '/app/rapoarte/revenue'
     | '/app/rapoarte/tva'
     | '/app/setari/preferinte'
+    | '/app/setari/securitate'
     | '/app/setari/utilizatori'
     | '/app/ai-center/'
     | '/app/e-facturi/'
@@ -364,9 +394,11 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/confidentialitate'
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/termeni'
     | '/app/ai-forecast'
     | '/app/ajutor'
     | '/app/clienti'
@@ -388,6 +420,7 @@ export interface FileRouteTypes {
     | '/app/rapoarte/revenue'
     | '/app/rapoarte/tva'
     | '/app/setari/preferinte'
+    | '/app/setari/securitate'
     | '/app/setari/utilizatori'
     | '/app/ai-center'
     | '/app/e-facturi'
@@ -397,9 +430,11 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/app'
+    | '/confidentialitate'
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/termeni'
     | '/app/ai-center'
     | '/app/ai-forecast'
     | '/app/ajutor'
@@ -424,6 +459,7 @@ export interface FileRouteTypes {
     | '/app/rapoarte/revenue'
     | '/app/rapoarte/tva'
     | '/app/setari/preferinte'
+    | '/app/setari/securitate'
     | '/app/setari/utilizatori'
     | '/app/ai-center/'
     | '/app/e-facturi/'
@@ -434,13 +470,22 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
+  ConfidentialitateRoute: typeof ConfidentialitateRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  TermeniRoute: typeof TermeniRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/termeni': {
+      id: '/termeni'
+      path: '/termeni'
+      fullPath: '/termeni'
+      preLoaderRoute: typeof TermeniRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/register': {
       id: '/register'
       path: '/register'
@@ -460,6 +505,13 @@ declare module '@tanstack/react-router' {
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confidentialitate': {
+      id: '/confidentialitate'
+      path: '/confidentialitate'
+      fullPath: '/confidentialitate'
+      preLoaderRoute: typeof ConfidentialitateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app': {
@@ -579,6 +631,13 @@ declare module '@tanstack/react-router' {
       path: '/utilizatori'
       fullPath: '/app/setari/utilizatori'
       preLoaderRoute: typeof AppSetariUtilizatoriRouteImport
+      parentRoute: typeof AppSetariRoute
+    }
+    '/app/setari/securitate': {
+      id: '/app/setari/securitate'
+      path: '/securitate'
+      fullPath: '/app/setari/securitate'
+      preLoaderRoute: typeof AppSetariSecuritateRouteImport
       parentRoute: typeof AppSetariRoute
     }
     '/app/setari/preferinte': {
@@ -730,12 +789,14 @@ const AppRapoarteRouteWithChildren = AppRapoarteRoute._addFileChildren(
 
 interface AppSetariRouteChildren {
   AppSetariPreferinteRoute: typeof AppSetariPreferinteRoute
+  AppSetariSecuritateRoute: typeof AppSetariSecuritateRoute
   AppSetariUtilizatoriRoute: typeof AppSetariUtilizatoriRoute
   AppSetariIndexRoute: typeof AppSetariIndexRoute
 }
 
 const AppSetariRouteChildren: AppSetariRouteChildren = {
   AppSetariPreferinteRoute: AppSetariPreferinteRoute,
+  AppSetariSecuritateRoute: AppSetariSecuritateRoute,
   AppSetariUtilizatoriRoute: AppSetariUtilizatoriRoute,
   AppSetariIndexRoute: AppSetariIndexRoute,
 }
@@ -781,9 +842,11 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
+  ConfidentialitateRoute: ConfidentialitateRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  TermeniRoute: TermeniRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
