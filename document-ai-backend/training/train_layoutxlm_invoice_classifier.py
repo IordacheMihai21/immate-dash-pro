@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Optional
 
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_DATA = BACKEND_ROOT / "datasets/fatura/processed"
+DEFAULT_DATA = BACKEND_ROOT / "datasets/fatura/processed_holdout"
 DEFAULT_LABEL_MAP = BACKEND_ROOT / "datasets/fatura/inferred_label_map.json"
 DEFAULT_OUTPUT = BACKEND_ROOT / "models/layoutxlm-invoice-token-classifier"
 
@@ -245,6 +245,23 @@ def main() -> int:
             trainer.save_model(str(output))
             tokenizer.save_pretrained(str(output))
             image_processor.save_pretrained(str(output))
+            split_summary_path = data_root / "split_summary.json"
+            split_method = (
+                json.loads(split_summary_path.read_text(encoding="utf-8"))
+                if split_summary_path.exists()
+                else {
+                    "method": "unknown",
+                    "warning": (
+                        "No split_summary.json next to --data. If this data came from "
+                        "prepare_layoutxlm_dataset.py directly (FATURA's official "
+                        "strat1_* split), be aware that split does NOT hold out whole "
+                        "invoice templates -- every template appears in train, dev and "
+                        "test, so test accuracy mostly measures template memorization, "
+                        "not generalization to unseen layouts. Use "
+                        "split_by_template_holdout.py for a trustworthy number."
+                    ),
+                }
+            )
             (output / "immapp_training_manifest.json").write_text(
                 json.dumps(
                     {
@@ -254,6 +271,7 @@ def main() -> int:
                         "test_documents": len(test_records),
                         "id2label": id2label,
                         "label_mapping_status": "inferred_not_official",
+                        "split_method": split_method,
                         "test_metrics": test_metrics,
                         "seed": args.seed,
                     },
