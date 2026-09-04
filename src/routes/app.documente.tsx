@@ -15,7 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { deleteDocument, deleteDocuments, getDocuments } from "@/lib/invoiceService";
-import { formatRON } from "@/lib/mock-data";
+import { formatRON } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -188,7 +188,7 @@ function DocumentsPage() {
       </InfoBanner>
 
       {errorMessage && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+        <div className="rounded-xl border border-destructive/30 bg-destructive/15 p-4 text-sm text-destructive">
           {errorMessage}
         </div>
       )}
@@ -199,7 +199,7 @@ function DocumentsPage() {
         action={
           selectedCount > 0 ? (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
+              <span className="rounded-full bg-secondary px-3 py-1 text-sm font-medium text-primary">
                 {selectedCount} selectate
               </span>
               <Button
@@ -220,7 +220,7 @@ function DocumentsPage() {
         contentClassName="p-0"
       >
         {isLoading ? (
-          <div className="flex min-h-[280px] items-center justify-center gap-2 text-slate-500">
+          <div className="flex min-h-[280px] items-center justify-center gap-2 text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             Se incarca documentele...
           </div>
@@ -240,7 +240,7 @@ function DocumentsPage() {
                       type="checkbox"
                       checked={allVisibleDocumentsSelected}
                       onChange={toggleAllDocuments}
-                      className="h-4 w-4 rounded border-slate-300"
+                      className="h-4 w-4 rounded border-border"
                       aria-label="Selecteaza toate documentele"
                     />
                   </TableHead>
@@ -262,20 +262,20 @@ function DocumentsPage() {
                   const isDeletingThisDocument = deletingDocumentId === document.id;
 
                   return (
-                    <TableRow key={document.id} className={cn(isSelected && "bg-blue-50/60")}>
+                    <TableRow key={document.id} className={cn(isSelected && "bg-secondary/60")}>
                       <TableCell>
                         <input
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => toggleDocumentSelection(document.id)}
-                          className="h-4 w-4 rounded border-slate-300"
+                          className="h-4 w-4 rounded border-border"
                           aria-label={`Selecteaza documentul ${document.file_name}`}
                         />
                       </TableCell>
 
                       <TableCell>
-                        <div className="font-medium text-slate-900">{document.file_name}</div>
-                        <div className="text-xs text-slate-500">
+                        <div className="font-medium text-foreground">{document.file_name}</div>
+                        <div className="text-xs text-muted-foreground">
                           {getDocumentKindLabel(document)}
                         </div>
                       </TableCell>

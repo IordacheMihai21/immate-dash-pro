@@ -585,7 +585,7 @@ async function createProcessedImageBlob(
     }
 
     if (mode === "threshold") {
-      applyThreshold(imageData, 156);
+      applyThreshold(imageData, computeOtsuThreshold(imageData));
     }
 
     if (mode === "sharpened") {
@@ -647,6 +647,65 @@ function applyContrast(imageData: ImageData, factor: number) {
     data[index + 1] = contrasted;
     data[index + 2] = contrasted;
   }
+}
+
+/**
+ * Otsu's method: picks the threshold that best splits the grayscale histogram into
+ * two classes (ink vs. paper) by maximizing between-class variance, instead of a
+ * fixed guess -- adapts per-document to lighting/scan exposure instead of assuming
+ * every image has the same brightness.
+ */
+function computeOtsuThreshold(imageData: ImageData): number {
+  const { data } = imageData;
+  const histogram = new Array(256).fill(0);
+  let totalPixels = 0;
+
+  for (let index = 0; index < data.length; index += 4) {
+    const gray = Math.round(
+      data[index] * 0.299 + data[index + 1] * 0.587 + data[index + 2] * 0.114,
+    );
+
+    histogram[gray] += 1;
+    totalPixels += 1;
+  }
+
+  let sumAll = 0;
+  for (let level = 0; level < 256; level += 1) {
+    sumAll += level * histogram[level];
+  }
+
+  let sumBackground = 0;
+  let weightBackground = 0;
+  let bestThreshold = 128;
+  let bestVariance = 0;
+
+  for (let level = 0; level < 256; level += 1) {
+    weightBackground += histogram[level];
+
+    if (weightBackground === 0) {
+      continue;
+    }
+
+    const weightForeground = totalPixels - weightBackground;
+
+    if (weightForeground === 0) {
+      break;
+    }
+
+    sumBackground += level * histogram[level];
+
+    const meanBackground = sumBackground / weightBackground;
+    const meanForeground = (sumAll - sumBackground) / weightForeground;
+    const betweenVariance =
+      weightBackground * weightForeground * (meanBackground - meanForeground) ** 2;
+
+    if (betweenVariance > bestVariance) {
+      bestVariance = betweenVariance;
+      bestThreshold = level;
+    }
+  }
+
+  return bestThreshold;
 }
 
 function applyThreshold(imageData: ImageData, threshold: number) {

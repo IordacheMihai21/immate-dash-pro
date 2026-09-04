@@ -142,17 +142,17 @@ export function DocumentAiEvaluation({
 
   return (
     <div className="space-y-6">
-      <section className="overflow-hidden rounded-3xl border border-blue-100 bg-gradient-to-br from-slate-950 via-blue-950 to-blue-900 p-6 text-white shadow-lg shadow-blue-950/10 sm:p-8">
+      <section className="overflow-hidden rounded-3xl border border-sidebar-border bg-sidebar p-6 text-sidebar-foreground shadow-lg sm:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-blue-50 backdrop-blur">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur">
               <Sparkles className="h-3.5 w-3.5" />
               Evaluare AI activă
             </div>
-            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            <h2 className="text-2xl font-normal tracking-tight sm:text-3xl">
               Validare automată pe dataset FATURA
             </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-blue-100 sm:text-base">
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-sidebar-foreground/80 sm:text-base">
               Compară datele extrase de IMMapp cu adnotările de referință și calculează metrici
               precum Precizie, Reamintire, Scor F1 și Acuratețe pe câmpuri.
             </p>
@@ -185,10 +185,10 @@ export function DocumentAiEvaluation({
         className="overflow-hidden rounded-3xl shadow-sm"
       >
         <div className="grid items-stretch gap-5 lg:grid-cols-2">
-          <div className="flex h-full flex-col rounded-2xl border border-slate-200 bg-slate-50/60 p-4 sm:p-5">
+          <div className="flex h-full flex-col rounded-2xl border border-border bg-muted p-4 sm:p-5">
             <div className="flex min-h-10 items-start justify-between gap-3">
               <Label htmlFor="predicted-json">Date extrase automat</Label>
-              <Badge variant="outline" className="rounded-full bg-white">
+              <Badge variant="outline" className="rounded-full bg-card">
                 Predicție
               </Badge>
             </div>
@@ -197,17 +197,17 @@ export function DocumentAiEvaluation({
               value={predictedText}
               onChange={(event) => onPredictedTextChange(event.target.value)}
               placeholder='{"invoiceNumber":"INV-001","totalAmount":1200}'
-              className="mt-3 min-h-72 flex-1 bg-white font-mono text-xs"
+              className="mt-3 min-h-72 flex-1 bg-card font-mono text-xs"
             />
-            <p className="mt-3 flex min-h-10 items-center text-xs leading-5 text-slate-500">
+            <p className="mt-3 flex min-h-10 items-center text-xs leading-5 text-muted-foreground">
               Datele sunt preluate automat din ultima analiză Document AI și pot fi revizuite.
             </p>
           </div>
 
-          <div className="flex h-full flex-col rounded-2xl border border-slate-200 bg-slate-50/60 p-4 sm:p-5">
+          <div className="flex h-full flex-col rounded-2xl border border-border bg-muted p-4 sm:p-5">
             <div className="flex min-h-10 items-start justify-between gap-3">
               <Label htmlFor="expected-json">Adnotare de referință</Label>
-              <Badge variant="outline" className="rounded-full bg-white">
+              <Badge variant="outline" className="rounded-full bg-card">
                 Referință
               </Badge>
             </div>
@@ -216,16 +216,18 @@ export function DocumentAiEvaluation({
               value={expectedText}
               onChange={(event) => updateExpectedAnnotation(event.target.value)}
               placeholder='{"invoiceNumber":"INV-001","totalAmount":1200}'
-              className="mt-3 min-h-72 flex-1 bg-white font-mono text-xs"
+              className="mt-3 min-h-72 flex-1 bg-card font-mono text-xs"
             />
             <div className="mt-3 flex min-h-10 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <span className="text-xs text-slate-500">Încarcă fișierul JSON de referință</span>
+              <span className="text-xs text-muted-foreground">
+                Încarcă fișierul JSON de referință
+              </span>
               <Input
                 ref={expectedFileInputRef}
                 type="file"
                 accept=".json,application/json"
                 aria-label="Încarcă adnotarea de referință"
-                className="w-full bg-white sm:max-w-72"
+                className="w-full bg-card sm:max-w-72"
                 onChange={handleExpectedFileChange}
               />
             </div>
@@ -246,7 +248,7 @@ export function DocumentAiEvaluation({
             </Button>
           )}
           {!analysis && (
-            <span className="text-sm text-slate-500">
+            <span className="text-sm text-muted-foreground">
               Nu există încă o extracție Document AI. Rulează mai întâi analiza unei facturi.
             </span>
           )}
@@ -280,7 +282,7 @@ function EvaluationResults({ result }: { result: BatchEvaluationResult }) {
             </TableHeader>
             <TableBody>
               {result.fieldMetrics.map((field) => (
-                <TableRow key={field.field} className="hover:bg-slate-50/70">
+                <TableRow key={field.field} className="hover:bg-muted">
                   <TableCell className="font-medium">{fieldLabels[field.field]}</TableCell>
                   <TableCell className="text-right tabular-nums">
                     {formatPercent(field.accuracy)}
@@ -312,7 +314,7 @@ function EvaluationResults({ result }: { result: BatchEvaluationResult }) {
           <TableBody>
             {result.documents.map((document) => {
               return (
-                <TableRow key={document.documentId} className="hover:bg-slate-50/70">
+                <TableRow key={document.documentId} className="hover:bg-muted">
                   <TableCell className="font-medium">{document.documentId}</TableCell>
                   <TableCell>
                     <Badge
@@ -321,8 +323,8 @@ function EvaluationResults({ result }: { result: BatchEvaluationResult }) {
                         "rounded-full",
                         (document.strictExactMatch ?? false) ||
                           (document.normalizedExactMatch ?? document.exactMatch)
-                          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                          : "border-amber-200 bg-amber-50 text-amber-700",
+                          ? "border-success/30 bg-success/15 text-success"
+                          : "border-warning/40 bg-warning/20 text-warning",
                       )}
                     >
                       {document.strictExactMatch
@@ -349,25 +351,27 @@ function EvaluationResults({ result }: { result: BatchEvaluationResult }) {
 
 function ExpectedFieldsPreview({ fields }: { fields: DocumentAiEvaluationFields }) {
   return (
-    <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+    <div className="mt-5 rounded-2xl border border-border bg-muted p-4">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="font-semibold text-slate-950">Câmpuri de referință extrase din dataset</h3>
-          <p className="mt-1 text-sm text-slate-500">
+          <h3 className="font-semibold text-foreground">
+            Câmpuri de referință extrase din dataset
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground">
             Aceste valori sunt folosite ca referință în calculul metricilor.
           </p>
         </div>
-        <Badge variant="outline" className="rounded-full bg-white">
+        <Badge variant="outline" className="rounded-full bg-card">
           Referință
         </Badge>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {DOCUMENT_AI_EVALUATION_FIELDS.map((field) => (
-          <div key={field} className="rounded-xl border border-slate-200 bg-white p-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+          <div key={field} className="rounded-xl border border-border bg-card p-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               {fieldLabels[field]}
             </p>
-            <p className="mt-1 break-words text-sm font-semibold text-slate-950">
+            <p className="mt-1 break-words text-sm font-semibold text-foreground">
               {formatFieldValue(fields[field]) || "-"}
             </p>
           </div>
@@ -379,9 +383,9 @@ function ExpectedFieldsPreview({ fields }: { fields: DocumentAiEvaluationFields 
 
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-3 text-2xl font-semibold tabular-nums text-slate-950">{value}</p>
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-3 text-2xl font-semibold tabular-nums text-foreground">{value}</p>
     </div>
   );
 }
@@ -398,14 +402,14 @@ function EvaluationHeroStatus({
   return (
     <div
       className={cn(
-        "flex min-w-36 items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-3 py-2.5 text-xs font-medium text-blue-50 backdrop-blur",
+        "flex min-w-36 items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-3 py-2.5 text-xs font-medium text-white backdrop-blur",
         className,
       )}
     >
       {active ? (
-        <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-300" />
+        <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
       ) : (
-        <CircleDashed className="h-4 w-4 shrink-0 text-blue-200" />
+        <CircleDashed className="h-4 w-4 shrink-0 text-muted-foreground" />
       )}
       {label}
     </div>
@@ -452,7 +456,7 @@ function MismatchPanel({ result }: { result: BatchEvaluationResult }) {
       className="overflow-hidden rounded-3xl shadow-sm"
     >
       {mismatches.length === 0 ? (
-        <div className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm font-medium text-emerald-800">
+        <div className="flex items-center gap-3 rounded-2xl border border-success/20 bg-success/15 p-4 text-sm font-medium text-success">
           <CheckCircle2 className="h-5 w-5 shrink-0" />
           Nu au fost identificate diferențe.
         </div>
@@ -461,11 +465,11 @@ function MismatchPanel({ result }: { result: BatchEvaluationResult }) {
           {mismatches.map((field) => (
             <div
               key={`${field.documentId}-${field.field}`}
-              className="rounded-2xl border border-amber-100 bg-amber-50/50 p-4"
+              className="rounded-2xl border border-warning/25 bg-warning/20/50 p-4"
             >
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <p className="font-semibold text-slate-950">{fieldLabels[field.field]}</p>
-                <Badge variant="outline" className="rounded-full bg-white text-slate-600">
+                <p className="font-semibold text-foreground">{fieldLabels[field.field]}</p>
+                <Badge variant="outline" className="rounded-full bg-card text-muted-foreground">
                   {field.documentId}
                 </Badge>
               </div>
@@ -496,9 +500,9 @@ function DifferenceValue({
   accent?: boolean;
 }) {
   return (
-    <div className="rounded-xl bg-white p-3">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      <p className={cn("mt-1 break-words font-medium text-slate-800", accent && "text-amber-800")}>
+    <div className="rounded-xl bg-card p-3">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className={cn("mt-1 break-words font-medium text-foreground", accent && "text-warning")}>
         {value}
       </p>
     </div>

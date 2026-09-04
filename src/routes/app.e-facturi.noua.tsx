@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createManualInvoice } from "@/lib/invoiceService";
-import { formatRON } from "@/lib/mock-data";
+import { formatRON } from "@/lib/formatters";
 
 export const Route = createFileRoute("/app/e-facturi/noua")({
   head: () => ({ meta: [{ title: "Factura noua - IMMapp" }] }),
@@ -252,7 +252,7 @@ function NewInvoicePage() {
               return (
                 <div
                   key={index}
-                  className="grid gap-3 rounded-lg border border-slate-200 p-3 sm:grid-cols-[2fr_1fr_1fr_1fr_auto_auto] sm:items-end"
+                  className="grid gap-3 rounded-lg border border-border p-3 sm:grid-cols-[2fr_1fr_1fr_1fr_auto_auto] sm:items-end"
                 >
                   <div className="space-y-2">
                     <Label>Descriere</Label>
@@ -294,7 +294,7 @@ function NewInvoicePage() {
                       disabled={isSubmitting}
                     />
                   </div>
-                  <div className="text-sm text-slate-500 sm:text-right">{formatRON(lineTotal)}</div>
+                  <div className="text-sm text-muted-foreground sm:text-right">{formatRON(lineTotal)}</div>
                   <Button
                     type="button"
                     variant="ghost"
@@ -313,12 +313,12 @@ function NewInvoicePage() {
 
         <Card>
           <CardContent className="flex flex-col gap-2 p-5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-1 text-sm text-slate-600">
+            <div className="space-y-1 text-sm text-muted-foreground">
               <div>Subtotal: {formatRON(subtotal)}</div>
               <div>
                 TVA ({vatRatePercent}%): {formatRON(vatAmount)}
               </div>
-              <div className="text-base font-semibold text-slate-900">
+              <div className="text-base font-semibold text-foreground">
                 Total: {formatRON(total)}
               </div>
             </div>

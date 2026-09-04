@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Eye, Loader2, ReceiptText, TrendingUp, UploadCloud, Users, Wallet } from "lucide-react";
 import {
   Bar,
@@ -33,9 +33,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { useInvoicesData } from "@/hooks/use-invoices-data";
 import { getDashboardData } from "@/lib/dashboardService";
-import { getInvoices } from "@/lib/invoiceService";
-import { formatRON } from "@/lib/mock-data";
+import { formatRON } from "@/lib/formatters";
 import {
   buildMonthlyReportPoints,
   filterInvoicesByClassification,
@@ -59,32 +60,27 @@ type DashboardData = Awaited<ReturnType<typeof getDashboardData>>;
 type RevenueTab = "all" | "high" | "recent";
 
 function RevenueReportPage() {
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [invoices, setInvoices] = useState<ReportInvoice[]>([]);
+  const {
+    data: dashboardData,
+    isLoading: isDashboardLoading,
+    isError: isDashboardError,
+  } = useDashboardData();
+  const {
+    data: invoicesData,
+    isLoading: isInvoicesLoading,
+    isError: isInvoicesError,
+  } = useInvoicesData();
+  const invoices = useMemo(
+    () => (invoicesData as unknown as ReportInvoice[]) ?? [],
+    [invoicesData],
+  );
   const [activeTab, setActiveTab] = useState<RevenueTab>("all");
   const [search, setSearch] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  useEffect(() => {
-    async function loadReport() {
-      try {
-        setIsLoading(true);
-        setErrorMessage("");
-
-        const [dashboard, invoiceData] = await Promise.all([getDashboardData(), getInvoices()]);
-
-        setDashboardData(dashboard);
-        setInvoices(invoiceData as unknown as ReportInvoice[]);
-      } catch {
-        setErrorMessage("Nu s-au putut încărca datele pentru raportul de venituri.");
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    loadReport();
-  }, []);
+  const isLoading = isDashboardLoading || isInvoicesLoading;
+  const errorMessage =
+    isDashboardError || isInvoicesError
+      ? "Nu s-au putut încărca datele pentru raportul de venituri."
+      : "";
 
   const report = useMemo(() => {
     const revenueInvoices = dashboardData
@@ -175,7 +171,7 @@ function RevenueReportPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[420px] items-center justify-center gap-2 text-slate-500">
+      <div className="flex min-h-[420px] items-center justify-center gap-2 text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
         Se încarcă raportul de venituri...
       </div>
@@ -191,7 +187,7 @@ function RevenueReportPage() {
         badge="Facturi emise"
         icon={<TrendingUp className="h-3.5 w-3.5" />}
         actions={
-          <Button asChild className="rounded-full bg-white text-slate-950 hover:bg-slate-100">
+          <Button asChild className="rounded-full bg-card text-foreground hover:bg-muted">
             <Link to="/app/documente">
               <UploadCloud className="h-4 w-4" />
               Importa documente
@@ -201,7 +197,7 @@ function RevenueReportPage() {
       />
 
       {errorMessage && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+        <div className="rounded-xl border border-destructive/30 bg-destructive/15 p-4 text-sm text-destructive">
           {errorMessage}
         </div>
       )}
@@ -245,7 +241,7 @@ function RevenueReportPage() {
             <ChartCard
               title="Evoluție venituri lunare"
               description="Venituri lunare comparate cu media perioadei"
-              className="border-slate-200 bg-white shadow-sm"
+              className="border-border bg-card shadow-sm"
             >
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={report.monthlyChart}>
@@ -275,7 +271,7 @@ function RevenueReportPage() {
             <ChartCard
               title="Top clienți după venit"
               description="Clienții care concentrează cea mai mare valoare"
-              className="border-slate-200 bg-white shadow-sm"
+              className="border-border bg-card shadow-sm"
             >
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={report.topCustomers} layout="vertical" margin={{ left: 20 }}>
@@ -355,7 +351,7 @@ function RevenueReportPage() {
             }
             contentClassName="p-0"
           >
-            <div className="border-b border-slate-100 p-5">
+            <div className="border-b border-border p-5">
               <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as RevenueTab)}>
                 <TabsList>
                   <TabsTrigger value="all">Toate</TabsTrigger>
@@ -380,7 +376,7 @@ function RevenueReportPage() {
                 <TableBody>
                   {report.rows.map((row) => (
                     <TableRow key={row.invoice.id}>
-                      <TableCell className="font-medium text-slate-900">
+                      <TableCell className="font-medium text-foreground">
                         {row.invoiceNumber}
                       </TableCell>
                       <TableCell>{row.customer}</TableCell>
@@ -410,7 +406,7 @@ function RevenueReportPage() {
           </ReportPanel>
 
           <ReportPanel title="Interpretare venituri">
-            <p className="text-sm leading-6 text-slate-600">
+            <p className="text-sm leading-6 text-muted-foreground">
               {report.highRevenueInvoices > 0
                 ? `Veniturile sunt influențate de ${report.highRevenueInvoices} facturi cu valoare ridicată. Monitorizează clienții principali și actualizează analiza după fiecare import.`
                 : "Veniturile sunt distribuite relativ echilibrat în facturile procesate. Continuă urmărirea evoluției lunare pentru a identifica din timp schimbările de ritm."}

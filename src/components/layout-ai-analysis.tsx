@@ -340,17 +340,17 @@ export function LayoutAiAnalysis({
 
   return (
     <div className="space-y-6">
-      <section className="overflow-hidden rounded-3xl border border-blue-100 bg-gradient-to-br from-slate-950 via-blue-950 to-blue-900 p-6 text-white shadow-lg shadow-blue-950/10 sm:p-8">
+      <section className="overflow-hidden rounded-3xl border border-sidebar-border bg-sidebar p-6 text-sidebar-foreground shadow-lg sm:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-blue-50 backdrop-blur">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur">
               <Sparkles className="h-3.5 w-3.5" />
               Analiză layout activă
             </div>
-            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            <h2 className="text-2xl font-normal tracking-tight sm:text-3xl">
               Analiză inteligentă a structurii documentului
             </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-blue-100 sm:text-base">
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-sidebar-foreground/80 sm:text-base">
               IMMapp folosește OCR și analiză layout-aware pentru a identifica, valida și confirma
               câmpurile importante din factură.
             </p>
@@ -400,7 +400,7 @@ export function LayoutAiAnalysis({
                 accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
                 onChange={handleFileChange}
               />
-              <p className="text-xs leading-5 text-slate-500">
+              <p className="text-xs leading-5 text-muted-foreground">
                 Încarcă o factură PDF sau imagine. IMMapp pregătește automat documentul pentru
                 analiză.
               </p>
@@ -447,7 +447,7 @@ export function LayoutAiAnalysis({
                   variant="ghost"
                   onClick={handleResetLayoutAnalysis}
                   disabled={isRunning || isCheckingHealth}
-                  className="gap-2 text-slate-600 hover:bg-rose-50 hover:text-rose-700"
+                  className="gap-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                 >
                   <Trash2 className="h-4 w-4" />
                   {selectedFile ? "Șterge documentul" : "Resetează analiza"}
@@ -456,14 +456,14 @@ export function LayoutAiAnalysis({
             </div>
 
             {processMessage && (
-              <div className="flex items-center gap-3 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm font-medium text-blue-800">
+              <div className="flex items-center gap-3 rounded-xl border border-primary/30 bg-secondary p-3 text-sm font-medium text-primary">
                 <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
                 {processMessage}
               </div>
             )}
 
             {message && (
-              <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+              <div className="flex items-start gap-3 rounded-2xl border border-warning/40 bg-warning/20 p-4 text-sm text-warning">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                 <p className="whitespace-pre-line">{message}</p>
               </div>
@@ -479,11 +479,11 @@ export function LayoutAiAnalysis({
           {!result ? (
             <div className="flex min-h-[300px] items-center justify-center p-8 text-center">
               <div>
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
                   <Network className="h-6 w-6" />
                 </div>
-                <h3 className="font-semibold text-slate-950">Analiza este pregătită</h3>
-                <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
+                <h3 className="font-semibold text-foreground">Analiza este pregătită</h3>
+                <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
                   Rulează analiza pentru a vedea câmpurile propuse și diferențele față de extracția
                   Document AI.
                 </p>
@@ -516,7 +516,7 @@ export function LayoutAiAnalysis({
                 <Button
                   onClick={handleApplyFields}
                   disabled={!hasAnyField(result.fields)}
-                  className="gap-2 bg-blue-700 hover:bg-blue-800"
+                  className="gap-2"
                 >
                   <CheckCircle2 className="h-4 w-4" />
                   Aplică propunerile AI
@@ -550,9 +550,9 @@ function UploadedDocumentCard({
   const isComplete = status === "Analiză finalizată";
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50/80 to-white p-4 shadow-sm">
+    <div className="overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-r from-secondary to-card p-4 shadow-sm">
       <div className="flex items-center gap-4">
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white bg-white text-blue-600 shadow-sm">
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white bg-card text-primary shadow-sm">
           {previewUrl ? (
             <img
               src={previewUrl}
@@ -568,25 +568,23 @@ function UploadedDocumentCard({
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary">
               Document încărcat
             </p>
             <Badge
               variant="outline"
               className={cn(
-                "rounded-full bg-white",
-                isComplete
-                  ? "border-emerald-200 text-emerald-700"
-                  : "border-blue-200 text-blue-700",
+                "rounded-full bg-card",
+                isComplete ? "border-success/30 text-success" : "border-primary/30 text-primary",
               )}
             >
               {status}
             </Badge>
           </div>
-          <p className="mt-1 truncate font-semibold text-slate-950" title={file.name}>
+          <p className="mt-1 truncate font-semibold text-foreground" title={file.name}>
             {file.name}
           </p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-muted-foreground">
             {getFileTypeLabel(file)} · {formatFileSize(file.size)}
           </p>
         </div>
@@ -611,10 +609,10 @@ function BackendStatusCard({
       className={cn(
         "rounded-2xl border p-4 shadow-sm",
         isAvailable
-          ? "border-emerald-200 bg-emerald-50"
+          ? "border-success/30 bg-success/15"
           : isActive
-            ? "border-amber-200 bg-amber-50"
-            : "border-slate-200 bg-slate-50",
+            ? "border-warning/40 bg-warning/20"
+            : "border-border bg-muted",
       )}
     >
       <div className="flex items-start justify-between gap-3">
@@ -623,23 +621,23 @@ function BackendStatusCard({
             className={cn(
               "rounded-xl p-3",
               isAvailable
-                ? "bg-emerald-100 text-emerald-700"
+                ? "bg-success/20 text-success"
                 : isActive
-                  ? "bg-amber-100 text-amber-700"
-                  : "bg-slate-100 text-slate-600",
+                  ? "bg-warning/25 text-warning"
+                  : "bg-muted text-muted-foreground",
             )}
           >
             <Network className="h-5 w-5" />
           </div>
           <div>
-            <p className="font-semibold text-slate-950">
+            <p className="font-semibold text-foreground">
               {isAvailable
                 ? "Model AI disponibil"
                 : isActive
                   ? "Serviciu pregătit"
                   : "Disponibilitate neverificată"}
             </p>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-muted-foreground">
               {modelInferenceAvailable
                 ? "Analiza inteligentă este pregătită pentru document."
                 : isActive
@@ -648,7 +646,7 @@ function BackendStatusCard({
             </p>
           </div>
         </div>
-        <Badge variant="outline" className="rounded-full bg-white">
+        <Badge variant="outline" className="rounded-full bg-card">
           {health?.model ?? "LayoutXLM"}
         </Badge>
       </div>
@@ -666,9 +664,9 @@ function LayoutFieldsTable({
   verifiedFields: DocumentAiFieldKey[];
 }) {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+    <div className="overflow-x-auto rounded-2xl border border-border bg-card">
       <Table>
-        <TableHeader className="bg-slate-50/80">
+        <TableHeader className="bg-muted">
           <TableRow>
             <TableHead>Câmp</TableHead>
             <TableHead>Propunere AI</TableHead>
@@ -686,15 +684,15 @@ function LayoutFieldsTable({
             const status = isVerified ? "confirmed" : comparison.status;
 
             return (
-              <TableRow key={field} className="hover:bg-slate-50/70">
-                <TableCell className="whitespace-nowrap font-semibold text-slate-900">
+              <TableRow key={field} className="hover:bg-muted">
+                <TableCell className="whitespace-nowrap font-semibold text-foreground">
                   {fieldLabels[field]}
                 </TableCell>
-                <TableCell className="min-w-40 font-medium text-slate-900">
-                  {proposed || <span className="text-slate-400">—</span>}
+                <TableCell className="min-w-40 font-medium text-foreground">
+                  {proposed || <span className="text-muted-foreground">—</span>}
                 </TableCell>
-                <TableCell className="min-w-40 text-slate-600">
-                  {current || <span className="text-slate-400">—</span>}
+                <TableCell className="min-w-40 text-muted-foreground">
+                  {current || <span className="text-muted-foreground">—</span>}
                 </TableCell>
                 <TableCell>
                   <Badge
@@ -702,18 +700,18 @@ function LayoutFieldsTable({
                     className={cn(
                       "rounded-full",
                       status === "confirmed"
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                        ? "border-success/30 bg-success/15 text-success"
                         : status === "review"
-                          ? "border-amber-200 bg-amber-50 text-amber-700"
+                          ? "border-warning/40 bg-warning/20 text-warning"
                           : status === "proposal"
-                            ? "border-blue-200 bg-blue-50 text-blue-700"
-                            : "border-slate-200 bg-slate-50 text-slate-500",
+                            ? "border-primary/30 bg-secondary text-primary"
+                            : "border-border bg-muted text-muted-foreground",
                     )}
                   >
                     {getComparisonStatusLabel(status)}
                   </Badge>
                 </TableCell>
-                <TableCell className="hidden max-w-60 text-sm text-slate-500 2xl:table-cell">
+                <TableCell className="hidden max-w-60 text-sm text-muted-foreground 2xl:table-cell">
                   {getFieldRecommendation(status)}
                 </TableCell>
               </TableRow>
@@ -746,10 +744,10 @@ function RecommendationsCard({
         {recommendations.map((recommendation) => (
           <div
             key={recommendation}
-            className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 p-4"
+            className="flex items-start gap-3 rounded-2xl border border-border bg-muted p-4"
           >
-            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-            <p className="text-sm leading-6 text-slate-700">{recommendation}</p>
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+            <p className="text-sm leading-6 text-foreground">{recommendation}</p>
           </div>
         ))}
       </div>
@@ -811,11 +809,11 @@ function TokenPreview({ result }: { result: LayoutAiBackendResponse }) {
   }
 
   return (
-    <details className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-      <summary className="cursor-pointer select-none text-sm font-semibold text-slate-950">
+    <details className="rounded-xl border border-border bg-muted p-4">
+      <summary className="cursor-pointer select-none text-sm font-semibold text-foreground">
         Tokeni și poziții returnate
       </summary>
-      <div className="mt-4 max-h-72 overflow-auto rounded-xl border border-slate-200 bg-white">
+      <div className="mt-4 max-h-72 overflow-auto rounded-xl border border-border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -830,7 +828,7 @@ function TokenPreview({ result }: { result: LayoutAiBackendResponse }) {
               <TableRow key={`${token.text}-${index}`}>
                 <TableCell className="font-medium">{token.text}</TableCell>
                 <TableCell>{token.label ?? "-"}</TableCell>
-                <TableCell className="font-mono text-xs text-slate-500">
+                <TableCell className="font-mono text-xs text-muted-foreground">
                   {token.bbox
                     ? `${token.bbox.x}, ${token.bbox.y}, ${token.bbox.width}, ${token.bbox.height}`
                     : "-"}
@@ -863,11 +861,11 @@ function TechnicalDetails({
   const notes = result?.notes ?? health?.notes ?? [];
 
   return (
-    <details className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-      <summary className="cursor-pointer select-none text-sm font-semibold text-slate-950">
+    <details className="rounded-xl border border-border bg-muted p-4">
+      <summary className="cursor-pointer select-none text-sm font-semibold text-foreground">
         Detalii tehnice
       </summary>
-      <div className="mt-4 space-y-4 text-sm text-slate-600">
+      <div className="mt-4 space-y-4 text-sm text-muted-foreground">
         <dl className="grid gap-3 sm:grid-cols-2">
           <TechnicalItem label="Model" value={result?.model ?? health?.model ?? "LayoutXLM"} />
           <TechnicalItem
@@ -888,19 +886,19 @@ function TechnicalDetails({
         </dl>
 
         {runtimeMode === "layoutxlm_backbone" && (
-          <p className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-800">
+          <p className="rounded-lg border border-success/30 bg-success/15 p-3 text-success">
             Model LayoutXLM încărcat. Se folosește backbone-ul LayoutXLM împreună cu extracția
             layout-aware pentru câmpurile de factură.
           </p>
         )}
         {runtimeMode === "full_layoutxlm" && (
-          <p className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-800">
+          <p className="rounded-lg border border-success/30 bg-success/15 p-3 text-success">
             Modelul LayoutXLM cu clasificare de tokeni este încărcat și produce predicții de
             entități.
           </p>
         )}
         {runtimeMode === "fallback_layout_aware" && (
-          <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-900">
+          <p className="rounded-lg border border-warning/40 bg-warning/20 p-3 text-warning">
             Modelul LayoutXLM complet nu este disponibil local. Se folosește fallback layout-aware.
           </p>
         )}
@@ -918,7 +916,7 @@ function TechnicalDetails({
 
         {notes.length > 0 && (
           <div>
-            <p className="font-medium text-slate-900">Note tehnice</p>
+            <p className="font-medium text-foreground">Note tehnice</p>
             <ul className="mt-2 space-y-1">
               {notes.map((note) => (
                 <li key={note}>{note}</li>
@@ -930,9 +928,9 @@ function TechnicalDetails({
         {result && <TokenPreview result={result} />}
 
         {result && (
-          <details className="rounded-lg border border-slate-200 bg-white p-3">
-            <summary className="cursor-pointer font-medium text-slate-900">Răspuns JSON</summary>
-            <pre className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap break-all text-xs text-slate-600">
+          <details className="rounded-lg border border-border bg-card p-3">
+            <summary className="cursor-pointer font-medium text-foreground">Răspuns JSON</summary>
+            <pre className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap break-all text-xs text-muted-foreground">
               {JSON.stringify(result, null, 2)}
             </pre>
           </details>
@@ -945,17 +943,17 @@ function TechnicalDetails({
 function TechnicalItem({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
-      <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</dt>
-      <dd className="mt-1 break-words font-medium text-slate-900">{value}</dd>
+      <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</dt>
+      <dd className="mt-1 break-words font-medium text-foreground">{value}</dd>
     </div>
   );
 }
 
 function ResultMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-3 text-lg font-semibold text-slate-950">{value}</p>
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-3 text-lg font-semibold text-foreground">{value}</p>
     </div>
   );
 }
@@ -972,14 +970,14 @@ function HeroStatus({
   return (
     <div
       className={cn(
-        "flex min-w-36 items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-3 py-2.5 text-xs font-medium text-blue-50 backdrop-blur",
+        "flex min-w-36 items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-3 py-2.5 text-xs font-medium text-white backdrop-blur",
         className,
       )}
     >
       {active ? (
-        <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-300" />
+        <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
       ) : (
-        <CircleDashed className="h-4 w-4 shrink-0 text-blue-200" />
+        <CircleDashed className="h-4 w-4 shrink-0 text-muted-foreground" />
       )}
       {label}
     </div>
@@ -1019,14 +1017,14 @@ function ComparisonSummary({
           key={item.label}
           className={cn(
             "rounded-xl border px-3 py-3",
-            item.tone === "emerald" && "border-emerald-100 bg-emerald-50",
-            item.tone === "blue" && "border-blue-100 bg-blue-50",
-            item.tone === "amber" && "border-amber-100 bg-amber-50",
-            item.tone === "rose" && "border-rose-100 bg-rose-50",
+            item.tone === "emerald" && "border-success/20 bg-success/15",
+            item.tone === "blue" && "border-primary/20 bg-secondary",
+            item.tone === "amber" && "border-warning/25 bg-warning/20",
+            item.tone === "rose" && "border-destructive/20 bg-destructive/15",
           )}
         >
-          <p className="text-2xl font-semibold tabular-nums text-slate-950">{item.value}</p>
-          <p className="mt-1 text-xs font-medium text-slate-600">{item.label}</p>
+          <p className="text-2xl font-semibold tabular-nums text-foreground">{item.value}</p>
+          <p className="mt-1 text-xs font-medium text-muted-foreground">{item.label}</p>
         </div>
       ))}
     </div>

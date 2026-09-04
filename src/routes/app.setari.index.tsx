@@ -163,7 +163,7 @@ function SettingsPage() {
       />
 
       {!isLoading && !loadError && !hasSavedProfile ? (
-        <Card className="border-blue-100 bg-blue-50 text-blue-900 shadow-sm">
+        <Card className="border-primary/20 bg-secondary text-primary shadow-sm">
           <CardContent className="p-4 text-sm">
             Completeaza datele companiei pentru personalizarea aplicatiei.
           </CardContent>
@@ -171,15 +171,15 @@ function SettingsPage() {
       ) : null}
 
       {loadError ? (
-        <Card className="border-amber-200 bg-amber-50 text-amber-900 shadow-sm">
+        <Card className="border-warning/40 bg-warning/20 text-warning shadow-sm">
           <CardContent className="p-4 text-sm">{loadError}</CardContent>
         </Card>
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="border-slate-200 bg-white shadow-sm lg:col-span-2">
+        <Card className="border-border bg-card shadow-sm lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-base text-slate-900">Profil companie</CardTitle>
+            <CardTitle className="text-base text-foreground">Profil companie</CardTitle>
             <CardDescription>
               Completeaza datele firmei pentru afisarea corecta in dashboard si rapoarte.
             </CardDescription>
@@ -212,28 +212,28 @@ function SettingsPage() {
                   Salveaza modificarile
                 </Button>
                 {isLoading ? (
-                  <span className="text-sm text-slate-500">Se incarca profilul companiei...</span>
+                  <span className="text-sm text-muted-foreground">Se incarca profilul companiei...</span>
                 ) : null}
               </div>
             </form>
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 bg-white shadow-sm">
+        <Card className="border-border bg-card shadow-sm">
           <CardHeader>
-            <CardTitle className="text-base text-slate-900">Identificare firma</CardTitle>
+            <CardTitle className="text-base text-foreground">Identificare firma</CardTitle>
             <CardDescription>
               Aceste date apar in zona de profil si pot fi refolosite in fluxurile viitoare.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white">
+            <div className="flex items-center gap-3 rounded-lg border border-border bg-muted p-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary text-white">
                 <Building2 className="h-5 w-5" />
               </div>
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-slate-900">{companyName}</p>
-                <p className="truncate text-xs text-slate-500">
+                <p className="truncate text-sm font-semibold text-foreground">{companyName}</p>
+                <p className="truncate text-xs text-muted-foreground">
                   {cui} / {registrationNumber}
                 </p>
               </div>
@@ -254,9 +254,9 @@ function SettingsPage() {
 
 function ProfileSummaryRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="grid gap-1 rounded-lg border border-slate-100 bg-white px-3 py-2">
-      <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</dt>
-      <dd className="break-words text-slate-700">{value}</dd>
+    <div className="grid gap-1 rounded-lg border border-border bg-card px-3 py-2">
+      <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</dt>
+      <dd className="break-words text-foreground">{value}</dd>
     </div>
   );
 }

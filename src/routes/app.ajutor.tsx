@@ -67,10 +67,10 @@ function HelpPage() {
         description="Gaseste rapid raspunsuri despre importul e-Facturilor, dashboard, AI Forecast si rapoarte."
       />
 
-      <Card className="border-slate-200 bg-white shadow-sm">
+      <Card className="border-border bg-card shadow-sm">
         <CardContent className="p-5">
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
@@ -82,15 +82,15 @@ function HelpPage() {
       </Card>
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <Card className="border-slate-200 bg-white shadow-sm xl:col-span-2">
+        <Card className="border-border bg-card shadow-sm xl:col-span-2">
           <CardContent className="p-5">
             {filteredFaqItems.length === 0 ? (
               <div className="flex min-h-[220px] flex-col items-center justify-center text-center">
-                <HelpCircle className="h-8 w-8 text-slate-400" />
-                <h2 className="mt-4 text-base font-semibold text-slate-900">
+                <HelpCircle className="h-8 w-8 text-muted-foreground" />
+                <h2 className="mt-4 text-base font-semibold text-foreground">
                   Nu am gasit raspunsuri pentru cautarea ta
                 </h2>
-                <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
+                <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
                   Incearca un termen diferit sau contacteaza suportul pentru ajutor.
                 </p>
               </div>
@@ -98,10 +98,10 @@ function HelpPage() {
               <Accordion type="single" collapsible className="w-full">
                 {filteredFaqItems.map((item, index) => (
                   <AccordionItem key={item.question} value={`faq-${index}`}>
-                    <AccordionTrigger className="text-left text-sm font-semibold text-slate-900">
+                    <AccordionTrigger className="text-left text-sm font-semibold text-foreground">
                       {item.question}
                     </AccordionTrigger>
-                    <AccordionContent className="text-sm leading-6 text-slate-600">
+                    <AccordionContent className="text-sm leading-6 text-muted-foreground">
                       {item.answer}
                     </AccordionContent>
                   </AccordionItem>
@@ -111,13 +111,13 @@ function HelpPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 bg-white shadow-sm">
+        <Card className="border-border bg-card shadow-sm">
           <CardContent className="p-5">
-            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-primary">
               <Mail className="h-5 w-5" />
             </div>
-            <h2 className="text-base font-semibold text-slate-900">Nu ai gasit raspunsul?</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
+            <h2 className="text-base font-semibold text-foreground">Nu ai gasit raspunsul?</h2>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
               Echipa de suport te poate ajuta cu importul documentelor, rapoarte sau predictii.
             </p>
             <Button className="mt-5 w-full">Contacteaza suportul</Button>

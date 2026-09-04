@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Calculator,
   Eye,
@@ -45,9 +45,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { useInvoicesData } from "@/hooks/use-invoices-data";
 import { getDashboardData } from "@/lib/dashboardService";
-import { getInvoices } from "@/lib/invoiceService";
-import { formatRON } from "@/lib/mock-data";
+import { formatRON } from "@/lib/formatters";
 import {
   buildMonthlyReportPoints,
   filterInvoicesByClassification,
@@ -76,32 +77,25 @@ type VatTab = "all" | "high" | "recent";
 const fiscalColors = ["#2563eb", "#f59e0b"];
 
 function VatReportPage() {
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [invoices, setInvoices] = useState<ReportInvoice[]>([]);
+  const {
+    data: dashboardData,
+    isLoading: isDashboardLoading,
+    isError: isDashboardError,
+  } = useDashboardData();
+  const {
+    data: invoicesData,
+    isLoading: isInvoicesLoading,
+    isError: isInvoicesError,
+  } = useInvoicesData();
+  const invoices = useMemo(
+    () => (invoicesData as unknown as ReportInvoice[]) ?? [],
+    [invoicesData],
+  );
   const [activeTab, setActiveTab] = useState<VatTab>("all");
   const [search, setSearch] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  useEffect(() => {
-    async function loadReport() {
-      try {
-        setIsLoading(true);
-        setErrorMessage("");
-
-        const [dashboard, invoiceData] = await Promise.all([getDashboardData(), getInvoices()]);
-
-        setDashboardData(dashboard);
-        setInvoices(invoiceData as unknown as ReportInvoice[]);
-      } catch {
-        setErrorMessage("Nu s-au putut încărca datele pentru raportul TVA.");
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    loadReport();
-  }, []);
+  const isLoading = isDashboardLoading || isInvoicesLoading;
+  const errorMessage =
+    isDashboardError || isInvoicesError ? "Nu s-au putut încărca datele pentru raportul TVA." : "";
 
   const report = useMemo(() => {
     const revenueInvoices = dashboardData
@@ -233,7 +227,7 @@ function VatReportPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[420px] items-center justify-center gap-2 text-slate-500">
+      <div className="flex min-h-[420px] items-center justify-center gap-2 text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
         Se încarcă raportul TVA...
       </div>
@@ -249,14 +243,14 @@ function VatReportPage() {
         badge="Expunere TVA"
         icon={<Percent className="h-3.5 w-3.5" />}
         actions={
-          <Button asChild className="rounded-full bg-white text-slate-950 hover:bg-slate-100">
+          <Button asChild className="rounded-full bg-card text-foreground hover:bg-muted">
             <Link to="/app/documente">Importa documente</Link>
           </Button>
         }
       />
 
       {errorMessage && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+        <div className="rounded-xl border border-destructive/30 bg-destructive/15 p-4 text-sm text-destructive">
           {errorMessage}
         </div>
       )}
@@ -318,7 +312,7 @@ function VatReportPage() {
             description="Compara pozitia TVA lunara pe baza facturilor emise si primite."
           >
             {report.monthlyVatBalance.length === 0 ? (
-              <div className="flex h-[340px] items-center justify-center rounded-2xl bg-slate-50 p-6 text-center text-sm text-slate-500">
+              <div className="flex h-[340px] items-center justify-center rounded-2xl bg-muted p-6 text-center text-sm text-muted-foreground">
                 Nu exista suficiente date lunare pentru evolutia TVA.
               </div>
             ) : (
@@ -436,7 +430,7 @@ function VatReportPage() {
             }
             contentClassName="p-0"
           >
-            <div className="border-b border-slate-100 p-5">
+            <div className="border-b border-border p-5">
               <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as VatTab)}>
                 <TabsList>
                   <TabsTrigger value="all">Toate</TabsTrigger>
@@ -464,7 +458,7 @@ function VatReportPage() {
                 <TableBody>
                   {report.rows.map((row) => (
                     <TableRow key={row.invoice.id}>
-                      <TableCell className="font-medium text-slate-900">
+                      <TableCell className="font-medium text-foreground">
                         {row.invoiceNumber}
                       </TableCell>
                       <TableCell>{row.supplier}</TableCell>
@@ -501,7 +495,7 @@ function VatReportPage() {
           </ReportPanel>
 
           <ReportPanel title="Interpretare TVA">
-            <p className="text-sm leading-6 text-slate-600">
+            <p className="text-sm leading-6 text-muted-foreground">
               TVA-ul colectat reprezintă {formatPercent(report.vatShare)} din valoarea totală
               procesată.
               {report.highVatCount > 0

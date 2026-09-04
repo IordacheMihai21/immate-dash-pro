@@ -323,17 +323,17 @@ export function DocumentAiUpload({
 
   return (
     <div className="space-y-6">
-      <section className="overflow-hidden rounded-3xl border border-blue-100 bg-gradient-to-br from-slate-950 via-blue-950 to-blue-900 p-6 text-white shadow-lg shadow-blue-950/10 sm:p-8">
+      <section className="overflow-hidden rounded-3xl border border-sidebar-border bg-sidebar p-6 text-sidebar-foreground shadow-lg sm:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-blue-50 backdrop-blur">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur">
               <BrainCircuit className="h-3.5 w-3.5" />
               Document AI activ
             </div>
-            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            <h2 className="text-2xl font-normal tracking-tight sm:text-3xl">
               Extragere inteligentă din documente financiare
             </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-blue-100 sm:text-base">
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-sidebar-foreground/80 sm:text-base">
               IMMapp transformă facturile PDF, JPG sau PNG în date structurate folosind OCR,
               preprocesare imagine și extracție de entități.
             </p>
@@ -363,16 +363,16 @@ export function DocumentAiUpload({
       >
         <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
           <div className="space-y-4">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+            <div className="rounded-2xl border border-border bg-muted p-4 sm:p-5">
               <div className="flex items-center gap-3">
-                <div className="rounded-2xl bg-blue-600 p-3 text-white">
+                <div className="rounded-2xl bg-primary p-3 text-primary-foreground">
                   <BrainCircuit className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-slate-950">
+                  <h3 className="font-semibold text-foreground">
                     OCR → Layout → Entități → Validare → Structurare
                   </h3>
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     Cinci etape clare, de la document brut la date pregătite.
                   </p>
                 </div>
@@ -387,15 +387,15 @@ export function DocumentAiUpload({
 
             <div className="space-y-2">
               <Label htmlFor="document-ai-file">Factura PDF / Imagine</Label>
-              <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-5 transition hover:border-blue-300 hover:bg-blue-50/30">
+              <div className="rounded-2xl border border-dashed border-border bg-card p-5 transition hover:border-primary/30 hover:bg-secondary/50">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="rounded-xl bg-slate-100 p-3 text-slate-600">
+                    <div className="rounded-xl bg-muted p-3 text-muted-foreground">
                       <FileImage className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-slate-900">PDF, PNG, JPG sau JPEG</p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-sm font-medium text-foreground">PDF, PNG, JPG sau JPEG</p>
+                      <p className="text-xs text-muted-foreground">
                         Recomandăm o scanare clară, dreaptă și bine luminată.
                       </p>
                     </div>
@@ -413,9 +413,9 @@ export function DocumentAiUpload({
                 </div>
 
                 {(selectedFile || analysis) && (
-                  <div className="mt-4 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-600">
+                  <div className="mt-4 rounded-xl bg-muted px-3 py-2 text-sm text-muted-foreground">
                     {selectedFile ? "Fisier selectat" : "Ultima analiza"}:{" "}
-                    <span className="font-medium text-slate-950">
+                    <span className="font-medium text-foreground">
                       {selectedFile?.name ?? analysis?.fileName}
                     </span>
                   </div>
@@ -424,12 +424,12 @@ export function DocumentAiUpload({
             </div>
 
             {isProcessing && (
-              <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
+              <div className="rounded-2xl border border-primary/20 bg-secondary p-4">
                 <div className="flex items-center justify-between gap-3 text-sm">
-                  <span className="font-medium text-blue-900">{progressLabel}</span>
-                  <span className="tabular-nums text-blue-700">{progress}%</span>
+                  <span className="font-medium text-primary">{progressLabel}</span>
+                  <span className="tabular-nums text-primary">{progress}%</span>
                 </div>
-                <Progress value={progress} className="mt-3 bg-blue-100" />
+                <Progress value={progress} className="mt-3 bg-secondary" />
               </div>
             )}
 
@@ -466,7 +466,7 @@ export function DocumentAiUpload({
                   variant="ghost"
                   onClick={handleClearAnalysis}
                   disabled={isProcessing || isSaving}
-                  className="gap-2 text-slate-600"
+                  className="gap-2 text-muted-foreground"
                 >
                   Șterge analiza curentă
                 </Button>
@@ -484,8 +484,8 @@ export function DocumentAiUpload({
                     className={cn(
                       "rounded-full",
                       analysis.inferenceMode === "hybrid_layoutxlm_candidate_engine"
-                        ? "border-blue-200 bg-blue-50 text-blue-700"
-                        : "border-amber-200 bg-amber-50 text-amber-700",
+                        ? "border-primary/30 bg-secondary text-primary"
+                        : "border-warning/40 bg-warning/20 text-warning",
                     )}
                   >
                     {analysis.inferenceMode === "hybrid_layoutxlm_candidate_engine"
@@ -526,7 +526,7 @@ export function DocumentAiUpload({
         </div>
 
         {analysis && (
-          <div className="mt-6 space-y-5 border-t border-slate-100 pt-6">
+          <div className="mt-6 space-y-5 border-t border-border pt-6">
             {requiresManualReview(analysis) && (
               <InfoBanner tone="amber" icon={<AlertTriangle className="h-4 w-4" />}>
                 <span data-testid="document-ai-manual-review">{getManualReviewMessage()}</span>
@@ -578,7 +578,7 @@ export function DocumentAiUpload({
               "Nu exista suficient text extras pentru previzualizare."
             }
             readOnly
-            className="min-h-56 resize-y bg-slate-50 font-mono text-xs leading-5"
+            className="min-h-56 resize-y bg-muted font-mono text-xs leading-5"
           />
         </AdminPanel>
       )}
@@ -679,27 +679,27 @@ function PipelineStatusCard({
   step: number;
 }) {
   const styles: Record<PipelineStatus, string> = {
-    finalizat: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    "necesită verificare": "border-amber-200 bg-amber-50 text-amber-700",
-    incomplet: "border-slate-200 bg-white text-slate-500",
+    finalizat: "border-success/30 bg-success/15 text-success",
+    "necesită verificare": "border-warning/40 bg-warning/20 text-warning",
+    incomplet: "border-border bg-card text-muted-foreground",
   };
 
   return (
     <div className={cn("rounded-xl border p-3", styles[status])}>
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/80 text-[10px] font-bold text-slate-600">
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-card/80 text-[10px] font-bold text-muted-foreground">
             {step}
           </span>
-          <p className="text-xs font-semibold text-slate-950">{title}</p>
+          <p className="text-xs font-semibold text-foreground">{title}</p>
         </div>
         {status === "finalizat" ? (
-          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
         ) : status === "necesită verificare" ? (
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
         ) : null}
       </div>
-      <p className="mt-2 text-xs leading-4 text-slate-600">{description}</p>
+      <p className="mt-2 text-xs leading-4 text-muted-foreground">{description}</p>
     </div>
   );
 }
@@ -750,15 +750,15 @@ function ScoreCard({
   testId?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-500">
-        <span className="rounded-lg bg-blue-50 p-1.5 text-blue-600">{icon}</span>
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+      <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <span className="rounded-lg bg-secondary p-1.5 text-primary">{icon}</span>
         {label}
       </div>
-      <p data-testid={testId} className="mt-3 text-lg font-semibold text-slate-950">
+      <p data-testid={testId} className="mt-3 text-lg font-semibold text-foreground">
         {value}
       </p>
-      {description && <p className="mt-2 text-xs leading-4 text-slate-500">{description}</p>}
+      {description && <p className="mt-2 text-xs leading-4 text-muted-foreground">{description}</p>}
     </div>
   );
 }
@@ -771,11 +771,11 @@ function LayoutSummaryCard({ analysis }: { analysis: DocumentAiAnalysis }) {
   const ocrDetails = analysis.ocrDetails;
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
-          <h3 className="font-semibold text-slate-950">Analiza layout</h3>
-          <p className="mt-1 text-sm text-slate-500">
+          <h3 className="font-semibold text-foreground">Analiza layout</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
             Rezumat al cuvintelor si pozitiilor folosite in extragere.
           </p>
         </div>
@@ -784,8 +784,8 @@ function LayoutSummaryCard({ analysis }: { analysis: DocumentAiAnalysis }) {
           className={cn(
             "rounded-full",
             analysis.layout.hasLayoutData
-              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-              : "border-amber-200 bg-amber-50 text-amber-700",
+              ? "border-success/30 bg-success/15 text-success"
+              : "border-warning/40 bg-warning/20 text-warning",
           )}
         >
           {analysis.layout.hasLayoutData ? "Layout disponibil" : "Verificare vizuala"}
@@ -811,9 +811,9 @@ function LayoutSummaryCard({ analysis }: { analysis: DocumentAiAnalysis }) {
 
 function LayoutMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-slate-50 p-3">
-      <p className="text-xs text-slate-500">{label}</p>
-      <p className="mt-1 text-base font-semibold text-slate-950">{value}</p>
+    <div className="rounded-xl bg-muted p-3">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="mt-1 text-base font-semibold text-foreground">{value}</p>
     </div>
   );
 }
@@ -826,15 +826,15 @@ function OcrDetailsPanel({
   extractedText: string;
 }) {
   return (
-    <div className="mt-4 rounded-2xl border border-blue-100 bg-blue-50/60 p-4">
+    <div className="mt-4 rounded-2xl border border-primary/20 bg-secondary/60 p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h4 className="font-semibold text-slate-950">Preprocesare imagine</h4>
-          <p className="mt-1 text-sm text-slate-600">
+          <h4 className="font-semibold text-foreground">Preprocesare imagine</h4>
+          <p className="mt-1 text-sm text-muted-foreground">
             IMMapp compara mai multe variante OCR si pastreaza rezultatul cu cel mai bun scor.
           </p>
         </div>
-        <Badge variant="outline" className="rounded-full bg-white text-blue-700">
+        <Badge variant="outline" className="rounded-full bg-card text-primary">
           {details.preprocessingApplied ? "Preprocesare aplicata" : "Text extras direct"}
         </Badge>
       </div>
@@ -856,8 +856,8 @@ function OcrDetailsPanel({
             className={cn(
               "rounded-full border px-3 py-1 text-xs font-semibold",
               attempt.selected
-                ? "border-blue-200 bg-white text-blue-700"
-                : "border-slate-200 bg-white/70 text-slate-600",
+                ? "border-primary/30 bg-card text-primary"
+                : "border-border bg-card/70 text-muted-foreground",
             )}
           >
             {attempt.label}: {formatConfidence(attempt.score)}
@@ -865,8 +865,8 @@ function OcrDetailsPanel({
         ))}
       </div>
 
-      <details className="mt-4 rounded-xl border border-blue-100 bg-white p-3">
-        <summary className="cursor-pointer select-none text-sm font-semibold text-slate-950">
+      <details className="mt-4 rounded-xl border border-primary/20 bg-card p-3">
+        <summary className="cursor-pointer select-none text-sm font-semibold text-foreground">
           Detalii OCR
         </summary>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -878,7 +878,7 @@ function OcrDetailsPanel({
             value={String(details.invoiceKeywordCount)}
           />
         </div>
-        <pre className="mt-3 max-h-56 overflow-auto rounded-xl bg-slate-950 p-4 text-xs leading-5 text-slate-100">
+        <pre className="mt-3 max-h-56 overflow-auto rounded-xl bg-sidebar p-4 text-xs leading-5 text-sidebar-foreground/80">
           {(extractedText.trim() || "Nu exista text OCR selectat.").slice(0, 1000)}
         </pre>
       </details>
@@ -919,11 +919,11 @@ function StructuredPreview({
     : [];
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="font-semibold text-slate-950">Date structurate detectate</h3>
-          <p className="mt-1 text-sm text-slate-500">
+          <h3 className="font-semibold text-foreground">Date structurate detectate</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
             Verifică doar câmpurile marcate și confirmă rezultatul.
           </p>
         </div>
@@ -952,17 +952,14 @@ function StructuredPreview({
       </div>
 
       {genericProfile && (optionalFields.length > 0 || optionalAddresses.length > 0) && (
-        <div
-          className="mt-5 border-t border-slate-100 pt-5"
-          data-testid="document-ai-optional-fields"
-        >
+        <div className="mt-5 border-t border-border pt-5" data-testid="document-ai-optional-fields">
           <div className="mb-3 flex flex-wrap items-center gap-2">
-            <h4 className="text-sm font-semibold text-slate-950">Detalii opționale detectate</h4>
-            <Badge variant="outline" className="rounded-full bg-slate-50 text-slate-600">
+            <h4 className="text-sm font-semibold text-foreground">Detalii opționale detectate</h4>
+            <Badge variant="outline" className="rounded-full bg-muted text-muted-foreground">
               Opțional
             </Badge>
           </div>
-          <p className="mb-4 text-xs leading-5 text-slate-500">
+          <p className="mb-4 text-xs leading-5 text-muted-foreground">
             Identificatori fiscali și valori suplimentare afișate numai când sunt detectate cu
             suficientă încredere.
           </p>
@@ -1019,16 +1016,16 @@ function StructuredFieldCard({
     <div
       data-testid={`document-ai-field-${field}`}
       className={cn(
-        "space-y-2 rounded-2xl border bg-slate-50/70 p-3.5 transition focus-within:border-blue-300 focus-within:bg-blue-50/30",
+        "space-y-2 rounded-2xl border bg-muted p-3.5 transition focus-within:border-primary/40 focus-within:bg-secondary/50",
         missing
-          ? "border-rose-200 bg-rose-50/70"
+          ? "border-destructive/30 bg-destructive/15/70"
           : lowConfidence
-            ? "border-amber-200 bg-amber-50/70"
-            : "border-slate-100",
+            ? "border-warning/40 bg-warning/20/70"
+            : "border-border",
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <Label htmlFor={`document-ai-${field}`} className="text-xs text-slate-500">
+        <Label htmlFor={`document-ai-${field}`} className="text-xs text-muted-foreground">
           {label}
         </Label>
         <span
@@ -1048,18 +1045,18 @@ function StructuredFieldCard({
         onChange={(event) => onUpdate(field, event.target.value)}
         onBlur={(event) => onCommit(field, event.target.value)}
         placeholder={optional ? "Detaliu opțional" : "Nedetectat"}
-        className="bg-white"
+        className="bg-card"
       />
 
       <div className="flex flex-wrap items-center gap-2 text-xs">
         <Badge
           variant="outline"
-          className="rounded-full border-slate-200 bg-white text-[10px] font-medium text-slate-500"
+          className="rounded-full border-border bg-card text-[10px] font-medium text-muted-foreground"
         >
           {formatExtractionMethod(displayMethod)}
         </Badge>
         {(missing || lowConfidence || fieldDetail.warning) && (
-          <span className={missing ? "text-rose-600" : "text-amber-700"}>
+          <span className={missing ? "text-destructive" : "text-warning"}>
             {missing ? "Câmp lipsă" : "Necesită verificare manuală"}
           </span>
         )}
@@ -1080,13 +1077,13 @@ function OptionalTextDetail({
   return (
     <div
       data-testid={`document-ai-optional-${kind}`}
-      className="space-y-2 rounded-2xl border border-slate-100 bg-slate-50/70 p-3.5"
+      className="space-y-2 rounded-2xl border border-border bg-muted p-3.5"
     >
-      <p className="text-xs text-slate-500">{label}</p>
-      <p className="text-sm font-medium leading-5 text-slate-900">{value}</p>
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-sm font-medium leading-5 text-foreground">{value}</p>
       <Badge
         variant="outline"
-        className="rounded-full border-slate-200 bg-white text-[10px] font-medium text-slate-500"
+        className="rounded-full border-border bg-card text-[10px] font-medium text-muted-foreground"
       >
         OCR – adresă etichetată
       </Badge>
@@ -1106,14 +1103,14 @@ function DocumentHeroStatus({
   return (
     <div
       className={cn(
-        "flex min-w-36 items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-3 py-2.5 text-xs font-medium text-blue-50 backdrop-blur",
+        "flex min-w-36 items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-3 py-2.5 text-xs font-medium text-white backdrop-blur",
         className,
       )}
     >
       {active ? (
-        <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-300" />
+        <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
       ) : (
-        <CircleDashed className="h-4 w-4 shrink-0 text-blue-200" />
+        <CircleDashed className="h-4 w-4 shrink-0 text-muted-foreground" />
       )}
       {label}
     </div>
@@ -1139,14 +1136,14 @@ function GeneratedStructureCard({
   );
 
   return (
-    <details className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <summary className="cursor-pointer select-none text-sm font-semibold text-slate-950">
+    <details className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+      <summary className="cursor-pointer select-none text-sm font-semibold text-foreground">
         Structură generată
       </summary>
-      <p className="mt-2 text-sm text-slate-500">
+      <p className="mt-2 text-sm text-muted-foreground">
         Previzualizare a datelor structurate rezultate din pipeline.
       </p>
-      <pre className="mt-4 max-h-80 overflow-auto rounded-xl bg-slate-950 p-4 text-xs leading-5 text-slate-100">
+      <pre className="mt-4 max-h-80 overflow-auto rounded-xl bg-sidebar p-4 text-xs leading-5 text-sidebar-foreground/80">
         {JSON.stringify(generatedStructure, null, 2)}
       </pre>
     </details>
@@ -1167,16 +1164,16 @@ function DetectedRelationshipsCard({
   return (
     <div
       data-testid="document-ai-relations"
-      className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+      className="rounded-2xl border border-border bg-card p-4 shadow-sm"
     >
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="font-semibold text-slate-950">Relații detectate</h3>
-          <p className="mt-1 text-sm text-slate-500">
+          <h3 className="font-semibold text-foreground">Relații detectate</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
             Model semantic intre entitatile extrase si rolul companiei in factura.
           </p>
         </div>
-        <Badge variant="outline" className="rounded-full bg-blue-50 text-blue-700">
+        <Badge variant="outline" className="rounded-full bg-secondary text-primary">
           <Network className="mr-1 h-3.5 w-3.5" />
           {relationships.length} relatii
         </Badge>
@@ -1184,7 +1181,7 @@ function DetectedRelationshipsCard({
 
       <div className="grid gap-3">
         {relationships.length === 0 ? (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          <div className="rounded-2xl border border-warning/40 bg-warning/20 p-4 text-sm text-warning">
             Relațiile cu încredere sub 60% sau bazate pe entități invalide sunt ascunse până la
             verificarea manuală.
           </div>
@@ -1192,11 +1189,11 @@ function DetectedRelationshipsCard({
           relationships.map((relationship) => (
             <div
               key={`${relationship.source}-${relationship.relation}-${relationship.target}`}
-              className="grid gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-3 sm:grid-cols-[1fr_auto_1fr_auto]"
+              className="grid gap-3 rounded-2xl border border-border bg-muted p-3 sm:grid-cols-[1fr_auto_1fr_auto]"
             >
               <RelationshipNode label="Sursa" value={relationship.source} />
               <div className="flex items-center justify-center">
-                <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm">
+                <span className="rounded-full bg-card px-3 py-1 text-xs font-semibold text-muted-foreground shadow-sm">
                   {relationship.relation}
                 </span>
               </div>
@@ -1222,8 +1219,8 @@ function DetectedRelationshipsCard({
 function RelationshipNode({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-slate-950">{value}</p>
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-foreground">{value}</p>
     </div>
   );
 }
@@ -1440,14 +1437,14 @@ function formatConfidence(value: number) {
 
 function getConfidenceTone(value: number) {
   if (value >= 0.75) {
-    return "bg-emerald-50 text-emerald-700";
+    return "bg-success/15 text-success";
   }
 
   if (value >= 0.6) {
-    return "bg-amber-50 text-amber-700";
+    return "bg-warning/20 text-warning";
   }
 
-  return "bg-rose-50 text-rose-700";
+  return "bg-destructive/15 text-destructive";
 }
 
 function formatExtractionMethod(value: DocumentAiExtractionMethod | "User verified") {

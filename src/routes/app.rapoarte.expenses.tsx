@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { AlertTriangle, Eye, Loader2, ReceiptText, Truck, UploadCloud, Wallet } from "lucide-react";
 import {
   Bar,
@@ -33,9 +33,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { useInvoicesData } from "@/hooks/use-invoices-data";
 import { getDashboardData } from "@/lib/dashboardService";
-import { getInvoices } from "@/lib/invoiceService";
-import { formatRON } from "@/lib/mock-data";
+import { formatRON } from "@/lib/formatters";
 import {
   buildMonthlyReportPoints,
   filterInvoicesByClassification,
@@ -59,32 +60,27 @@ type DashboardData = Awaited<ReturnType<typeof getDashboardData>>;
 type ExpensesTab = "all" | "high" | "recent";
 
 function ExpensesReportPage() {
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [invoices, setInvoices] = useState<ReportInvoice[]>([]);
+  const {
+    data: dashboardData,
+    isLoading: isDashboardLoading,
+    isError: isDashboardError,
+  } = useDashboardData();
+  const {
+    data: invoicesData,
+    isLoading: isInvoicesLoading,
+    isError: isInvoicesError,
+  } = useInvoicesData();
+  const invoices = useMemo(
+    () => (invoicesData as unknown as ReportInvoice[]) ?? [],
+    [invoicesData],
+  );
   const [activeTab, setActiveTab] = useState<ExpensesTab>("all");
   const [search, setSearch] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  useEffect(() => {
-    async function loadReport() {
-      try {
-        setIsLoading(true);
-        setErrorMessage("");
-
-        const [dashboard, invoiceData] = await Promise.all([getDashboardData(), getInvoices()]);
-
-        setDashboardData(dashboard);
-        setInvoices(invoiceData as unknown as ReportInvoice[]);
-      } catch {
-        setErrorMessage("Nu s-au putut încărca datele pentru raportul de cheltuieli.");
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    loadReport();
-  }, []);
+  const isLoading = isDashboardLoading || isInvoicesLoading;
+  const errorMessage =
+    isDashboardError || isInvoicesError
+      ? "Nu s-au putut încărca datele pentru raportul de cheltuieli."
+      : "";
 
   const report = useMemo(() => {
     const expenseInvoices = dashboardData
@@ -178,7 +174,7 @@ function ExpensesReportPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[420px] items-center justify-center gap-2 text-slate-500">
+      <div className="flex min-h-[420px] items-center justify-center gap-2 text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
         Se încarcă raportul de cheltuieli...
       </div>
@@ -194,7 +190,7 @@ function ExpensesReportPage() {
         badge="Facturi primite"
         icon={<Wallet className="h-3.5 w-3.5" />}
         actions={
-          <Button asChild className="rounded-full bg-white text-slate-950 hover:bg-slate-100">
+          <Button asChild className="rounded-full bg-card text-foreground hover:bg-muted">
             <Link to="/app/documente">
               <UploadCloud className="h-4 w-4" />
               Importa documente
@@ -204,7 +200,7 @@ function ExpensesReportPage() {
       />
 
       {errorMessage && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+        <div className="rounded-xl border border-destructive/30 bg-destructive/15 p-4 text-sm text-destructive">
           {errorMessage}
         </div>
       )}
@@ -248,7 +244,7 @@ function ExpensesReportPage() {
             <ChartCard
               title="Cheltuieli lunare"
               description="Evoluția valorii facturilor pe lună"
-              className="border-slate-200 bg-white shadow-sm"
+              className="border-border bg-card shadow-sm"
             >
               <ResponsiveContainer width="100%" height={300}>
                 <AreaChart data={report.monthlyChart}>
@@ -271,7 +267,7 @@ function ExpensesReportPage() {
             <ChartCard
               title="Top furnizori după cost"
               description="Furnizorii care concentrează cele mai mari valori"
-              className="border-slate-200 bg-white shadow-sm"
+              className="border-border bg-card shadow-sm"
             >
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={report.suppliers} layout="vertical" margin={{ left: 20 }}>
@@ -351,7 +347,7 @@ function ExpensesReportPage() {
             }
             contentClassName="p-0"
           >
-            <div className="border-b border-slate-100 p-5">
+            <div className="border-b border-border p-5">
               <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as ExpensesTab)}>
                 <TabsList>
                   <TabsTrigger value="all">Toate</TabsTrigger>
@@ -376,7 +372,7 @@ function ExpensesReportPage() {
                 <TableBody>
                   {report.rows.map((row) => (
                     <TableRow key={row.invoice.id}>
-                      <TableCell className="font-medium text-slate-900">
+                      <TableCell className="font-medium text-foreground">
                         {row.invoiceNumber}
                       </TableCell>
                       <TableCell>{row.supplier}</TableCell>
@@ -387,7 +383,7 @@ function ExpensesReportPage() {
                       <TableCell>
                         <ImpactBadge value={row.impact} />
                       </TableCell>
-                      <TableCell className="min-w-[220px] text-slate-600">
+                      <TableCell className="min-w-[220px] text-muted-foreground">
                         {row.observation}
                       </TableCell>
                       <TableCell className="text-right">
@@ -406,7 +402,7 @@ function ExpensesReportPage() {
           </ReportPanel>
 
           <ReportPanel title="Interpretare cheltuieli">
-            <p className="text-sm leading-6 text-slate-600">
+            <p className="text-sm leading-6 text-muted-foreground">
               {report.highExpenseInvoices > 0
                 ? `Există ${report.highExpenseInvoices} facturi cu impact ridicat asupra costurilor. Verifică furnizorii principali și prioritizează plățile esențiale.`
                 : "Cheltuielile sunt distribuite fără concentrații majore. Continuă monitorizarea furnizorilor și a facturilor recente."}

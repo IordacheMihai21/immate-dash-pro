@@ -50,18 +50,18 @@ function UserGuidePage() {
           const Icon = step.icon;
 
           return (
-            <Card key={step.title} className="border-slate-200 bg-white shadow-sm">
+            <Card key={step.title} className="border-border bg-card shadow-sm">
               <CardContent className="p-5">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary">
                     <Icon className="h-5 w-5" />
                   </div>
                   <div>
-                    <div className="mb-2 inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                    <div className="mb-2 inline-flex rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">
                       Etapa {index + 1}
                     </div>
-                    <h2 className="text-base font-semibold text-slate-900">{step.title}</h2>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">{step.text}</p>
+                    <h2 className="text-base font-semibold text-foreground">{step.title}</h2>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{step.text}</p>
                   </div>
                 </div>
               </CardContent>
@@ -70,16 +70,16 @@ function UserGuidePage() {
         })}
       </section>
 
-      <Card className="border-blue-100 bg-blue-50 shadow-sm">
+      <Card className="border-primary/20 bg-secondary shadow-sm">
         <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <div className="mb-3 inline-flex rounded-xl bg-white p-3 text-blue-600">
+            <div className="mb-3 inline-flex rounded-xl bg-card p-3 text-primary">
               <FileText className="h-5 w-5" />
             </div>
-            <h2 className="text-base font-semibold text-blue-950">
+            <h2 className="text-base font-semibold text-foreground">
               Incepe prin incarcarea unei e-Facturi XML
             </h2>
-            <p className="mt-1 text-sm leading-6 text-blue-900">
+            <p className="mt-1 text-sm leading-6 text-primary">
               Dupa import, dashboard-ul, rapoartele si AI Forecast vor folosi documentele tale.
             </p>
           </div>

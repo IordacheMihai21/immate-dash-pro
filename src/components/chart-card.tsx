@@ -11,9 +11,9 @@ interface ChartCardProps {
 export function ChartCard({ title, description, children, className }: ChartCardProps) {
   return (
     <Card className={className}>
-      <CardHeader className="border-b border-slate-100 pb-4">
-        <CardTitle className="text-base font-semibold text-slate-900">{title}</CardTitle>
-        {description && <p className="text-sm text-slate-500">{description}</p>}
+      <CardHeader className="border-b border-border pb-4">
+        <CardTitle className="text-base font-semibold text-foreground">{title}</CardTitle>
+        {description && <p className="text-sm text-muted-foreground">{description}</p>}
       </CardHeader>
       <CardContent className="pt-5">{children}</CardContent>
     </Card>

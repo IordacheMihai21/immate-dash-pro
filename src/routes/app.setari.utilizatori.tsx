@@ -153,7 +153,7 @@ function UsersSettingsPage() {
       />
 
       {errorMessage && (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/15 p-4 text-sm text-destructive">
           {errorMessage}
         </div>
       )}
@@ -185,15 +185,15 @@ function UsersSettingsPage() {
         />
       </section>
 
-      <Card className="border-slate-200 bg-white shadow-sm">
-        <CardHeader className="border-b border-slate-100 p-5">
-          <CardTitle className="text-base font-semibold text-slate-900">
+      <Card className="border-border bg-card shadow-sm">
+        <CardHeader className="border-b border-border p-5">
+          <CardTitle className="text-base font-semibold text-foreground">
             Membrii companiei
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="flex items-center justify-center gap-2 p-10 text-sm text-slate-500">
+            <div className="flex items-center justify-center gap-2 p-10 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
               Se incarca membrii...
             </div>
@@ -211,7 +211,7 @@ function UsersSettingsPage() {
                 <TableBody>
                   {members.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="py-8 text-center text-slate-500">
+                      <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
                         Nu exista membri.
                       </TableCell>
                     </TableRow>
@@ -222,9 +222,9 @@ function UsersSettingsPage() {
 
                       return (
                         <TableRow key={member.id}>
-                          <TableCell className="font-medium text-slate-900">
+                          <TableCell className="font-medium text-foreground">
                             {displayEmail}
-                            {isMe && <span className="ml-2 text-xs text-slate-400">(tu)</span>}
+                            {isMe && <span className="ml-2 text-xs text-muted-foreground">(tu)</span>}
                           </TableCell>
                           <TableCell>
                             {canManage && member.role !== "owner" ? (
@@ -258,7 +258,7 @@ function UsersSettingsPage() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="text-rose-600 hover:text-rose-700"
+                                  className="text-destructive hover:text-destructive"
                                   onClick={() => handleRevoke(member.id)}
                                 >
                                   Revoca
@@ -367,18 +367,18 @@ function UserKpiCard({
   tone: "blue" | "emerald" | "amber" | "slate";
 }) {
   const toneClass = {
-    blue: "bg-blue-50 text-blue-600",
-    emerald: "bg-emerald-50 text-emerald-600",
-    amber: "bg-amber-50 text-amber-600",
-    slate: "bg-slate-100 text-slate-600",
+    blue: "bg-secondary text-primary",
+    emerald: "bg-success/15 text-success",
+    amber: "bg-warning/20 text-warning",
+    slate: "bg-muted text-muted-foreground",
   }[tone];
 
   return (
-    <Card className="border-slate-200 bg-white shadow-sm">
+    <Card className="border-border bg-card shadow-sm">
       <CardContent className="p-5">
         <div className={cn("mb-5 inline-flex rounded-xl p-3", toneClass)}>{icon}</div>
-        <p className="text-sm font-medium text-slate-500">{title}</p>
-        <p className="mt-2 text-2xl font-semibold text-slate-900">{value}</p>
+        <p className="text-sm font-medium text-muted-foreground">{title}</p>
+        <p className="mt-2 text-2xl font-semibold text-foreground">{value}</p>
       </CardContent>
     </Card>
   );
@@ -393,8 +393,8 @@ function MemberStatusBadge({ status }: { status: string }) {
       className={cn(
         "rounded-full",
         active
-          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-          : "border-amber-200 bg-amber-50 text-amber-700",
+          ? "border-success/30 bg-success/15 text-success"
+          : "border-warning/40 bg-warning/20 text-warning",
       )}
     >
       {active ? "Activ" : "Invitat"}

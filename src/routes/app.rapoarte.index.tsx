@@ -18,10 +18,10 @@ function ReportsIndexPage() {
 
       <ReportPanel title="Rapoarte specializate">
         <div className="flex items-start gap-4">
-          <div className="rounded-xl bg-blue-50 p-3 text-blue-600">
+          <div className="rounded-xl bg-secondary p-3 text-primary">
             <BarChart3 className="h-5 w-5" />
           </div>
-          <p className="text-sm leading-6 text-slate-600">
+          <p className="text-sm leading-6 text-muted-foreground">
             Fiecare subsecțiune din meniul Rapoarte deschide o pagină separată, cu indicatori,
             grafice, filtre și tabele dedicate acelui tip de analiză.
           </p>
