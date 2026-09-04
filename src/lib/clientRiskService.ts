@@ -39,7 +39,7 @@ type RelationParty =
   | null
   | undefined;
 
-type InvoiceForRisk = {
+export type InvoiceForRisk = {
   payable_amount: number | null;
   issue_date: string | null;
   created_at: string | null;
@@ -80,8 +80,22 @@ export async function getCustomerRiskProfiles(): Promise<ClientRiskProfile[]> {
     getOrCreateCompanyProfile(),
   ]);
 
-  const salesInvoices = (invoices as InvoiceForRisk[]).filter(
-    (invoice) => classifyInvoiceForCompany(invoice, companyProfile.cui) === "revenue",
+  return computeCustomerRiskProfiles(invoices as InvoiceForRisk[], companyProfile.cui);
+}
+
+/**
+ * Pure computation half of getCustomerRiskProfiles(), split out so
+ * server-only callers (the AI assistant's tool handlers, which use a
+ * request-scoped Supabase client instead of the browser singleton this
+ * file's own fetch functions are bound to) can reuse the exact same
+ * scoring logic instead of a second, drifting copy of it.
+ */
+export function computeCustomerRiskProfiles(
+  invoices: InvoiceForRisk[],
+  companyCui: string | null | undefined,
+): ClientRiskProfile[] {
+  const salesInvoices = invoices.filter(
+    (invoice) => classifyInvoiceForCompany(invoice, companyCui) === "revenue",
   );
 
   const byKey = new Map<

@@ -49,6 +49,7 @@ import { Route as AppAiCenterMonitorizareAiRouteImport } from './routes/app.ai-c
 import { Route as AppAiCenterLayoutAiRouteImport } from './routes/app.ai-center.layout-ai'
 import { Route as AppAiCenterEvaluareAiRouteImport } from './routes/app.ai-center.evaluare-ai'
 import { Route as AppAiCenterDocumentAiRouteImport } from './routes/app.ai-center.document-ai'
+import { Route as AppAiCenterAsistentRouteImport } from './routes/app.ai-center.asistent'
 import { Route as ApiWebhooksStripeRouteImport } from './routes/api.webhooks.stripe'
 
 const TermeniRoute = TermeniRouteImport.update({
@@ -255,6 +256,11 @@ const AppAiCenterDocumentAiRoute = AppAiCenterDocumentAiRouteImport.update({
   path: '/document-ai',
   getParentRoute: () => AppAiCenterRoute,
 } as any)
+const AppAiCenterAsistentRoute = AppAiCenterAsistentRouteImport.update({
+  id: '/asistent',
+  path: '/asistent',
+  getParentRoute: () => AppAiCenterRoute,
+} as any)
 const ApiWebhooksStripeRoute = ApiWebhooksStripeRouteImport.update({
   id: '/api/webhooks/stripe',
   path: '/api/webhooks/stripe',
@@ -282,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/app/setari': typeof AppSetariRouteWithChildren
   '/app/': typeof AppIndexRoute
   '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
+  '/app/ai-center/asistent': typeof AppAiCenterAsistentRoute
   '/app/ai-center/document-ai': typeof AppAiCenterDocumentAiRoute
   '/app/ai-center/evaluare-ai': typeof AppAiCenterEvaluareAiRoute
   '/app/ai-center/layout-ai': typeof AppAiCenterLayoutAiRoute
@@ -321,6 +328,7 @@ export interface FileRoutesByTo {
   '/app/ghid-utilizare': typeof AppGhidUtilizareRoute
   '/app': typeof AppIndexRoute
   '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
+  '/app/ai-center/asistent': typeof AppAiCenterAsistentRoute
   '/app/ai-center/document-ai': typeof AppAiCenterDocumentAiRoute
   '/app/ai-center/evaluare-ai': typeof AppAiCenterEvaluareAiRoute
   '/app/ai-center/layout-ai': typeof AppAiCenterLayoutAiRoute
@@ -365,6 +373,7 @@ export interface FileRoutesById {
   '/app/setari': typeof AppSetariRouteWithChildren
   '/app/': typeof AppIndexRoute
   '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
+  '/app/ai-center/asistent': typeof AppAiCenterAsistentRoute
   '/app/ai-center/document-ai': typeof AppAiCenterDocumentAiRoute
   '/app/ai-center/evaluare-ai': typeof AppAiCenterEvaluareAiRoute
   '/app/ai-center/layout-ai': typeof AppAiCenterLayoutAiRoute
@@ -410,6 +419,7 @@ export interface FileRouteTypes {
     | '/app/setari'
     | '/app/'
     | '/api/webhooks/stripe'
+    | '/app/ai-center/asistent'
     | '/app/ai-center/document-ai'
     | '/app/ai-center/evaluare-ai'
     | '/app/ai-center/layout-ai'
@@ -449,6 +459,7 @@ export interface FileRouteTypes {
     | '/app/ghid-utilizare'
     | '/app'
     | '/api/webhooks/stripe'
+    | '/app/ai-center/asistent'
     | '/app/ai-center/document-ai'
     | '/app/ai-center/evaluare-ai'
     | '/app/ai-center/layout-ai'
@@ -492,6 +503,7 @@ export interface FileRouteTypes {
     | '/app/setari'
     | '/app/'
     | '/api/webhooks/stripe'
+    | '/app/ai-center/asistent'
     | '/app/ai-center/document-ai'
     | '/app/ai-center/evaluare-ai'
     | '/app/ai-center/layout-ai'
@@ -810,6 +822,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAiCenterDocumentAiRouteImport
       parentRoute: typeof AppAiCenterRoute
     }
+    '/app/ai-center/asistent': {
+      id: '/app/ai-center/asistent'
+      path: '/asistent'
+      fullPath: '/app/ai-center/asistent'
+      preLoaderRoute: typeof AppAiCenterAsistentRouteImport
+      parentRoute: typeof AppAiCenterRoute
+    }
     '/api/webhooks/stripe': {
       id: '/api/webhooks/stripe'
       path: '/api/webhooks/stripe'
@@ -821,6 +840,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppAiCenterRouteChildren {
+  AppAiCenterAsistentRoute: typeof AppAiCenterAsistentRoute
   AppAiCenterDocumentAiRoute: typeof AppAiCenterDocumentAiRoute
   AppAiCenterEvaluareAiRoute: typeof AppAiCenterEvaluareAiRoute
   AppAiCenterLayoutAiRoute: typeof AppAiCenterLayoutAiRoute
@@ -830,6 +850,7 @@ interface AppAiCenterRouteChildren {
 }
 
 const AppAiCenterRouteChildren: AppAiCenterRouteChildren = {
+  AppAiCenterAsistentRoute: AppAiCenterAsistentRoute,
   AppAiCenterDocumentAiRoute: AppAiCenterDocumentAiRoute,
   AppAiCenterEvaluareAiRoute: AppAiCenterEvaluareAiRoute,
   AppAiCenterLayoutAiRoute: AppAiCenterLayoutAiRoute,
