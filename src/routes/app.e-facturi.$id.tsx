@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { ArrowLeft, Download, FileCode2, Info, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { RecordDiscussion } from "@/components/record-discussion";
 import { formatRON } from "@/lib/formatters";
 import { getInvoiceDetails } from "@/lib/invoiceService";
 import { generateUblInvoiceXml } from "@/lib/ublInvoiceGenerator";
@@ -239,6 +240,10 @@ function InvoiceDetail() {
           Aceasta pagina afiseaza datele extrase automat din document, liniile facturii, entitatile
           identificate si relatiile dintre acestea.
         </p>
+      </div>
+
+      <div className="mb-4">
+        <RecordDiscussion entityType="invoice" entityId={invoice.id} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
