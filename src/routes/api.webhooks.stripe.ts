@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type Stripe from "stripe";
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin.server";
-import { getStripeClient, getStripeWebhookSecret } from "@/lib/stripe.server";
+import { getPlanFromPriceId, getStripeClient, getStripeWebhookSecret } from "@/lib/stripe.server";
 
 // Stripe -> IMMapp webhook. This is the ONLY place subscription status is
 // ever written -- never trust a client-reported "I paid", always trust
@@ -9,12 +9,15 @@ import { getStripeClient, getStripeWebhookSecret } from "@/lib/stripe.server";
 // for why the table itself also refuses any client-side write.
 //
 // LIVE-VERIFIED end-to-end on 2026-09-04 (API version 2026-08-26.dahlia,
-// via `stripe listen` + a real test-mode checkout and a real portal
-// cancellation): checkout.session.completed, customer.subscription.updated
-// and the cancel-at-period-end path all confirmed against a real Stripe
-// account, not just written to the docs. customer.subscription.deleted
-// (immediate/non-scheduled cancellation) is still unverified -- the portal
-// only exercised the cancel-at-period-end path.
+// via `stripe listen` against a real Stripe test-mode account, not just
+// written to the docs): checkout.session.completed, a real checkout, the
+// cancel-at-period-end path, a real Customer Portal PLAN SWITCH (Business ->
+// Companie, confirmed the DB picked up the new plan from the subscription's
+// live price -- see getPlanFromPriceId in stripe.server.ts, not from
+// checkout-time metadata, which goes stale exactly on a portal-initiated
+// switch), and a real immediate cancellation (customer.subscription.deleted,
+// confirmed the company reverts to the free "start" plan with no stale
+// current_period_end left behind).
 
 export const Route = createFileRoute("/api/webhooks/stripe")({
   server: {
@@ -119,6 +122,13 @@ async function handleStripeEvent(event: Stripe.Event): Promise<void> {
           plan: "start",
           status: "canceled",
           stripe_subscription_id: null,
+          // LIVE-VERIFIED (2026-09-04): leaving the previous paid
+          // subscription's current_period_end in place made the billing
+          // page show "Se reinnoieste pe <old date>" for a company that had
+          // just reverted to the free plan -- found by triggering a real
+          // subscription.deleted event and checking the UI, not by
+          // inspection.
+          current_period_end: null,
           cancel_at_period_end: false,
           updated_at: new Date().toISOString(),
         })
@@ -162,6 +172,20 @@ async function upsertSubscriptionFromStripe(
 ): Promise<void> {
   const admin = getSupabaseAdminClient();
 
+  // Source of truth for plan/cycle is the price actually on the subscription
+  // right now, not extra.plan/billingCycle (checkout-time metadata). Metadata
+  // only reflects what was chosen at the original checkout -- if the
+  // customer later switches plans from the Customer Portal (see
+  // ensurePortalPlanSwitchingEnabled in stripe.server.ts), that happens
+  // entirely on Stripe's side and never touches our metadata, so relying on
+  // it would silently keep showing the old plan after a real portal switch.
+  const livePriceId = subscription.items.data[0]?.price?.id;
+  const livePlan = getPlanFromPriceId(livePriceId);
+
+  // Fallback path for metadata is defensive only (e.g. a price ID that
+  // somehow isn't one of the 4 configured ones) -- expected to never
+  // actually trigger in normal operation.
+
   // LIVE-VERIFIED 2026-09-04: on API version 2026-08-26.dahlia, the top-level
   // `current_period_end` is what's actually present (confirmed via a real
   // checkout: the row landed with the correct one-year-out timestamp).
@@ -180,11 +204,14 @@ async function upsertSubscriptionFromStripe(
           ? subscription.customer
           : subscription.customer.id),
       stripe_subscription_id: subscription.id,
-      plan: extra.plan && ["business", "companie"].includes(extra.plan) ? extra.plan : "business",
+      plan:
+        livePlan?.plan ??
+        (extra.plan && ["business", "companie"].includes(extra.plan) ? extra.plan : "business"),
       billing_cycle:
-        extra.billingCycle && ["monthly", "annual"].includes(extra.billingCycle)
+        livePlan?.cycle ??
+        (extra.billingCycle && ["monthly", "annual"].includes(extra.billingCycle)
           ? extra.billingCycle
-          : null,
+          : null),
       status: mapStripeStatus(subscription.status),
       current_period_end: currentPeriodEndSeconds
         ? new Date(currentPeriodEndSeconds * 1000).toISOString()

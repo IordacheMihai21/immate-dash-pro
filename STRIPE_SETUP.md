@@ -2,11 +2,11 @@
 
 Verificat live end-to-end pe 2026-09-04, cu un cont Stripe real (sandbox,
 test mode): checkout real (card de test 4242...4242), webhook real primit
-prin `stripe listen`, portal de facturare real, anulare reala. Doua
-probleme reale au fost gasite in acest proces si reparate -- vezi "Ce a
-iesit la iveala din testarea reala" mai jos. Pasii de mai jos folosesc
-**test mode** -- niciun card real nu e taxat pana nu comuti explicit pe
-live mode in Stripe.
+prin `stripe listen`, portal de facturare real, schimbare de plan reala,
+anulare programata si anulare imediata reale. Trei probleme reale au fost
+gasite in acest proces si reparate -- vezi "Ce a iesit la iveala din
+testarea reala" mai jos. Pasii de mai jos folosesc **test mode** -- niciun
+card real nu e taxat pana nu comuti explicit pe live mode in Stripe.
 
 ## 1. Cont Stripe
 
@@ -54,14 +54,16 @@ STRIPE_PRICE_COMPANIE_ANNUAL=price_...
 
 ## 5. Customer Portal
 
-**Settings -> Billing -> Customer portal.** Activeaza-l. Pentru inceput,
-**dezactiveaza** optiunea de schimbare a planului direct din portal ("Allow
-customers to switch plans") -- codul actual nu recunoaste inca o schimbare
-de plan facuta din portal (doar cele facute prin checkout-ul din aplicatie).
-Poti lasa active: actualizare card, anulare abonament, facturi trecute.
+**Settings -> Billing -> Customer portal.** Activeaza-l. Nu mai e nevoie sa
+dezactivezi manual "Allow customers to switch plans" -- codul acum
+activeaza automat acea optiune la fiecare deschidere de portal
+(`ensurePortalPlanSwitchingEnabled` in `stripe.server.ts`), restrans exact
+la cele 4 preturi Business/Companie din `.env`, si citeste planul real de
+pe abonament (nu din metadata de la checkout) ca sa recunoasca si o
+schimbare facuta din portal. Verificat live -- vezi mai jos.
 
-Anularea din portal **e verificata live** (vezi mai jos) si functioneaza
-corect.
+Anularea din portal (atat programata cat si imediata) **e verificata live**
+(vezi mai jos) si functioneaza corect.
 
 ## 6. Restul `.env`
 
@@ -93,9 +95,15 @@ Testeaza si anularea: din `/app/setari/facturare` -> "Gestioneaza
 abonamentul" -> anuleaza -> confirma ca planul revine la "Start" dupa ce
 webhook-ul `customer.subscription.deleted` ajunge.
 
+Testeaza si schimbarea de plan direct din portal (nu din checkout-ul
+aplicatiei): "Gestioneaza abonamentul" -> "Update subscription" -> alege
+celalalt plan -> confirma. Verifica in Supabase ca `plan` s-a actualizat
+corect. Pentru o anulare imediata (nu programata), foloseste Stripe CLI:
+`stripe subscriptions cancel <sub_...>`.
+
 ## Ce a iesit la iveala din testarea reala (2026-09-04)
 
-Doua probleme reale, care nu puteau fi gasite fara un cont Stripe adevarat:
+Trei probleme reale, care nu puteau fi gasite fara un cont Stripe adevarat:
 
 - **Managed Payments**: checkout-ul esua cu "product tax code is missing"
   -- Stripe activeaza implicit Managed Payments (colecteaza si remite taxe
@@ -110,6 +118,11 @@ Doua probleme reale, care nu puteau fi gasite fara un cont Stripe adevarat:
   `2026-08-26.dahlia`, Stripe seteaza `cancel_at` (un timestamp), nu
   boolean-ul legacy `cancel_at_period_end`. Reparat in webhook -- acum
   verifica ambele campuri.
+- **`current_period_end` invechit dupa anulare imediata**: la revenirea pe
+  planul gratuit, webhook-ul nu stergea `current_period_end` din
+  abonamentul anterior, asa ca pagina de facturare afisa gresit "Se
+  reinnoieste pe <data veche>" pentru o companie de fapt pe planul gratuit.
+  Reparat -- campul se goleste explicit la `customer.subscription.deleted`.
 
 ## Ce e verificat live (2026-09-04, cont Stripe real, test mode)
 
@@ -118,21 +131,21 @@ Doua probleme reale, care nu puteau fi gasite fara un cont Stripe adevarat:
 - `current_period_end`: confirmat ca soseste corect la nivelul de top al
   obiectului Subscription pe versiunea de API `2026-08-26.dahlia` (randul
   din baza de date a aparut cu timestamp-ul corect, la un an distanta).
-- `customer.subscription.updated`, inclusiv anularea (cancel-at-period-end)
-  facuta din Customer Portal real -- confirmata dupa fix-ul de mai sus.
+- `customer.subscription.updated`, inclusiv anularea programata
+  (cancel-at-period-end) facuta din Customer Portal real.
+- **Schimbare de plan din Customer Portal** (Business -> Companie, cu bani
+  reali de test): confirmat ca baza de date a preluat planul nou -- codul
+  citeste pretul curent de pe abonament (`getPlanFromPriceId`), nu metadata
+  de la checkout, care ramane invechita exact intr-o schimbare facuta din
+  portal.
+- **Anulare imediata** (`customer.subscription.deleted`, nu doar programata):
+  compania revine real la planul gratuit "start" in baza de date, fara sa
+  ramana un `current_period_end` invechit din abonamentul anterior (bug
+  gasit si reparat in acest test: pagina de facturare afisa gresit "Se
+  reinnoieste pe ..." pentru o companie de fapt pe planul gratuit).
 - Portalul de facturare (buton "Gestioneaza abonamentul") deschide sesiunea
   reala Stripe si revine corect in aplicatie.
 - Plomberia client -> server function -> guard-ul `STRIPE_SECRET_KEY`.
 - Migratia bazei de date (tabelul `subscriptions`, RLS, trigger-ul de
   bootstrap).
 - Pagina de facturare afiseaza corect planul real al companiei.
-
-## Ce NU e inca verificat (motiv real, nu presupunere)
-
-- `customer.subscription.deleted` (anulare imediata / necesta programata) --
-  testarea reala a acoperit doar fluxul de anulare programata (cancel at
-  period end) din Customer Portal, nu o anulare imediata.
-- Comportamentul exact al `customer.subscription.updated` la schimbari de
-  plan facute din Customer Portal (motiv pentru care e recomandat sa
-  dezactivezi acea optiune la pasul 5, cel putin pana se adauga suport
-  explicit pentru ea).

@@ -1,7 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getScopedSupabaseClient, getVerifiedUserId } from "@/lib/supabaseScoped.server";
-import { getStripeClient, getStripePriceId } from "@/lib/stripe.server";
+import {
+  ensurePortalPlanSwitchingEnabled,
+  getStripeClient,
+  getStripePriceId,
+} from "@/lib/stripe.server";
 
 const billingRoles = new Set(["owner", "admin"]);
 
@@ -101,6 +105,17 @@ export const createBillingPortalSession = createServerFn({ method: "POST" })
     }
 
     const stripe = getStripeClient();
+
+    // Best-effort: makes sure "switch plans" is turned on in the portal,
+    // restricted to our own Business/Companie prices. If it fails (e.g. no
+    // portal configuration exists yet on a brand new account), the portal
+    // session below still works -- it just opens without plan-switching,
+    // same as before this existed.
+    try {
+      await ensurePortalPlanSwitchingEnabled();
+    } catch (error) {
+      console.warn("Nu s-a putut activa schimbarea planului din portal", error);
+    }
 
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: subscription.stripe_customer_id,

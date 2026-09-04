@@ -110,9 +110,11 @@ function BillingPage() {
                 <p className="mt-1 text-sm text-muted-foreground">
                   {subscription.status === "past_due"
                     ? "Plata a esuat -- actualizeaza metoda de plata."
-                    : subscription.cancelAtPeriodEnd && subscription.currentPeriodEnd
+                    : subscription.plan !== "start" &&
+                        subscription.cancelAtPeriodEnd &&
+                        subscription.currentPeriodEnd
                       ? `Se anuleaza pe ${new Date(subscription.currentPeriodEnd).toLocaleDateString("ro-RO")}.`
-                      : subscription.currentPeriodEnd
+                      : subscription.plan !== "start" && subscription.currentPeriodEnd
                         ? `Se reinnoieste pe ${new Date(subscription.currentPeriodEnd).toLocaleDateString("ro-RO")}.`
                         : "Fara costuri, fara card bancar."}
                 </p>
