@@ -127,41 +127,19 @@ function EInvoicesPage() {
       return;
     }
 
-    const headers = [
-      "Numar factura",
-      "Data emiterii",
-      "Furnizor",
-      "CUI furnizor",
-      "Client",
-      "CUI client",
-      "Valoare fara TVA",
-      "TVA",
-      "Total de plata",
-      "Moneda",
-      "Status",
-    ];
+    const rows = filteredInvoices.map(buildInvoiceCsvRow);
 
-    const rows = filteredInvoices.map((invoice) => {
-      const supplier = getRelationParty(invoice.suppliers);
-      const customer = getRelationParty(invoice.customers);
-
-      return [
-        invoice.invoice_number,
-        formatDate(invoice.issue_date),
-        supplier?.name ?? "",
-        supplier?.cui ?? "",
-        customer?.name ?? "",
-        customer?.cui ?? "",
-        Number(invoice.tax_exclusive_amount ?? 0).toFixed(2),
-        Number(invoice.tax_amount ?? 0).toFixed(2),
-        Number(invoice.payable_amount ?? 0).toFixed(2),
-        invoice.currency ?? "RON",
-        normalizeStatus(invoice.status),
-      ];
-    });
-
-    downloadCsv(`facturi-immapp-${todayForFilename()}.csv`, headers, rows);
+    downloadCsv(`facturi-immapp-${todayForFilename()}.csv`, invoiceCsvHeaders, rows);
     toast.success(`${filteredInvoices.length} facturi exportate.`);
+  }
+
+  function handleExportInvoiceCsv(invoice: InvoiceRow) {
+    downloadCsv(
+      `factura-${invoice.invoice_number || invoice.id}-${todayForFilename()}.csv`,
+      invoiceCsvHeaders,
+      [buildInvoiceCsvRow(invoice)],
+    );
+    toast.success(`Factura ${invoice.invoice_number} exportata.`);
   }
 
   async function loadInvoices() {
@@ -392,7 +370,9 @@ function EInvoicesPage() {
                                     Detalii factura
                                   </Link>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem disabled>Export in curand</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleExportInvoiceCsv(invoice)}>
+                                  Export CSV
+                                </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
@@ -408,6 +388,39 @@ function EInvoicesPage() {
       </AdminPanel>
     </div>
   );
+}
+
+const invoiceCsvHeaders = [
+  "Numar factura",
+  "Data emiterii",
+  "Furnizor",
+  "CUI furnizor",
+  "Client",
+  "CUI client",
+  "Valoare fara TVA",
+  "TVA",
+  "Total de plata",
+  "Moneda",
+  "Status",
+];
+
+function buildInvoiceCsvRow(invoice: InvoiceRow) {
+  const supplier = getRelationParty(invoice.suppliers);
+  const customer = getRelationParty(invoice.customers);
+
+  return [
+    invoice.invoice_number,
+    formatDate(invoice.issue_date),
+    supplier?.name ?? "",
+    supplier?.cui ?? "",
+    customer?.name ?? "",
+    customer?.cui ?? "",
+    Number(invoice.tax_exclusive_amount ?? 0).toFixed(2),
+    Number(invoice.tax_amount ?? 0).toFixed(2),
+    Number(invoice.payable_amount ?? 0).toFixed(2),
+    invoice.currency ?? "RON",
+    normalizeStatus(invoice.status),
+  ];
 }
 
 function getRelationParty(party: RelationParty) {
