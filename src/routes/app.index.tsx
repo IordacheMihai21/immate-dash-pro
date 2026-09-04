@@ -56,7 +56,7 @@ import { TrendBadge } from "@/components/trend-badge";
 import { useRecentActivity } from "@/hooks/use-activity-log";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { getDashboardData } from "@/lib/dashboardService";
-import { formatRON } from "@/lib/mock-data";
+import { formatRON } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/")({

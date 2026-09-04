@@ -52,7 +52,7 @@ import {
 } from "@/components/ui/table";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { getDashboardData } from "@/lib/dashboardService";
-import { formatRON } from "@/lib/mock-data";
+import { formatRON } from "@/lib/formatters";
 import type { AiFinancialForecast } from "@/lib/predictionService";
 import type { RiskClassificationResult } from "@/lib/riskClassificationService";
 import type { DocumentExtractionEvaluation } from "@/lib/extractionEvaluationService";

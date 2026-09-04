@@ -40,7 +40,7 @@ import {
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { useInvoicesData } from "@/hooks/use-invoices-data";
 import { getDashboardData } from "@/lib/dashboardService";
-import { formatRON } from "@/lib/mock-data";
+import { formatRON } from "@/lib/formatters";
 import {
   filterInvoicesByClassification,
   formatPercent,

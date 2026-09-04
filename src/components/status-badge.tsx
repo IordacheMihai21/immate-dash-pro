@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
-import type { DocStatus } from "@/lib/mock-data";
+
+export type DocStatus = "Procesat" | "În procesare" | "Eroare";
 
 const styles: Record<string, string> = {
   Procesat: "bg-success/15 text-success border-success/30",

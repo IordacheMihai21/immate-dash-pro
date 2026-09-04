@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import { ArrowLeft, Download, FileCode2, Info, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { formatRON } from "@/lib/mock-data";
+import { formatRON } from "@/lib/formatters";
 import { getInvoiceDetails } from "@/lib/invoiceService";
 import { generateUblInvoiceXml } from "@/lib/ublInvoiceGenerator";
 

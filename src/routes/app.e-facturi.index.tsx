@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/table";
 import { downloadCsv, todayForFilename } from "@/lib/csvExport";
 import { getInvoices } from "@/lib/invoiceService";
-import { formatRON } from "@/lib/mock-data";
+import { formatRON } from "@/lib/formatters";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/app/e-facturi/")({

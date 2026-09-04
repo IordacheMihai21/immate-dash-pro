@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/table";
 import { useCustomerSummaries } from "@/hooks/use-party-summaries";
 import { downloadCsv, todayForFilename } from "@/lib/csvExport";
-import { formatRON } from "@/lib/mock-data";
+import { formatRON } from "@/lib/formatters";
 
 export const Route = createFileRoute("/app/clienti")({
   head: () => ({ meta: [{ title: "Clienți — IMMapp" }] }),

@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermeniRouteImport } from './routes/termeni'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as PreturiRouteImport } from './routes/preturi'
 import { Route as LoginRouteImport } from './routes/login'
@@ -53,6 +54,11 @@ import { Route as ApiWebhooksStripeRouteImport } from './routes/api.webhooks.str
 const TermeniRoute = TermeniRouteImport.update({
   id: '/termeni',
   path: '/termeni',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterRoute = RegisterRouteImport.update({
@@ -263,6 +269,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/preturi': typeof PreturiRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/termeni': typeof TermeniRoute
   '/app/ai-center': typeof AppAiCenterRouteWithChildren
   '/app/ai-forecast': typeof AppAiForecastRoute
@@ -304,6 +311,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/preturi': typeof PreturiRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/termeni': typeof TermeniRoute
   '/app/ai-forecast': typeof AppAiForecastRoute
   '/app/ajutor': typeof AppAjutorRoute
@@ -344,6 +352,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/preturi': typeof PreturiRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/termeni': typeof TermeniRoute
   '/app/ai-center': typeof AppAiCenterRouteWithChildren
   '/app/ai-forecast': typeof AppAiForecastRoute
@@ -388,6 +397,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/preturi'
     | '/register'
+    | '/reset-password'
     | '/termeni'
     | '/app/ai-center'
     | '/app/ai-forecast'
@@ -429,6 +439,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/preturi'
     | '/register'
+    | '/reset-password'
     | '/termeni'
     | '/app/ai-forecast'
     | '/app/ajutor'
@@ -468,6 +479,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/preturi'
     | '/register'
+    | '/reset-password'
     | '/termeni'
     | '/app/ai-center'
     | '/app/ai-forecast'
@@ -511,6 +523,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PreturiRoute: typeof PreturiRoute
   RegisterRoute: typeof RegisterRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   TermeniRoute: typeof TermeniRoute
   ApiWebhooksStripeRoute: typeof ApiWebhooksStripeRoute
 }
@@ -522,6 +535,13 @@ declare module '@tanstack/react-router' {
       path: '/termeni'
       fullPath: '/termeni'
       preLoaderRoute: typeof TermeniRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
@@ -908,6 +928,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PreturiRoute: PreturiRoute,
   RegisterRoute: RegisterRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   TermeniRoute: TermeniRoute,
   ApiWebhooksStripeRoute: ApiWebhooksStripeRoute,
 }
