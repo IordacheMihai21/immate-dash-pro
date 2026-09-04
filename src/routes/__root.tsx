@@ -8,6 +8,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import * as Sentry from "@sentry/tanstackstart-react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -39,6 +40,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    Sentry.captureException(error);
   }, [error]);
 
   return (
@@ -77,37 +79,28 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "IMMApp" },
+      { title: "IMMapp — Document AI și e-Factura pentru IMM-uri" },
       {
         name: "description",
         content:
-          "IMMapp Insights is a SaaS BI platform for Romanian SMEs to process financial documents and view interactive dashboards.",
+          "IMMapp centralizează e-Factura, Document AI și rapoarte financiare (cash-flow, TVA, profitabilitate) pentru IMM-uri din România, cu colaborare directă firmă-contabil.",
       },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "IMMApp" },
+      { name: "author", content: "IMMapp" },
+      { name: "theme-color", content: "#2556e0" },
+      { property: "og:title", content: "IMMapp — Document AI și e-Factura pentru IMM-uri" },
       {
         property: "og:description",
         content:
-          "IMMapp Insights is a SaaS BI platform for Romanian SMEs to process financial documents and view interactive dashboards.",
+          "Citește automat facturile firmei tale, verifică extractia AI și vezi TVA, cash-flow și risc într-un dashboard clar.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "IMMapp" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "IMMApp" },
+      { name: "twitter:title", content: "IMMapp — Document AI și e-Factura pentru IMM-uri" },
       {
         name: "twitter:description",
         content:
-          "IMMapp Insights is a SaaS BI platform for Romanian SMEs to process financial documents and view interactive dashboards.",
-      },
-      {
-        property: "og:image",
-        content:
-          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b00f8ef0-cead-4de3-a32d-882acadb0a68/id-preview-92798887--75451b34-c37b-4447-9b2b-4d4b075aaf13.lovable.app-1780501264494.png",
-      },
-      {
-        name: "twitter:image",
-        content:
-          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b00f8ef0-cead-4de3-a32d-882acadb0a68/id-preview-92798887--75451b34-c37b-4447-9b2b-4d4b075aaf13.lovable.app-1780501264494.png",
+          "Citește automat facturile firmei tale, verifică extractia AI și vezi TVA, cash-flow și risc într-un dashboard clar.",
       },
     ],
     links: [
@@ -115,6 +108,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
+      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+      { rel: "icon", href: "/favicon.ico", sizes: "any" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      { rel: "manifest", href: "/site.webmanifest" },
     ],
   }),
   shellComponent: RootShell,
@@ -125,7 +122,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="ro">
       <head>
         <HeadContent />
       </head>

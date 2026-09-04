@@ -34,6 +34,7 @@ import { Route as AppAiCenterIndexRouteImport } from './routes/app.ai-center.ind
 import { Route as AppSetariUtilizatoriRouteImport } from './routes/app.setari.utilizatori'
 import { Route as AppSetariSecuritateRouteImport } from './routes/app.setari.securitate'
 import { Route as AppSetariPreferinteRouteImport } from './routes/app.setari.preferinte'
+import { Route as AppSetariFacturareRouteImport } from './routes/app.setari.facturare'
 import { Route as AppRapoarteTvaRouteImport } from './routes/app.rapoarte.tva'
 import { Route as AppRapoarteRevenueRouteImport } from './routes/app.rapoarte.revenue'
 import { Route as AppRapoarteProfitabilitateRouteImport } from './routes/app.rapoarte.profitabilitate'
@@ -47,6 +48,7 @@ import { Route as AppAiCenterMonitorizareAiRouteImport } from './routes/app.ai-c
 import { Route as AppAiCenterLayoutAiRouteImport } from './routes/app.ai-center.layout-ai'
 import { Route as AppAiCenterEvaluareAiRouteImport } from './routes/app.ai-center.evaluare-ai'
 import { Route as AppAiCenterDocumentAiRouteImport } from './routes/app.ai-center.document-ai'
+import { Route as ApiWebhooksStripeRouteImport } from './routes/api.webhooks.stripe'
 
 const TermeniRoute = TermeniRouteImport.update({
   id: '/termeni',
@@ -173,6 +175,11 @@ const AppSetariPreferinteRoute = AppSetariPreferinteRouteImport.update({
   path: '/preferinte',
   getParentRoute: () => AppSetariRoute,
 } as any)
+const AppSetariFacturareRoute = AppSetariFacturareRouteImport.update({
+  id: '/facturare',
+  path: '/facturare',
+  getParentRoute: () => AppSetariRoute,
+} as any)
 const AppRapoarteTvaRoute = AppRapoarteTvaRouteImport.update({
   id: '/tva',
   path: '/tva',
@@ -242,6 +249,11 @@ const AppAiCenterDocumentAiRoute = AppAiCenterDocumentAiRouteImport.update({
   path: '/document-ai',
   getParentRoute: () => AppAiCenterRoute,
 } as any)
+const ApiWebhooksStripeRoute = ApiWebhooksStripeRouteImport.update({
+  id: '/api/webhooks/stripe',
+  path: '/api/webhooks/stripe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -262,6 +274,7 @@ export interface FileRoutesByFullPath {
   '/app/rapoarte': typeof AppRapoarteRouteWithChildren
   '/app/setari': typeof AppSetariRouteWithChildren
   '/app/': typeof AppIndexRoute
+  '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
   '/app/ai-center/document-ai': typeof AppAiCenterDocumentAiRoute
   '/app/ai-center/evaluare-ai': typeof AppAiCenterEvaluareAiRoute
   '/app/ai-center/layout-ai': typeof AppAiCenterLayoutAiRoute
@@ -275,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/app/rapoarte/profitabilitate': typeof AppRapoarteProfitabilitateRoute
   '/app/rapoarte/revenue': typeof AppRapoarteRevenueRoute
   '/app/rapoarte/tva': typeof AppRapoarteTvaRoute
+  '/app/setari/facturare': typeof AppSetariFacturareRoute
   '/app/setari/preferinte': typeof AppSetariPreferinteRoute
   '/app/setari/securitate': typeof AppSetariSecuritateRoute
   '/app/setari/utilizatori': typeof AppSetariUtilizatoriRoute
@@ -298,6 +312,7 @@ export interface FileRoutesByTo {
   '/app/furnizori': typeof AppFurnizoriRoute
   '/app/ghid-utilizare': typeof AppGhidUtilizareRoute
   '/app': typeof AppIndexRoute
+  '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
   '/app/ai-center/document-ai': typeof AppAiCenterDocumentAiRoute
   '/app/ai-center/evaluare-ai': typeof AppAiCenterEvaluareAiRoute
   '/app/ai-center/layout-ai': typeof AppAiCenterLayoutAiRoute
@@ -311,6 +326,7 @@ export interface FileRoutesByTo {
   '/app/rapoarte/profitabilitate': typeof AppRapoarteProfitabilitateRoute
   '/app/rapoarte/revenue': typeof AppRapoarteRevenueRoute
   '/app/rapoarte/tva': typeof AppRapoarteTvaRoute
+  '/app/setari/facturare': typeof AppSetariFacturareRoute
   '/app/setari/preferinte': typeof AppSetariPreferinteRoute
   '/app/setari/securitate': typeof AppSetariSecuritateRoute
   '/app/setari/utilizatori': typeof AppSetariUtilizatoriRoute
@@ -339,6 +355,7 @@ export interface FileRoutesById {
   '/app/rapoarte': typeof AppRapoarteRouteWithChildren
   '/app/setari': typeof AppSetariRouteWithChildren
   '/app/': typeof AppIndexRoute
+  '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
   '/app/ai-center/document-ai': typeof AppAiCenterDocumentAiRoute
   '/app/ai-center/evaluare-ai': typeof AppAiCenterEvaluareAiRoute
   '/app/ai-center/layout-ai': typeof AppAiCenterLayoutAiRoute
@@ -352,6 +369,7 @@ export interface FileRoutesById {
   '/app/rapoarte/profitabilitate': typeof AppRapoarteProfitabilitateRoute
   '/app/rapoarte/revenue': typeof AppRapoarteRevenueRoute
   '/app/rapoarte/tva': typeof AppRapoarteTvaRoute
+  '/app/setari/facturare': typeof AppSetariFacturareRoute
   '/app/setari/preferinte': typeof AppSetariPreferinteRoute
   '/app/setari/securitate': typeof AppSetariSecuritateRoute
   '/app/setari/utilizatori': typeof AppSetariUtilizatoriRoute
@@ -381,6 +399,7 @@ export interface FileRouteTypes {
     | '/app/rapoarte'
     | '/app/setari'
     | '/app/'
+    | '/api/webhooks/stripe'
     | '/app/ai-center/document-ai'
     | '/app/ai-center/evaluare-ai'
     | '/app/ai-center/layout-ai'
@@ -394,6 +413,7 @@ export interface FileRouteTypes {
     | '/app/rapoarte/profitabilitate'
     | '/app/rapoarte/revenue'
     | '/app/rapoarte/tva'
+    | '/app/setari/facturare'
     | '/app/setari/preferinte'
     | '/app/setari/securitate'
     | '/app/setari/utilizatori'
@@ -417,6 +437,7 @@ export interface FileRouteTypes {
     | '/app/furnizori'
     | '/app/ghid-utilizare'
     | '/app'
+    | '/api/webhooks/stripe'
     | '/app/ai-center/document-ai'
     | '/app/ai-center/evaluare-ai'
     | '/app/ai-center/layout-ai'
@@ -430,6 +451,7 @@ export interface FileRouteTypes {
     | '/app/rapoarte/profitabilitate'
     | '/app/rapoarte/revenue'
     | '/app/rapoarte/tva'
+    | '/app/setari/facturare'
     | '/app/setari/preferinte'
     | '/app/setari/securitate'
     | '/app/setari/utilizatori'
@@ -457,6 +479,7 @@ export interface FileRouteTypes {
     | '/app/rapoarte'
     | '/app/setari'
     | '/app/'
+    | '/api/webhooks/stripe'
     | '/app/ai-center/document-ai'
     | '/app/ai-center/evaluare-ai'
     | '/app/ai-center/layout-ai'
@@ -470,6 +493,7 @@ export interface FileRouteTypes {
     | '/app/rapoarte/profitabilitate'
     | '/app/rapoarte/revenue'
     | '/app/rapoarte/tva'
+    | '/app/setari/facturare'
     | '/app/setari/preferinte'
     | '/app/setari/securitate'
     | '/app/setari/utilizatori'
@@ -488,6 +512,7 @@ export interface RootRouteChildren {
   PreturiRoute: typeof PreturiRoute
   RegisterRoute: typeof RegisterRoute
   TermeniRoute: typeof TermeniRoute
+  ApiWebhooksStripeRoute: typeof ApiWebhooksStripeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -667,6 +692,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSetariPreferinteRouteImport
       parentRoute: typeof AppSetariRoute
     }
+    '/app/setari/facturare': {
+      id: '/app/setari/facturare'
+      path: '/facturare'
+      fullPath: '/app/setari/facturare'
+      preLoaderRoute: typeof AppSetariFacturareRouteImport
+      parentRoute: typeof AppSetariRoute
+    }
     '/app/rapoarte/tva': {
       id: '/app/rapoarte/tva'
       path: '/tva'
@@ -758,6 +790,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAiCenterDocumentAiRouteImport
       parentRoute: typeof AppAiCenterRoute
     }
+    '/api/webhooks/stripe': {
+      id: '/api/webhooks/stripe'
+      path: '/api/webhooks/stripe'
+      fullPath: '/api/webhooks/stripe'
+      preLoaderRoute: typeof ApiWebhooksStripeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -808,6 +847,7 @@ const AppRapoarteRouteWithChildren = AppRapoarteRoute._addFileChildren(
 )
 
 interface AppSetariRouteChildren {
+  AppSetariFacturareRoute: typeof AppSetariFacturareRoute
   AppSetariPreferinteRoute: typeof AppSetariPreferinteRoute
   AppSetariSecuritateRoute: typeof AppSetariSecuritateRoute
   AppSetariUtilizatoriRoute: typeof AppSetariUtilizatoriRoute
@@ -815,6 +855,7 @@ interface AppSetariRouteChildren {
 }
 
 const AppSetariRouteChildren: AppSetariRouteChildren = {
+  AppSetariFacturareRoute: AppSetariFacturareRoute,
   AppSetariPreferinteRoute: AppSetariPreferinteRoute,
   AppSetariSecuritateRoute: AppSetariSecuritateRoute,
   AppSetariUtilizatoriRoute: AppSetariUtilizatoriRoute,
@@ -868,6 +909,7 @@ const rootRouteChildren: RootRouteChildren = {
   PreturiRoute: PreturiRoute,
   RegisterRoute: RegisterRoute,
   TermeniRoute: TermeniRoute,
+  ApiWebhooksStripeRoute: ApiWebhooksStripeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
