@@ -926,18 +926,29 @@ def extract_currency(text: str) -> str:
     return ""
 
 
+# Must match the id2label of the currently deployed checkpoint (see
+# models/layoutxlm-invoice-token-classifier/immapp_training_manifest.json).
+# The fine-tuned model predicts layout BLOCKS/REGIONS (e.g. "the box that
+# contains the total"), not exact field values -- that's a coarser task
+# than the regex extractor's, so only labels with an unambiguous field
+# match are wired here. Labels with no clean target (TOTAL_IN_WORDS_BLOCK,
+# SHIP_TO_BLOCK, TABLE_REGION, LOGO_REGION, SELLER_WEBSITE, DUE_DATE_BLOCK
+# -- no due-date field exists downstream yet, UNKNOWN_7, OTHER) are
+# deliberately left unmapped rather than guessed at.
+#
+# PREVIOUSLY this dict used placeholder label names (INVOICE_NUMBER,
+# SUPPLIER, CUSTOMER_CUI, ...) that never matched the real checkpoint's
+# labels, so extract_model_field_proposals() silently discarded every
+# single model prediction below -- the model ran real inference on every
+# document and its output was thrown away 100% of the time. Fixed
+# 2026-09-04.
 MODEL_LABEL_TO_FIELD = {
-    "INVOICE_NUMBER": "invoiceNumber",
-    "INVOICE_DATE": "invoiceDate",
-    "SUPPLIER": "supplierName",
-    "CUSTOMER": "customerName",
-    "SUPPLIER_CUI": "supplierCui",
-    "CUSTOMER_CUI": "customerCui",
-    "SUBTOTAL": "subtotal",
-    "TAX": "vatAmount",
-    "VAT": "vatAmount",
-    "TOTAL": "totalAmount",
-    "CURRENCY": "currency",
+    "INVOICE_NUMBER_BLOCK": "invoiceNumber",
+    "INVOICE_DATE_BLOCK": "invoiceDate",
+    "SUPPLIER_NAME": "supplierName",
+    "BUYER_BLOCK": "customerName",
+    "BILL_TO_BLOCK": "customerName",
+    "TOTAL_BLOCK": "totalAmount",
 }
 
 

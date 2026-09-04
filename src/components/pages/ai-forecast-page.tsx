@@ -723,61 +723,29 @@ function RiskClassificationCard({
       <div className="mb-5">
         <h3 className="text-base font-semibold text-foreground">Clasificare risc</h3>
         <p className="mt-1 text-sm leading-6 text-muted-foreground">
-          Metricile Precision, Recall și F1 Score sunt folosite pentru clasificarea nivelului de
-          risc, nu pentru predicțiile numerice.
+          Scor de risc bazat pe reguli explicabile, calculat direct din datele tale financiare
+          recente — nu este un model antrenat separat.
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-3">
         <EvaluationMetric label="Risc plată" value={riskClassification.paymentRiskClass} />
         <EvaluationMetric label="Risc cash-flow" value={riskClassification.cashFlowRiskClass} />
         <EvaluationMetric label="Trend financiar" value={riskClassification.financialTrendClass} />
-        <EvaluationMetric label="Accuracy" value={formatPercent(riskClassification.accuracy)} />
-        <EvaluationMetric label="Precision" value={formatPercent(riskClassification.precision)} />
-        <EvaluationMetric label="Recall" value={formatPercent(riskClassification.recall)} />
-        <EvaluationMetric label="F1 Score" value={formatPercent(riskClassification.f1Score)} />
       </div>
 
-      <div className="mt-5 grid gap-4 xl:grid-cols-2">
-        <div className="rounded-xl border border-border">
-          <div className="border-b border-border p-4">
-            <h4 className="text-sm font-semibold text-foreground">Confusion Matrix</h4>
-          </div>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Actual</TableHead>
-                  <TableHead>Prezicere</TableHead>
-                  <TableHead className="text-right">Număr</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {riskClassification.confusionMatrix.map((item) => (
-                  <TableRow key={`${item.actual}-${item.predicted}`}>
-                    <TableCell>{item.actual}</TableCell>
-                    <TableCell>{item.predicted}</TableCell>
-                    <TableCell className="text-right tabular-nums">{item.count}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-border p-4">
-          <h4 className="text-sm font-semibold text-foreground">Factori de risc</h4>
-          <ul className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
-            {riskClassification.riskFactors.map((factor) => (
-              <li key={factor} className="rounded-lg bg-muted px-3 py-2">
-                {factor}
-              </li>
-            ))}
-          </ul>
-          <p className="mt-4 text-sm leading-6 text-muted-foreground">
-            {riskClassification.explanation}
-          </p>
-        </div>
+      <div className="mt-5 rounded-xl border border-border p-4">
+        <h4 className="text-sm font-semibold text-foreground">Factori de risc</h4>
+        <ul className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
+          {riskClassification.riskFactors.map((factor) => (
+            <li key={factor} className="rounded-lg bg-muted px-3 py-2">
+              {factor}
+            </li>
+          ))}
+        </ul>
+        <p className="mt-4 text-sm leading-6 text-muted-foreground">
+          {riskClassification.explanation}
+        </p>
       </div>
     </div>
   );

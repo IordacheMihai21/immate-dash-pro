@@ -16,6 +16,14 @@ export type DocumentAiMonitoringSummary = {
   fieldStats: FieldConfidenceStat[];
   correctionsCount: number;
   correctionsByField: { fieldName: string; count: number }[];
+  // Real-world implied accuracy: (fields extracted - fields a user later
+  // corrected) / fields extracted. Unlike autoAcceptRate (which just
+  // reflects the model's own confidence score), this is grounded in an
+  // actual outcome -- whether a human changed the value afterwards.
+  // Undercounts true accuracy slightly, since a field the user never
+  // reviewed can't have been corrected either way; treat it as a floor,
+  // not a ceiling.
+  impliedAccuracyRate: number | null;
 };
 
 const MAX_ENTITIES = 5000;
@@ -86,5 +94,9 @@ export async function getDocumentAiMonitoringSummary(
     correctionsByField: Array.from(correctionsByFieldMap.entries())
       .map(([fieldName, count]) => ({ fieldName, count }))
       .sort((a, b) => b.count - a.count),
+    impliedAccuracyRate:
+      rows.length > 0
+        ? Math.max(0, Math.min(1, (rows.length - corrections.length) / rows.length))
+        : null,
   };
 }
