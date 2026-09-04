@@ -4,14 +4,15 @@ import {
   Download,
   Eye,
   FileCode2,
-  Filter,
   Loader2,
   MoreHorizontal,
   Percent,
   ReceiptText,
+  Search,
   Timer,
   UploadCloud,
   Wallet,
+  X,
 } from "lucide-react";
 import { AdminPanel, EmptyState, InfoBanner, StatCard } from "@/components/admin-ui";
 import { PageHeader } from "@/components/page-header";
@@ -24,6 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -77,6 +79,7 @@ function EInvoicesPage() {
   const [activeTab, setActiveTab] = useState<InvoiceTab>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const stats = useMemo(() => {
     const total = invoices.reduce((sum, invoice) => sum + Number(invoice.payable_amount ?? 0), 0);
@@ -94,16 +97,29 @@ function EInvoicesPage() {
   }, [invoices]);
 
   const filteredInvoices = useMemo(() => {
+    let result = invoices;
+
     if (activeTab === "processed") {
-      return invoices.filter((invoice) => normalizeStatus(invoice.status) === "Activ");
+      result = result.filter((invoice) => normalizeStatus(invoice.status) === "Activ");
+    } else if (activeTab === "recent") {
+      result = result.filter((invoice) => isRecentDate(invoice.issue_date ?? invoice.created_at));
     }
 
-    if (activeTab === "recent") {
-      return invoices.filter((invoice) => isRecentDate(invoice.issue_date ?? invoice.created_at));
+    const query = searchQuery.trim().toLowerCase();
+
+    if (query) {
+      result = result.filter((invoice) => {
+        const supplier = getRelationParty(invoice.suppliers);
+        const customer = getRelationParty(invoice.customers);
+
+        return [invoice.invoice_number, supplier?.name, customer?.name].some((value) =>
+          value?.toLowerCase().includes(query),
+        );
+      });
     }
 
-    return invoices;
-  }, [activeTab, invoices]);
+    return result;
+  }, [activeTab, invoices, searchQuery]);
 
   function handleExportCsv() {
     if (filteredInvoices.length === 0) {
@@ -249,16 +265,26 @@ function EInvoicesPage() {
         title="Lista facturi"
         description="Filtreaza si deschide rapid detaliile fiecarei facturi."
         action={
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-card"
-              onClick={() => toast.info("Filtre avansate disponibile in curand.")}
-            >
-              <Filter className="h-4 w-4" />
-              Filtru
-            </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Cauta factura sau partener..."
+                className="h-8 w-56 bg-card pl-8 text-sm"
+              />
+              {searchQuery ? (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  aria-label="Sterge cautarea"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground transition hover:text-foreground"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              ) : null}
+            </div>
             <Button variant="outline" size="sm" className="bg-card" onClick={handleExportCsv}>
               <Download className="h-4 w-4" />
               Export CSV
