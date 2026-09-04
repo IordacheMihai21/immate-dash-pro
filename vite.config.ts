@@ -13,6 +13,11 @@ export default defineConfig({
         ignored: ["**/document-ai-backend/.venv/**"],
       },
     },
+    ssr: {
+      // @visx packages (alpha prerelease) ship extensionless ESM relative imports,
+      // which fail under Node's native ESM resolver during SSR unless Vite processes them.
+      noExternal: [/^@visx\//],
+    },
   },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).

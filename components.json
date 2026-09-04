@@ -1,6 +1,6 @@
 {
   "$schema": "https://ui.shadcn.com/schema.json",
-  "style": "new-york",
+  "style": "new-york-v4",
   "rsc": false,
   "tsx": true,
   "tailwind": {
@@ -18,5 +18,9 @@
     "lib": "@/lib",
     "hooks": "@/hooks"
   },
-  "registries": {}
+  "registries": {
+    "@kokonutui": "https://kokonutui.com/r/{name}.json",
+    "@bklit": "https://bklit.com/r/{name}.json",
+    "@magicui": "https://magicui.design/r/{name}.json"
+  }
 }
