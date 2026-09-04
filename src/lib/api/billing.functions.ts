@@ -69,6 +69,11 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         metadata: { company_id: companyId, plan: data.plan, billing_cycle: data.cycle },
       },
       allow_promotion_codes: true,
+      // IMMapp already reports TVA itself (see Rapoarte > TVA); Stripe's
+      // Managed Payments would additionally calculate and remit tax as
+      // merchant of record, which would double up with that and requires
+      // a tax_code on every product. Explicitly opted out.
+      managed_payments: { enabled: false },
       success_url: `${baseUrl}/app/setari/facturare?checkout=success`,
       cancel_url: `${baseUrl}/app/setari/facturare?checkout=anulat`,
     });

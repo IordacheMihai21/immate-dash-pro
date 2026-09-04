@@ -8,11 +8,13 @@ import { getStripeClient, getStripeWebhookSecret } from "@/lib/stripe.server";
 // Stripe's own signed event. See supabase/migrations/20260904_add_subscriptions.sql
 // for why the table itself also refuses any client-side write.
 //
-// NOT YET LIVE-TESTED: written to the documented Stripe API, but this
-// project has no Stripe account yet, so nothing here has run against a
-// real event. Before relying on it, replay each event type with the
-// Stripe CLI (`stripe trigger checkout.session.completed`, etc. -- see
-// STRIPE_SETUP.md) and confirm the subscriptions row updates as expected.
+// LIVE-VERIFIED end-to-end on 2026-09-04 (API version 2026-08-26.dahlia,
+// via `stripe listen` + a real test-mode checkout and a real portal
+// cancellation): checkout.session.completed, customer.subscription.updated
+// and the cancel-at-period-end path all confirmed against a real Stripe
+// account, not just written to the docs. customer.subscription.deleted
+// (immediate/non-scheduled cancellation) is still unverified -- the portal
+// only exercised the cancel-at-period-end path.
 
 export const Route = createFileRoute("/api/webhooks/stripe")({
   server: {
@@ -160,10 +162,11 @@ async function upsertSubscriptionFromStripe(
 ): Promise<void> {
   const admin = getSupabaseAdminClient();
 
-  // NOT YET LIVE-VERIFIED: Stripe moved period fields onto subscription
-  // items in newer API versions. Falling back across both shapes so this
-  // doesn't silently write a null period end either way -- confirm which
-  // path actually fires against your account's API version once live.
+  // LIVE-VERIFIED 2026-09-04: on API version 2026-08-26.dahlia, the top-level
+  // `current_period_end` is what's actually present (confirmed via a real
+  // checkout: the row landed with the correct one-year-out timestamp).
+  // Kept the subscription-items fallback for older/different API versions,
+  // since Stripe has moved this field around across versions before.
   const currentPeriodEndSeconds =
     (subscription as unknown as { current_period_end?: number }).current_period_end ??
     subscription.items.data[0]?.current_period_end;
@@ -186,7 +189,13 @@ async function upsertSubscriptionFromStripe(
       current_period_end: currentPeriodEndSeconds
         ? new Date(currentPeriodEndSeconds * 1000).toISOString()
         : null,
-      cancel_at_period_end: subscription.cancel_at_period_end,
+      // LIVE-VERIFIED (2026-09-04, API version 2026-08-26.dahlia): canceling
+      // via the Customer Portal sets `cancel_at` to the period-end
+      // timestamp, NOT the legacy `cancel_at_period_end` boolean, which
+      // stayed false throughout. Checking both so a real cancellation is
+      // never missed regardless of which field Stripe actually sets.
+      cancel_at_period_end:
+        Boolean(subscription.cancel_at_period_end) || subscription.cancel_at != null,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "company_id" },
