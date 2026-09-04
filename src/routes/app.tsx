@@ -5,6 +5,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { AppHeader } from "@/components/app-header";
 import { MfaVerifyForm } from "@/components/mfa-verify-form";
 import { Toaster } from "@/components/ui/sonner";
+import { useCompanyPreferences } from "@/hooks/use-company-preferences";
 import { needsMfaChallenge } from "@/lib/mfaService";
 
 export const Route = createFileRoute("/app")({
@@ -15,6 +16,7 @@ function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [mfaGateStatus, setMfaGateStatus] = useState<"checking" | "required" | "clear">("checking");
+  const { data: preferences } = useCompanyPreferences();
 
   useEffect(() => {
     let isMounted = true;
@@ -43,7 +45,10 @@ function AppLayout() {
   }
 
   return (
-    <div className="immapp-app min-h-screen w-full bg-background text-foreground">
+    <div
+      className="immapp-app min-h-screen w-full bg-background text-foreground"
+      data-density={preferences?.tableDensity ?? "comfortable"}
+    >
       <AppSidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="min-h-screen md:pl-72">

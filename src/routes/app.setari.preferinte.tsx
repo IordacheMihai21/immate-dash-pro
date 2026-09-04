@@ -1,11 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, type ReactNode } from "react";
-import { Bell, BrainCircuit, Eye, Save, Wallet } from "lucide-react";
-import { toast } from "sonner";
+import { useEffect, useState, type ReactNode } from "react";
+import { Bell, BrainCircuit, Eye, Loader2, Save, Wallet } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  useCompanyPreferences,
+  useUpdateCompanyPreferences,
+} from "@/hooks/use-company-preferences";
+import type { CompanyPreferences } from "@/lib/companyPreferencesService";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/setari/preferinte")({
@@ -13,16 +17,45 @@ export const Route = createFileRoute("/app/setari/preferinte")({
   component: PreferencesPage,
 });
 
+type EditableFields = Omit<CompanyPreferences, "companyId">;
+
 function PreferencesPage() {
-  const [documentNotifications, setDocumentNotifications] = useState(true);
-  const [forecastNotifications, setForecastNotifications] = useState(true);
-  const [riskNotifications, setRiskNotifications] = useState(true);
-  const [theme, setTheme] = useState("Sistem");
-  const [density, setDensity] = useState("Confortabil");
-  const [technicalMetrics, setTechnicalMetrics] = useState(false);
+  const { data: preferences, isLoading, isError } = useCompanyPreferences();
+  const updatePreferences = useUpdateCompanyPreferences();
+  const [draft, setDraft] = useState<EditableFields | null>(null);
+
+  useEffect(() => {
+    if (preferences) {
+      setDraft({
+        documentNotifications: preferences.documentNotifications,
+        forecastNotifications: preferences.forecastNotifications,
+        riskNotifications: preferences.riskNotifications,
+        showTechnicalMetrics: preferences.showTechnicalMetrics,
+        tableDensity: preferences.tableDensity,
+      });
+    }
+  }, [preferences]);
 
   function handleSave() {
-    toast.success("Preferintele au fost salvate.");
+    if (!draft) return;
+    updatePreferences.mutate(draft);
+  }
+
+  if (isLoading || !draft) {
+    return (
+      <div className="flex min-h-[420px] items-center justify-center gap-2 text-muted-foreground">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        Se incarca preferintele...
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="rounded-xl border border-destructive/30 bg-destructive/15 p-4 text-sm text-destructive">
+        Preferintele companiei nu au putut fi incarcate. Incearca sa reincarci pagina.
+      </div>
+    );
   }
 
   return (
@@ -31,8 +64,12 @@ function PreferencesPage() {
         title="Preferinte"
         description="Configureaza modul in care IMMapp afiseaza informatiile si notificarile companiei."
         actions={
-          <Button onClick={handleSave}>
-            <Save className="h-4 w-4" />
+          <Button onClick={handleSave} disabled={updatePreferences.isPending}>
+            {updatePreferences.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
             Salveaza preferintele
           </Button>
         }
@@ -53,22 +90,22 @@ function PreferencesPage() {
         <SettingsCard
           title="Notificari"
           icon={<Bell className="h-5 w-5" />}
-          description="Alege evenimentele pentru care vrei atentionari."
+          description="Alege evenimentele pentru care vrei atentionari in header."
         >
           <SwitchPreference
             label="Notificare dupa import documente"
-            checked={documentNotifications}
-            onCheckedChange={setDocumentNotifications}
+            checked={draft.documentNotifications}
+            onCheckedChange={(value) => setDraft({ ...draft, documentNotifications: value })}
           />
           <SwitchPreference
             label="Notificare cand AI Forecast necesita actualizare"
-            checked={forecastNotifications}
-            onCheckedChange={setForecastNotifications}
+            checked={draft.forecastNotifications}
+            onCheckedChange={(value) => setDraft({ ...draft, forecastNotifications: value })}
           />
           <SwitchPreference
             label="Notificare pentru risc ridicat"
-            checked={riskNotifications}
-            onCheckedChange={setRiskNotifications}
+            checked={draft.riskNotifications}
+            onCheckedChange={(value) => setDraft({ ...draft, riskNotifications: value })}
           />
         </SettingsCard>
 
@@ -77,22 +114,22 @@ function PreferencesPage() {
           icon={<Eye className="h-5 w-5" />}
           description="Controleaza modul de prezentare a interfetei."
         >
-          <ChoicePreference
-            label="Tema interfata"
-            value={theme}
-            options={["Sistem", "Luminos", "Intunecat"]}
-            onChange={setTheme}
-          />
+          <StaticPreference label="Tema interfata" value="Luminos" />
           <ChoicePreference
             label="Densitate tabele"
-            value={density}
+            value={draft.tableDensity === "compact" ? "Compact" : "Confortabil"}
             options={["Confortabil", "Compact"]}
-            onChange={setDensity}
+            onChange={(value) =>
+              setDraft({
+                ...draft,
+                tableDensity: value === "Compact" ? "compact" : "comfortable",
+              })
+            }
           />
           <SwitchPreference
-            label="Afisare metrici tehnice"
-            checked={technicalMetrics}
-            onCheckedChange={setTechnicalMetrics}
+            label="Afisare metrici tehnice (metodologie AI Forecast)"
+            checked={draft.showTechnicalMetrics}
+            onCheckedChange={(value) => setDraft({ ...draft, showTechnicalMetrics: value })}
             offLabel="Dezactivat"
           />
         </SettingsCard>
@@ -172,7 +209,7 @@ function SwitchPreference({
         onClick={() => onCheckedChange(!checked)}
         className={cn(
           "inline-flex h-8 min-w-20 items-center justify-center rounded-full px-3 text-xs font-semibold transition",
-          checked ? "bg-primary text-white" : "bg-card text-muted-foreground ring-1 ring-slate-200",
+          checked ? "bg-primary text-white" : "bg-card text-muted-foreground ring-1 ring-border",
         )}
       >
         {checked ? "Activ" : offLabel}

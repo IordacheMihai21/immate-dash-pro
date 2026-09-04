@@ -8,10 +8,8 @@ import {
   Info,
   LogOut,
   Menu,
-  Moon,
   Search,
   Settings,
-  Sun,
   User,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -26,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CommandMenu } from "@/components/command-menu";
+import { useCompanyPreferences } from "@/hooks/use-company-preferences";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { getCompanyProfile, type CompanyProfile } from "@/lib/companyService";
 import { getCurrentUserProfile, type CurrentUserProfile } from "@/lib/authUserService";
@@ -49,10 +48,10 @@ function getCompanyDisplay(profile: CompanyProfile | null | undefined) {
 }
 
 export function AppHeader({ onSidebarToggle }: { onSidebarToggle: () => void }) {
-  const [darkMode, setDarkMode] = useState(false);
   const [commandMenuOpen, setCommandMenuOpen] = useState(false);
   const { data: dashboardData } = useDashboardData();
-  const notifications = getDashboardNotifications(dashboardData);
+  const { data: preferences } = useCompanyPreferences();
+  const notifications = getDashboardNotifications(dashboardData, preferences);
   const hasAttentionNotification = notifications.some(
     (notification) => notification.tone === "risk" || notification.tone === "warning",
   );
@@ -63,14 +62,6 @@ export function AppHeader({ onSidebarToggle }: { onSidebarToggle: () => void }) 
     initials: "UI",
     role: "Administrator",
   });
-
-  useEffect(() => {
-    if (typeof document === "undefined") {
-      return;
-    }
-
-    setDarkMode(document.documentElement.classList.contains("dark"));
-  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -137,16 +128,6 @@ export function AppHeader({ onSidebarToggle }: { onSidebarToggle: () => void }) 
     void supabase.auth.signOut();
   }
 
-  function toggleTheme() {
-    if (typeof document === "undefined") {
-      return;
-    }
-
-    const nextDarkMode = !darkMode;
-    document.documentElement.classList.toggle("dark", nextDarkMode);
-    setDarkMode(nextDarkMode);
-  }
-
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
       <div className="flex h-16 items-center gap-3 px-4 sm:px-6 lg:px-8">
@@ -176,18 +157,6 @@ export function AppHeader({ onSidebarToggle }: { onSidebarToggle: () => void }) 
         <CommandMenu open={commandMenuOpen} onOpenChange={setCommandMenuOpen} />
 
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="rounded-lg"
-            onClick={toggleTheme}
-            aria-label="Comuta tema"
-            title="Comuta tema"
-          >
-            {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </Button>
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button

@@ -491,3 +491,16 @@
     }
   }
 }
+
+/* Densitatea tabelelor (Setari > Preferinte). Setat pe wrapper-ul aplicatiei
+   in app.tsx din preferintele companiei -- afecteaza toate tabelele shadcn/ui
+   (data-slot="table-cell"/"table-head") indiferent unde sunt randate. */
+[data-density="compact"] [data-slot="table-cell"],
+[data-density="compact"] [data-slot="table-head"] {
+  padding-top: 0.375rem;
+  padding-bottom: 0.375rem;
+}
+
+[data-density="compact"] [data-slot="table-head"] {
+  height: 2rem;
+}

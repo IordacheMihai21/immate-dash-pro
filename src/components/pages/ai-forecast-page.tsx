@@ -50,6 +50,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useCompanyPreferences } from "@/hooks/use-company-preferences";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { getDashboardData } from "@/lib/dashboardService";
 import { formatRON } from "@/lib/formatters";
@@ -62,6 +63,7 @@ type DashboardData = Awaited<ReturnType<typeof getDashboardData>>;
 
 export function AiForecastPage() {
   const { data: dashboardData, isLoading, isError, refetch } = useDashboardData();
+  const { data: preferences } = useCompanyPreferences();
   const [forecastStatus, setForecastStatus] = useState(() =>
     typeof window === "undefined"
       ? "updated"
@@ -297,11 +299,13 @@ export function AiForecastPage() {
         )}
       </section>
 
-      <MethodologyAccordion
-        prediction={prediction}
-        riskClassification={riskClassification}
-        extractionEvaluation={extractionEvaluation}
-      />
+      {preferences?.showTechnicalMetrics && (
+        <MethodologyAccordion
+          prediction={prediction}
+          riskClassification={riskClassification}
+          extractionEvaluation={extractionEvaluation}
+        />
+      )}
     </div>
   );
 }
