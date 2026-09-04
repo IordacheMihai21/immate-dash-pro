@@ -1,9 +1,12 @@
 # Activarea facturarii (Stripe)
 
-Tot codul e scris si testat cat s-a putut fara un cont real (vezi mai jos
-"Ce am putut verifica"). Ramane doar configurarea din Stripe Dashboard si
-completarea `.env`. Pasii de mai jos folosesc **test mode** -- niciun card
-real nu e taxat pana nu comuti explicit pe live mode in Stripe.
+Verificat live end-to-end pe 2026-09-04, cu un cont Stripe real (sandbox,
+test mode): checkout real (card de test 4242...4242), webhook real primit
+prin `stripe listen`, portal de facturare real, anulare reala. Doua
+probleme reale au fost gasite in acest proces si reparate -- vezi "Ce a
+iesit la iveala din testarea reala" mai jos. Pasii de mai jos folosesc
+**test mode** -- niciun card real nu e taxat pana nu comuti explicit pe
+live mode in Stripe.
 
 ## 1. Cont Stripe
 
@@ -57,6 +60,9 @@ customers to switch plans") -- codul actual nu recunoaste inca o schimbare
 de plan facuta din portal (doar cele facute prin checkout-ul din aplicatie).
 Poti lasa active: actualizare card, anulare abonament, facturi trecute.
 
+Anularea din portal **e verificata live** (vezi mai jos) si functioneaza
+corect.
+
 ## 6. Restul `.env`
 
 ```
@@ -87,22 +93,45 @@ Testeaza si anularea: din `/app/setari/facturare` -> "Gestioneaza
 abonamentul" -> anuleaza -> confirma ca planul revine la "Start" dupa ce
 webhook-ul `customer.subscription.deleted` ajunge.
 
-## Ce am putut verifica fara cont Stripe
+## Ce a iesit la iveala din testarea reala (2026-09-04)
 
-- Toata plomberia client -> server function -> guard-ul `STRIPE_SECRET_KEY`
-  functioneaza corect end-to-end (verificat live: butonul de upgrade trimite
-  cererea, primeste eroarea clara asteptata, arata un toast -- nu se blocheaza).
+Doua probleme reale, care nu puteau fi gasite fara un cont Stripe adevarat:
+
+- **Managed Payments**: checkout-ul esua cu "product tax code is missing"
+  -- Stripe activeaza implicit Managed Payments (colecteaza si remite taxe
+  ca merchant of record), ceea ce cere un `tax_code` pe fiecare produs.
+  IMMapp raporteaza deja TVA-ul singur (Rapoarte > TVA), asa ca dublarea ar
+  fi fost gresita. Rezolvat in cod (`managed_payments: { enabled: false }`
+  in `billing.functions.ts`) -- nu mai e nimic de configurat in dashboard
+  pentru asta.
+- **`cancel_at_period_end`**: dupa o anulare reala din Customer Portal,
+  campul `cancel_at_period_end` din baza de date ramanea `false`, desi
+  portalul arata clar "Cancels ...". Cauza: pe versiunea de API
+  `2026-08-26.dahlia`, Stripe seteaza `cancel_at` (un timestamp), nu
+  boolean-ul legacy `cancel_at_period_end`. Reparat in webhook -- acum
+  verifica ambele campuri.
+
+## Ce e verificat live (2026-09-04, cont Stripe real, test mode)
+
+- Checkout complet, cu card de test real (4242 4242 4242 4242) --
+  `checkout.session.completed` primit si procesat corect prin webhook.
+- `current_period_end`: confirmat ca soseste corect la nivelul de top al
+  obiectului Subscription pe versiunea de API `2026-08-26.dahlia` (randul
+  din baza de date a aparut cu timestamp-ul corect, la un an distanta).
+- `customer.subscription.updated`, inclusiv anularea (cancel-at-period-end)
+  facuta din Customer Portal real -- confirmata dupa fix-ul de mai sus.
+- Portalul de facturare (buton "Gestioneaza abonamentul") deschide sesiunea
+  reala Stripe si revine corect in aplicatie.
+- Plomberia client -> server function -> guard-ul `STRIPE_SECRET_KEY`.
 - Migratia bazei de date (tabelul `subscriptions`, RLS, trigger-ul de
-  bootstrap) -- testata intr-o tranzactie cu rollback si aplicata live.
+  bootstrap).
 - Pagina de facturare afiseaza corect planul real al companiei.
 
 ## Ce NU e inca verificat (motiv real, nu presupunere)
 
-- Formatul exact al campului `current_period_end` pe obiectul Stripe
-  Subscription difera intre versiuni de API (a fost mutat pe subscription
-  items in versiuni recente). Codul incearca ambele forme, dar care dintre
-  ele chiar se potriveste contului tau nu poate fi confirmat fara un
-  eveniment real -- verifica dupa primul `checkout.session.completed`.
+- `customer.subscription.deleted` (anulare imediata / necesta programata) --
+  testarea reala a acoperit doar fluxul de anulare programata (cancel at
+  period end) din Customer Portal, nu o anulare imediata.
 - Comportamentul exact al `customer.subscription.updated` la schimbari de
   plan facute din Customer Portal (motiv pentru care e recomandat sa
   dezactivezi acea optiune la pasul 5, cel putin pana se adauga suport
