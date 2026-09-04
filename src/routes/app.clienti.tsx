@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Download, Loader2, ReceiptText, TrendingUp, Users, Wallet } from "lucide-react";
+import { Download, Info, Loader2, ReceiptText, TrendingUp, Users, Wallet } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,9 +13,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useCustomerRiskProfiles } from "@/hooks/use-client-risk";
 import { useCustomerSummaries } from "@/hooks/use-party-summaries";
+import type { ClientRiskClass, ClientRiskProfile } from "@/lib/clientRiskService";
 import { downloadCsv, todayForFilename } from "@/lib/csvExport";
 import { formatRON } from "@/lib/formatters";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/clienti")({
   head: () => ({ meta: [{ title: "Clienți — IMMapp" }] }),
@@ -24,7 +28,11 @@ export const Route = createFileRoute("/app/clienti")({
 
 function ClientsPage() {
   const { data: clients, isLoading } = useCustomerSummaries();
+  const { data: riskProfiles } = useCustomerRiskProfiles();
 
+  const riskByKey = new Map<string, ClientRiskProfile>(
+    (riskProfiles ?? []).map((profile) => [profile.key, profile]),
+  );
   const top = clients?.[0] ?? null;
   const totalValue = clients?.reduce((sum, client) => sum + client.totalValue, 0) ?? 0;
 
@@ -35,7 +43,15 @@ function ClientsPage() {
 
     downloadCsv(
       `clienti-immapp-${todayForFilename()}.csv`,
-      ["Denumire client", "CUI", "Nr. facturi", "Valoare totala", "Ultima factura", "Status"],
+      [
+        "Denumire client",
+        "CUI",
+        "Nr. facturi",
+        "Valoare totala",
+        "Ultima factura",
+        "Status",
+        "Risc",
+      ],
       clients.map((client) => [
         client.name,
         client.cui,
@@ -43,6 +59,7 @@ function ClientsPage() {
         client.totalValue.toFixed(2),
         client.lastInvoiceDate ?? "",
         client.status,
+        riskByKey.get(client.key)?.riskClass ?? "",
       ]),
     );
   }
@@ -109,6 +126,7 @@ function ClientsPage() {
                   <TableHead className="text-right">Valoare totală</TableHead>
                   <TableHead>Ultima factură</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Risc</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -124,6 +142,9 @@ function ClientsPage() {
                     <TableCell>
                       <StatusBadge status={client.status} />
                     </TableCell>
+                    <TableCell>
+                      <ClientRiskBadge profile={riskByKey.get(client.key)} />
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -132,5 +153,43 @@ function ClientsPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+const riskBadgeStyles: Record<ClientRiskClass, string> = {
+  Scazut: "border-success/30 bg-success/15 text-success",
+  Mediu: "border-warning/40 bg-warning/20 text-foreground",
+  Ridicat: "border-destructive/30 bg-destructive/15 text-destructive",
+  Insuficient: "border-border bg-muted text-muted-foreground",
+};
+
+function ClientRiskBadge({ profile }: { profile: ClientRiskProfile | undefined }) {
+  if (!profile) {
+    return <span className="text-xs text-muted-foreground">-</span>;
+  }
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span
+            className={cn(
+              "inline-flex cursor-default items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium",
+              riskBadgeStyles[profile.riskClass],
+            )}
+          >
+            {profile.riskClass}
+            <Info className="h-3 w-3 opacity-60" />
+          </span>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs text-left">
+          <ul className="list-disc space-y-1 pl-3">
+            {profile.riskFactors.map((factor) => (
+              <li key={factor}>{factor}</li>
+            ))}
+          </ul>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
