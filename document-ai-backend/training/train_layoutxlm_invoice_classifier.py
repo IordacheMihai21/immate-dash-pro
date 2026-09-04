@@ -228,6 +228,10 @@ def main() -> int:
         use_cpu=resolved_device == "cpu",
         dataloader_pin_memory=resolved_device == "cuda",
         seed=args.seed,
+        load_best_model_at_end=bool(dev_records) and not args.smoke_test,
+        metric_for_best_model="token_accuracy" if dev_records else None,
+        greater_is_better=True if dev_records else None,
+        save_total_limit=2,
     )
     trainer = Trainer(
         model=model,

@@ -30,12 +30,34 @@ SUPPLIERS = [
     ("Atelier Digital SRL", "J12/5678/2020"),
     ("Comexim Trading SA", "J22/910/2015"),
     ("Servicii Contabile Pro SRL", "J40/4321/2019"),
+    ("Delta Logistic SRL", "J40/2211/2017"),
+    ("Prima Soft SRL", "J12/3344/2021"),
+    ("Carpați Instalații SRL", "J08/551/2016"),
+    ("Vector Marketing SRL", "J40/7788/2022"),
+    ("Aurora Design Studio SRL", "J13/220/2019"),
+    ("Metropol Servicii SA", "J22/4501/2014"),
+    ("Optim Facility SRL", "J40/990/2020"),
+    ("Silva Construct SRL", "J08/1123/2018"),
+    ("Rapid Curier SRL", "J40/6602/2021"),
+    ("Cristal Print SRL", "J12/815/2017"),
+    ("Elena Popa PFA", "F40/302/2022"),
+    ("Andrei Munteanu PFA", "F12/154/2021"),
 ]
 CUSTOMERS = [
     ("Beta Retail SRL", "J35/222/2017"),
     ("Global Impex SRL", "J13/876/2021"),
     ("Mihai Popescu PFA", "F40/999/2022"),
     ("Media Solutions SRL", "J40/1500/2016"),
+    ("Coral Distribuție SRL", "J35/410/2019"),
+    ("Fortis Trading SA", "J22/601/2015"),
+    ("Nova Media SRL", "J40/3312/2020"),
+    ("Herald Consulting SRL", "J13/275/2018"),
+    ("Ioana Dumitrescu PFA", "F35/188/2022"),
+    ("Blue Ocean Impex SRL", "J40/5521/2017"),
+    ("Textil Prod SRL", "J08/640/2016"),
+    ("Verde Agro SRL", "J24/912/2019"),
+    ("Radu Constantin PFA", "F13/207/2021"),
+    ("Star Events SRL", "J40/2287/2020"),
 ]
 CITIES = [
     ("București", "Sector 1"),
@@ -43,6 +65,16 @@ CITIES = [
     ("Timișoara", "Timiș"),
     ("Iași", "Iași"),
     ("Brașov", "Brașov"),
+    ("Constanța", "Constanța"),
+    ("Craiova", "Dolj"),
+    ("Galați", "Galați"),
+    ("Ploiești", "Prahova"),
+    ("Oradea", "Bihor"),
+    ("Sibiu", "Sibiu"),
+    ("Târgu Mureș", "Mureș"),
+    ("Baia Mare", "Maramureș"),
+    ("Arad", "Arad"),
+    ("Pitești", "Argeș"),
 ]
 LINE_ITEMS = [
     "Servicii de consultanță",
@@ -52,6 +84,14 @@ LINE_ITEMS = [
     "Materiale consumabile birou",
     "Servicii de contabilitate",
     "Chirie spațiu birouri",
+    "Servicii de proiectare",
+    "Instalare și configurare echipamente",
+    "Servicii de curățenie",
+    "Materiale de construcție",
+    "Servicii de traducere",
+    "Găzduire și mentenanță website",
+    "Servicii de pază și securitate",
+    "Consumabile IT",
 ]
 VAT_RATES = [0.19, 0.09, 0.05, 0.0]
 MONTHS_RO = [
@@ -65,7 +105,11 @@ LAYOUTS = [
     "totals-left",
     "table-compact",
 ]
-STREET_NAMES = ["Victoriei", "Republicii", "Mihai Eminescu", "Unirii", "Ștefan cel Mare"]
+STREET_NAMES = [
+    "Victoriei", "Republicii", "Mihai Eminescu", "Unirii", "Ștefan cel Mare",
+    "Aviatorilor", "Calea Dorobanților", "Libertății", "Crângului", "Traian",
+    "Dacia", "Independenței", "Nicolae Bălcescu", "Horea", "1 Decembrie",
+]
 
 
 def main() -> int:
@@ -165,7 +209,9 @@ def make_invoice(index: int, rng: random.Random) -> dict:
         "reference": {
             "invoiceNumber": invoice_number,
             "invoiceDate": issued.isoformat(),
+            "invoiceDateDisplay": date_text,
             "dueDate": due.isoformat(),
+            "dueDateDisplay": due.strftime("%d.%m.%Y"),
             "supplierName": supplier_name,
             "supplierCui": f"RO{rng.randint(10000000, 39999999)}",
             "supplierRegCom": supplier_reg,

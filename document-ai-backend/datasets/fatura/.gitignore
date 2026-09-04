@@ -4,7 +4,13 @@ train/*
 test/*
 processed/*.jsonl
 processed/layoutxlm_preparation_summary.json
+processed_ro/*
+processed_combined/*
+processed_holdout/*
 !raw/.gitkeep
 !train/.gitkeep
 !test/.gitkeep
 !processed/.gitkeep
+!processed_ro/.gitkeep
+!processed_combined/.gitkeep
+!processed_holdout/.gitkeep

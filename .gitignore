@@ -16,6 +16,10 @@ dist-ssr
 .nitro
 *.local
 
+# Local tool run artifacts (not source)
+.playwright-mcp/
+.impeccable/
+
 # Environment files
 .env
 .env.local
