@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Building2, CheckCircle2, Loader2 } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
+import { verifyCuiWithAnaf } from "@/lib/api/anaf.functions";
 import { ensureAppUser } from "@/lib/appUserService";
 import { claimPendingCompanyInvite } from "@/lib/companyMembersService";
 import { upsertCompanyProfile } from "@/lib/companyService";
@@ -20,14 +21,57 @@ export const Route = createFileRoute("/register")({
 function RegisterPage() {
   const navigate = useNavigate();
   const [cuiVerified, setCuiVerified] = useState(false);
+  const [isVerifyingCui, setIsVerifyingCui] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
 
-  // TODO: connect to backend API for ANAF CUI validation
-  const verifyCui = () => {
-    setCuiVerified(true);
-    toast.success("CUI valid. Datele companiei au fost preluate.");
+  const verifyCui = async () => {
+    const cuiInput = document.getElementById("cui") as HTMLInputElement | null;
+    const cui = cuiInput?.value.trim() ?? "";
+
+    if (!cui) {
+      toast.error("Introdu CUI-ul firmei inainte de verificare.");
+      return;
+    }
+
+    setCuiVerified(false);
+    setIsVerifyingCui(true);
+
+    try {
+      const result = await verifyCuiWithAnaf({ data: { cui } });
+
+      const companyNameInput = document.getElementById("companyName") as HTMLInputElement | null;
+      const regComInput = document.getElementById("regCom") as HTMLInputElement | null;
+      const addressInput = document.getElementById("address") as HTMLInputElement | null;
+
+      if (companyNameInput && result.companyName) {
+        companyNameInput.value = result.companyName;
+      }
+
+      if (regComInput && result.registrationNumber) {
+        regComInput.value = result.registrationNumber;
+      }
+
+      if (addressInput && result.address) {
+        addressInput.value = result.address;
+      }
+
+      setCuiVerified(true);
+      toast.success(
+        result.vatPayer
+          ? "CUI valid. Datele companiei au fost preluate de la ANAF (platitor de TVA)."
+          : "CUI valid. Datele companiei au fost preluate de la ANAF.",
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "CUI-ul nu a putut fi verificat. Incearca din nou.";
+      toast.error(message);
+    } finally {
+      setIsVerifyingCui(false);
+    }
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -141,7 +185,7 @@ function RegisterPage() {
               ) : null}
 
               {statusMessage ? (
-                <Alert className="border-blue-100 bg-blue-50 text-blue-900">
+                <Alert className="border-primary/20 bg-secondary text-primary">
                   <AlertDescription>{statusMessage}</AlertDescription>
                 </Alert>
               ) : null}
@@ -195,8 +239,9 @@ function RegisterPage() {
                         type="button"
                         variant="outline"
                         onClick={verifyCui}
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isVerifyingCui}
                       >
+                        {isVerifyingCui ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                         Verifică CUI
                       </Button>
                     </div>
