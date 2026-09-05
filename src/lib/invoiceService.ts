@@ -1,4 +1,4 @@
-import { getActiveCompanyId, getCompanyProfile } from "./companyService";
+import { getActiveCompanyId, getCompanyProfileById } from "./companyService";
 import { ParsedInvoice, parseEFacturaXml } from "./efacturaParser";
 import { supabase } from "./supabaseClient";
 
@@ -439,7 +439,10 @@ export async function saveDocumentAiInvoice(
 
 export async function createManualInvoice(input: ManualInvoiceInput): Promise<SavedInvoiceResult> {
   const companyId = await getActiveCompanyId();
-  const companyProfile = await getCompanyProfile();
+  // The active company's own profile, not "whichever company the current
+  // auth user personally owns" -- matters for an accountant creating an
+  // invoice while viewing a client company they don't own themselves.
+  const companyProfile = await getCompanyProfileById(companyId);
 
   if (!companyProfile) {
     throw new Error("Completeaza profilul companiei inainte de a emite o factura.");

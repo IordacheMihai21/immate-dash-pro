@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   Bell,
   Building2,
+  Check,
   CheckCircle2,
   ChevronDown,
   Info,
@@ -24,9 +25,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CommandMenu } from "@/components/command-menu";
+import { useCompanyMemberships } from "@/hooks/use-company-memberships";
 import { useCompanyPreferences } from "@/hooks/use-company-preferences";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
-import { getCompanyProfile, type CompanyProfile } from "@/lib/companyService";
+import {
+  getActiveCompanyId,
+  getCompanyProfileById,
+  getSelectedCompanyId,
+  reloadForCompanySwitch,
+  setSelectedCompanyId,
+  type CompanyProfile,
+} from "@/lib/companyService";
 import { getCurrentUserProfile, type CurrentUserProfile } from "@/lib/authUserService";
 import { getDashboardNotifications, type AppNotification } from "@/lib/notifications";
 import { supabase } from "@/lib/supabaseClient";
@@ -56,6 +65,7 @@ export function AppHeader({ onSidebarToggle }: { onSidebarToggle: () => void }) 
     (notification) => notification.tone === "risk" || notification.tone === "warning",
   );
   const [companyDisplay, setCompanyDisplay] = useState(fallbackCompany);
+  const { data: memberships } = useCompanyMemberships();
   const [userProfile, setUserProfile] = useState<CurrentUserProfile>({
     displayName: "Utilizator IMMapp",
     email: "",
@@ -68,7 +78,10 @@ export function AppHeader({ onSidebarToggle }: { onSidebarToggle: () => void }) 
 
     async function refreshCompanyProfile() {
       try {
-        const profile = await getCompanyProfile();
+        // The active company, not necessarily one the current auth user
+        // personally owns -- see getCompanyProfileById's doc comment.
+        const companyId = await getActiveCompanyId();
+        const profile = await getCompanyProfileById(companyId);
 
         if (isMounted) {
           setCompanyDisplay(getCompanyDisplay(profile));
@@ -126,6 +139,15 @@ export function AppHeader({ onSidebarToggle }: { onSidebarToggle: () => void }) 
 
   function handleSignOut() {
     void supabase.auth.signOut();
+  }
+
+  function handleSwitchCompany(companyId: string) {
+    if (companyId === getSelectedCompanyId()) {
+      return;
+    }
+
+    setSelectedCompanyId(companyId);
+    reloadForCompanySwitch();
   }
 
   return (
@@ -239,6 +261,36 @@ export function AppHeader({ onSidebarToggle }: { onSidebarToggle: () => void }) 
                 <Building2 className="h-4 w-4" />
                 {companyDisplay.cui}
               </DropdownMenuItem>
+              {memberships && memberships.length > 1 ? (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                    Companiile tale
+                  </DropdownMenuLabel>
+                  {memberships.map((membership) => (
+                    <DropdownMenuItem
+                      key={membership.companyId}
+                      onClick={() => handleSwitchCompany(membership.companyId)}
+                    >
+                      <Check
+                        className={cn(
+                          "h-4 w-4",
+                          membership.cui && membership.cui === companyDisplay.cui
+                            ? "opacity-100"
+                            : "opacity-0",
+                        )}
+                      />
+                      <span className="truncate">{membership.companyName}</span>
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuItem asChild>
+                    <Link to="/app/portofoliu">
+                      <Building2 className="h-4 w-4" />
+                      Vezi toate companiile
+                    </Link>
+                  </DropdownMenuItem>
+                </>
+              ) : null}
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link to="/login" onClick={handleSignOut}>

@@ -1,4 +1,4 @@
-import { getOrCreateCompanyProfile } from "@/lib/companyService";
+import { getActiveCompanyId } from "@/lib/companyService";
 import { supabase } from "@/lib/supabaseClient";
 
 export type ActivityLogEntry = {
@@ -13,12 +13,12 @@ export type ActivityLogEntry = {
 const activityLogColumns = "id, actor_label, action, entity_type, summary, created_at";
 
 export async function getRecentActivity(limit = 6): Promise<ActivityLogEntry[]> {
-  const companyProfile = await getOrCreateCompanyProfile();
+  const companyId = await getActiveCompanyId();
 
   const { data, error } = await supabase
     .from("activity_log")
     .select(activityLogColumns)
-    .eq("company_id", companyProfile.id)
+    .eq("company_id", companyId)
     .order("created_at", { ascending: false })
     .limit(limit);
 

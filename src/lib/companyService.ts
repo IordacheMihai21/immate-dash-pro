@@ -112,6 +112,37 @@ export async function getCompanyProfile(): Promise<CompanyProfile | null> {
   return (data as CompanyProfile | null) ?? null;
 }
 
+/**
+ * Reads a company's profile by its actual id, not by who owns/created it.
+ * getCompanyProfile() (above) is auth_user_id-keyed on purpose -- it's
+ * used during signup bootstrap, before any company_members row exists, to
+ * answer "does this auth user already own a company profile." That's the
+ * wrong question once a company is selected via the multi-company
+ * switcher (companyService.ts's getSelectedCompanyId/getActiveCompanyId):
+ * an accountant who owns their own company AND is a "Contabil" member of
+ * a client's would get their OWN profile back from getCompanyProfile()
+ * regardless of which client they're actively viewing. Use this instead
+ * wherever the caller already has (or can get) the active company_id --
+ * e.g. via getActiveCompanyId() -- and wants that company's real profile.
+ */
+export async function getCompanyProfileById(companyId: string): Promise<CompanyProfile | null> {
+  const { data, error } = await supabase
+    .from("company_profiles")
+    .select(profileColumns)
+    .eq("id", companyId)
+    .maybeSingle();
+
+  if (error) {
+    if (isMissingCompanyProfileSchema(error)) {
+      return null;
+    }
+
+    throw new Error(`Profilul companiei nu a putut fi citit: ${error.message}`);
+  }
+
+  return (data as CompanyProfile | null) ?? null;
+}
+
 export async function upsertCompanyProfile(profile: CompanyProfileInput): Promise<CompanyProfile> {
   const authUser = await getCurrentAuthUser();
 
@@ -221,15 +252,62 @@ function isMissingCompanyMembersSchema(error: { code?: string; message?: string 
   );
 }
 
+// A user can be an active member of more than one company (e.g. an
+// accountant collaborating with several client companies -- see
+// company_members' unique index, which is on (company_id, auth_user_id),
+// not on auth_user_id alone). "Active company" is a client-side-only
+// concept layered on top of that: which one of the user's real
+// memberships the app is currently showing. Persisted in localStorage so
+// it survives reloads; per-browser, not synced across devices, which is
+// fine for a low-stakes UI preference like this.
+const SELECTED_COMPANY_STORAGE_KEY = "immapp:selected-company-id";
+
+export function getSelectedCompanyId(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return localStorage.getItem(SELECTED_COMPANY_STORAGE_KEY);
+}
+
+export function setSelectedCompanyId(companyId: string): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  localStorage.setItem(SELECTED_COMPANY_STORAGE_KEY, companyId);
+}
+
+/**
+ * Call after setSelectedCompanyId() to make every page/service actually
+ * pick up the new company. A full reload, not a client-side route change:
+ * nearly everything resolves "which company" once via getActiveCompanyId()
+ * and caches results under company-agnostic React Query keys, so reloading
+ * is the only way to guarantee it's consistently reflected everywhere
+ * instead of hunting down every cache key. Uses reload() rather than
+ * re-assigning href when already on /app -- setting location.href to the
+ * page's own current URL isn't guaranteed to force a navigation in every
+ * browser.
+ */
+export function reloadForCompanySwitch(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (window.location.pathname === "/app") {
+    window.location.reload();
+  } else {
+    window.location.href = "/app";
+  }
+}
+
 async function getActiveMembershipCompanyId(authUserId: string): Promise<string | null> {
   const { data, error } = await supabase
     .from("company_members")
     .select("company_id")
     .eq("auth_user_id", authUserId)
     .eq("status", "active")
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
+    .order("created_at", { ascending: true });
 
   if (error) {
     if (isMissingCompanyMembersSchema(error)) {
@@ -239,7 +317,20 @@ async function getActiveMembershipCompanyId(authUserId: string): Promise<string 
     throw new Error(`Apartenenta la companie nu a putut fi citita: ${error.message}`);
   }
 
-  return data?.company_id ?? null;
+  const memberships = data ?? [];
+
+  if (memberships.length === 0) {
+    return null;
+  }
+
+  const selected = getSelectedCompanyId();
+  const selectedIsValid = memberships.some((membership) => membership.company_id === selected);
+
+  // Falls back to the first membership -- identical to the previous
+  // behavior -- whenever there's no stored selection yet, or the stored
+  // one is no longer a company the user actually belongs to (e.g. removed,
+  // or a stale value from a different account on a shared browser).
+  return selectedIsValid && selected ? selected : memberships[0].company_id;
 }
 
 export async function getActiveCompanyId(): Promise<string> {

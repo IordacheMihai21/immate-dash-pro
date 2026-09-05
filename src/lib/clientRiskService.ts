@@ -1,5 +1,5 @@
 import { classifyInvoiceForCompany } from "@/lib/cuiUtils";
-import { getOrCreateCompanyProfile } from "@/lib/companyService";
+import { getActiveCompanyId, getCompanyProfileById } from "@/lib/companyService";
 import { getInvoices } from "@/lib/invoiceService";
 
 // Per-client risk, not the portfolio-wide one in riskClassificationService.ts.
@@ -75,12 +75,13 @@ function classifyRiskScore(score: number): ClientRiskClass {
 }
 
 export async function getCustomerRiskProfiles(): Promise<ClientRiskProfile[]> {
+  const companyId = await getActiveCompanyId();
   const [invoices, companyProfile] = await Promise.all([
     getInvoices(),
-    getOrCreateCompanyProfile(),
+    getCompanyProfileById(companyId),
   ]);
 
-  return computeCustomerRiskProfiles(invoices as InvoiceForRisk[], companyProfile.cui);
+  return computeCustomerRiskProfiles(invoices as InvoiceForRisk[], companyProfile?.cui);
 }
 
 /**

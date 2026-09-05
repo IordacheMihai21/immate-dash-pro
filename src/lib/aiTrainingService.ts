@@ -1,4 +1,4 @@
-import { getActiveCompanyId, getOrCreateCompanyProfile } from "./companyService";
+import { getActiveCompanyId, getCompanyProfileById } from "./companyService";
 import { classifyInvoiceForCompany, normalizeCui } from "./cuiUtils";
 import { supabase } from "./supabaseClient";
 import type { AiFinancialForecast } from "./predictionService";
@@ -239,13 +239,9 @@ export async function updatePredictionWithActuals({
 }
 
 async function getMonthlyActualsFromInvoices() {
-  const companyProfile = await getOrCreateCompanyProfile();
-  const companyId = companyProfile.id;
-  const companyCui = normalizeCui(companyProfile.cui);
-
-  if (!companyId) {
-    throw new Error("Profilul companiei nu a putut fi pregatit pentru evaluarea AI.");
-  }
+  const companyId = await getActiveCompanyId();
+  const companyProfile = await getCompanyProfileById(companyId);
+  const companyCui = normalizeCui(companyProfile?.cui);
 
   const { data: invoicesData, error } = await supabase
     .from("invoices")

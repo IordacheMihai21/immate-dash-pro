@@ -40,7 +40,10 @@ export const menuGroups: SidebarGroup[] = [
   {
     title: "Panou principal",
     icon: LayoutDashboard,
-    items: [{ label: "Privire generala", to: "/app", icon: Gauge, exact: true }],
+    items: [
+      { label: "Privire generala", to: "/app", icon: Gauge, exact: true },
+      { label: "Portofoliu companii", to: "/app/portofoliu", icon: Building2 },
+    ],
   },
   {
     title: "Documente",

@@ -1,5 +1,5 @@
 import { classifyInvoiceForCompany } from "@/lib/cuiUtils";
-import { getOrCreateCompanyProfile } from "@/lib/companyService";
+import { getActiveCompanyId, getCompanyProfileById } from "@/lib/companyService";
 import { getInvoices } from "@/lib/invoiceService";
 
 type RelationParty =
@@ -88,31 +88,33 @@ function aggregateParties(
 }
 
 export async function getCustomerSummaries(): Promise<PartySummary[]> {
+  const companyId = await getActiveCompanyId();
   const [invoices, companyProfile] = await Promise.all([
     getInvoices(),
-    getOrCreateCompanyProfile(),
+    getCompanyProfileById(companyId),
   ]);
 
   // Only invoices where our company is the supplier represent real sales to
   // a client -- otherwise (an invoice where we're the customer) the
   // "customers" field on that row is our own company, not a client of ours.
   const salesInvoices = invoices.filter(
-    (invoice) => classifyInvoiceForCompany(invoice, companyProfile.cui) === "revenue",
+    (invoice) => classifyInvoiceForCompany(invoice, companyProfile?.cui) === "revenue",
   );
 
   return aggregateParties(salesInvoices, "customers");
 }
 
 export async function getSupplierSummaries(): Promise<PartySummary[]> {
+  const companyId = await getActiveCompanyId();
   const [invoices, companyProfile] = await Promise.all([
     getInvoices(),
-    getOrCreateCompanyProfile(),
+    getCompanyProfileById(companyId),
   ]);
 
   // Symmetric to getCustomerSummaries: only invoices where our company is
   // the customer represent a real purchase from a supplier.
   const purchaseInvoices = invoices.filter(
-    (invoice) => classifyInvoiceForCompany(invoice, companyProfile.cui) === "expense",
+    (invoice) => classifyInvoiceForCompany(invoice, companyProfile?.cui) === "expense",
   );
 
   return aggregateParties(purchaseInvoices, "suppliers");

@@ -1,4 +1,4 @@
-import { getOrCreateCompanyProfile } from "./companyService";
+import { getActiveCompanyId, getCompanyProfileById } from "./companyService";
 import { supabase } from "./supabaseClient";
 import { buildAiFinancialForecast, type MonthlyFinancialPoint } from "./predictionService";
 import { classifyInvoiceForCompany, normalizeCui } from "./cuiUtils";
@@ -89,9 +89,9 @@ function getMonthLabel(monthKey: string): string {
 }
 
 export async function getDashboardData() {
-  const companyProfile = await getOrCreateCompanyProfile();
-  const companyId = companyProfile.id;
-  const companyCui = normalizeCui(companyProfile.cui);
+  const companyId = await getActiveCompanyId();
+  const companyProfile = await getCompanyProfileById(companyId);
+  const companyCui = normalizeCui(companyProfile?.cui);
 
   if (!companyId) {
     throw new Error("Profilul companiei nu a putut fi pregatit pentru dashboard.");

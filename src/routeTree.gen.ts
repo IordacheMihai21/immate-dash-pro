@@ -21,6 +21,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppSetariRouteImport } from './routes/app.setari'
 import { Route as AppRapoarteRouteImport } from './routes/app.rapoarte'
+import { Route as AppPortofoliuRouteImport } from './routes/app.portofoliu'
 import { Route as AppGhidUtilizareRouteImport } from './routes/app.ghid-utilizare'
 import { Route as AppFurnizoriRouteImport } from './routes/app.furnizori'
 import { Route as AppDocumenteRouteImport } from './routes/app.documente'
@@ -110,6 +111,11 @@ const AppSetariRoute = AppSetariRouteImport.update({
 const AppRapoarteRoute = AppRapoarteRouteImport.update({
   id: '/rapoarte',
   path: '/rapoarte',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPortofoliuRoute = AppPortofoliuRouteImport.update({
+  id: '/portofoliu',
+  path: '/portofoliu',
   getParentRoute: () => AppRoute,
 } as any)
 const AppGhidUtilizareRoute = AppGhidUtilizareRouteImport.update({
@@ -284,6 +290,7 @@ export interface FileRoutesByFullPath {
   '/app/documente': typeof AppDocumenteRoute
   '/app/furnizori': typeof AppFurnizoriRoute
   '/app/ghid-utilizare': typeof AppGhidUtilizareRoute
+  '/app/portofoliu': typeof AppPortofoliuRoute
   '/app/rapoarte': typeof AppRapoarteRouteWithChildren
   '/app/setari': typeof AppSetariRouteWithChildren
   '/app/': typeof AppIndexRoute
@@ -326,6 +333,7 @@ export interface FileRoutesByTo {
   '/app/documente': typeof AppDocumenteRoute
   '/app/furnizori': typeof AppFurnizoriRoute
   '/app/ghid-utilizare': typeof AppGhidUtilizareRoute
+  '/app/portofoliu': typeof AppPortofoliuRoute
   '/app': typeof AppIndexRoute
   '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
   '/app/ai-center/asistent': typeof AppAiCenterAsistentRoute
@@ -369,6 +377,7 @@ export interface FileRoutesById {
   '/app/documente': typeof AppDocumenteRoute
   '/app/furnizori': typeof AppFurnizoriRoute
   '/app/ghid-utilizare': typeof AppGhidUtilizareRoute
+  '/app/portofoliu': typeof AppPortofoliuRoute
   '/app/rapoarte': typeof AppRapoarteRouteWithChildren
   '/app/setari': typeof AppSetariRouteWithChildren
   '/app/': typeof AppIndexRoute
@@ -415,6 +424,7 @@ export interface FileRouteTypes {
     | '/app/documente'
     | '/app/furnizori'
     | '/app/ghid-utilizare'
+    | '/app/portofoliu'
     | '/app/rapoarte'
     | '/app/setari'
     | '/app/'
@@ -457,6 +467,7 @@ export interface FileRouteTypes {
     | '/app/documente'
     | '/app/furnizori'
     | '/app/ghid-utilizare'
+    | '/app/portofoliu'
     | '/app'
     | '/api/webhooks/stripe'
     | '/app/ai-center/asistent'
@@ -499,6 +510,7 @@ export interface FileRouteTypes {
     | '/app/documente'
     | '/app/furnizori'
     | '/app/ghid-utilizare'
+    | '/app/portofoliu'
     | '/app/rapoarte'
     | '/app/setari'
     | '/app/'
@@ -624,6 +636,13 @@ declare module '@tanstack/react-router' {
       path: '/rapoarte'
       fullPath: '/app/rapoarte'
       preLoaderRoute: typeof AppRapoarteRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/portofoliu': {
+      id: '/app/portofoliu'
+      path: '/portofoliu'
+      fullPath: '/app/portofoliu'
+      preLoaderRoute: typeof AppPortofoliuRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/ghid-utilizare': {
@@ -915,6 +934,7 @@ interface AppRouteChildren {
   AppDocumenteRoute: typeof AppDocumenteRoute
   AppFurnizoriRoute: typeof AppFurnizoriRoute
   AppGhidUtilizareRoute: typeof AppGhidUtilizareRoute
+  AppPortofoliuRoute: typeof AppPortofoliuRoute
   AppRapoarteRoute: typeof AppRapoarteRouteWithChildren
   AppSetariRoute: typeof AppSetariRouteWithChildren
   AppIndexRoute: typeof AppIndexRoute
@@ -931,6 +951,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDocumenteRoute: AppDocumenteRoute,
   AppFurnizoriRoute: AppFurnizoriRoute,
   AppGhidUtilizareRoute: AppGhidUtilizareRoute,
+  AppPortofoliuRoute: AppPortofoliuRoute,
   AppRapoarteRoute: AppRapoarteRouteWithChildren,
   AppSetariRoute: AppSetariRouteWithChildren,
   AppIndexRoute: AppIndexRoute,

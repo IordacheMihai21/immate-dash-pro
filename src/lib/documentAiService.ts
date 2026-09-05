@@ -1,5 +1,5 @@
 import { classifyInvoiceByCui, type InvoiceClassification } from "./cuiUtils";
-import { getCompanyProfile } from "./companyService";
+import { getActiveCompanyId, getCompanyProfileById } from "./companyService";
 import {
   calculateDocumentConfidence as calculateCandidateDocumentConfidence,
   extractInvoiceCandidates,
@@ -298,7 +298,12 @@ export async function analyzeInvoiceDocument(
     throw new Error("Selecteaza un fisier PDF, PNG, JPG sau JPEG.");
   }
 
-  const companyProfile = await getCompanyProfile().catch(() => null);
+  // The active company's own CUI, not "whichever company the current auth
+  // user personally owns" -- matters for an accountant processing a
+  // client's document while viewing that client's company, not their own.
+  const companyProfile = await getActiveCompanyId()
+    .then((companyId) => getCompanyProfileById(companyId))
+    .catch(() => null);
   const companyCui = companyProfile?.cui ?? "";
   const extraction = await extractText(file, onProgress);
   const layoutLines = buildLayoutLines(extraction.words, extraction.text);
