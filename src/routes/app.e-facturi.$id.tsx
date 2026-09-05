@@ -30,7 +30,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Download, FileCode2, FileText, Info, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  ClipboardCopy,
+  Download,
+  FileCode2,
+  FileText,
+  Info,
+  Loader2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { RecordDiscussion } from "@/components/record-discussion";
 import { formatRON } from "@/lib/formatters";
@@ -40,6 +48,9 @@ import {
   PAYMENT_METHODS,
   type PaymentMethod,
 } from "@/lib/invoiceService";
+import { getActiveCompanyCui } from "@/lib/companyService";
+import { classifyInvoiceForCompany } from "@/lib/cuiUtils";
+import { buildPaymentReminderMessage } from "@/lib/paymentReminder";
 import { generateUblInvoiceXml } from "@/lib/ublInvoiceGenerator";
 import { InvoicePdfDocument } from "@/lib/pdfInvoiceGenerator";
 import { cn } from "@/lib/utils";
@@ -158,6 +169,9 @@ const paymentBadgeStyles: Record<PaymentBadgeState, string> = {
 
 function PaymentStatusRow({
   invoice,
+  isRevenue,
+  customerName,
+  supplierName,
   onUpdated,
 }: {
   invoice: {
@@ -167,7 +181,11 @@ function PaymentStatusRow({
     payment_status: string | null;
     payment_date: string | null;
     payment_method: string | null;
+    payable_amount: number | null;
   };
+  isRevenue: boolean;
+  customerName: string;
+  supplierName: string;
   onUpdated: () => void | Promise<void>;
 }) {
   const [open, setOpen] = useState(false);
@@ -176,6 +194,27 @@ function PaymentStatusRow({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const state = getPaymentBadgeState(invoice);
+
+  async function handleCopyReminder() {
+    if (!invoice.due_date) {
+      return;
+    }
+
+    const message = buildPaymentReminderMessage({
+      customerName,
+      invoiceNumber: invoice.invoice_number,
+      payableAmount: Number(invoice.payable_amount ?? 0),
+      dueDate: invoice.due_date,
+      supplierName,
+    });
+
+    try {
+      await navigator.clipboard.writeText(message);
+      toast.success("Mesaj de reminder copiat in clipboard.");
+    } catch {
+      toast.error("Nu am putut copia mesajul in clipboard.");
+    }
+  }
 
   async function handleMarkPaid() {
     try {
@@ -287,6 +326,18 @@ function PaymentStatusRow({
               </DialogContent>
             </Dialog>
           )}
+          {state === "Restanta" && isRevenue ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 gap-1 px-2 text-xs"
+              title="Copiaza un mesaj de reminder pentru client"
+              onClick={handleCopyReminder}
+            >
+              <ClipboardCopy className="h-3 w-3" />
+              Reminder
+            </Button>
+          ) : null}
         </div>
       </div>
 
@@ -311,6 +362,7 @@ function InvoiceDetail() {
   const [data, setData] = useState<InvoiceDetailsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [companyCui, setCompanyCui] = useState("");
 
   const loadInvoiceDetails = useCallback(async () => {
     try {
@@ -334,6 +386,12 @@ function InvoiceDetail() {
   useEffect(() => {
     loadInvoiceDetails();
   }, [loadInvoiceDetails]);
+
+  useEffect(() => {
+    getActiveCompanyCui()
+      .then(setCompanyCui)
+      .catch(() => setCompanyCui(""));
+  }, []);
 
   if (isLoading) {
     return (
@@ -484,7 +542,13 @@ function InvoiceDetail() {
             <Row label="Data scadenta" value={invoice.due_date ?? "-"} />
             <Row label="Moneda" value={invoice.currency ?? "RON"} />
             <Row label="ID intern" value={invoice.id} mono />
-            <PaymentStatusRow invoice={invoice} onUpdated={loadInvoiceDetails} />
+            <PaymentStatusRow
+              invoice={invoice}
+              isRevenue={classifyInvoiceForCompany(invoice, companyCui) === "revenue"}
+              customerName={customer?.name ?? ""}
+              supplierName={supplier?.name ?? ""}
+              onUpdated={loadInvoiceDetails}
+            />
           </CardContent>
         </Card>
 

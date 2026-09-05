@@ -352,3 +352,17 @@ export async function getActiveCompanyId(): Promise<string> {
 
   return profile.id;
 }
+
+/**
+ * CUI of the currently active company, used to tell "we issued this
+ * invoice" (revenue) apart from "we received this invoice" (expense) --
+ * see classifyInvoiceForCompany in cuiUtils.ts. Returns "" if the active
+ * company has no CUI on file yet, matching classifyInvoiceForCompany's
+ * "unclassified" fallback for an empty companyCui.
+ */
+export async function getActiveCompanyCui(): Promise<string> {
+  const companyId = await getActiveCompanyId();
+  const profile = await getCompanyProfileById(companyId);
+
+  return profile?.cui ?? "";
+}

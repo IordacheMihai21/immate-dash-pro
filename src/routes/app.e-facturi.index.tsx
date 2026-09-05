@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
+  ClipboardCopy,
   Download,
   Eye,
   FileCode2,
@@ -59,6 +60,9 @@ import {
   PAYMENT_METHODS,
   type PaymentMethod,
 } from "@/lib/invoiceService";
+import { getActiveCompanyCui } from "@/lib/companyService";
+import { classifyInvoiceForCompany } from "@/lib/cuiUtils";
+import { buildPaymentReminderMessage } from "@/lib/paymentReminder";
 import { formatRON } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -127,9 +131,11 @@ const paymentBadgeStyles: Record<PaymentBadgeState, string> = {
 
 function PaymentCell({
   invoice,
+  companyCui,
   onUpdated,
 }: {
   invoice: InvoiceRow;
+  companyCui: string;
   onUpdated: () => void | Promise<void>;
 }) {
   const [open, setOpen] = useState(false);
@@ -138,6 +144,30 @@ function PaymentCell({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const state = getPaymentBadgeState(invoice);
+  const isRevenue = classifyInvoiceForCompany(invoice, companyCui) === "revenue";
+
+  async function handleCopyReminder() {
+    if (!invoice.due_date) {
+      return;
+    }
+
+    const supplier = getRelationParty(invoice.suppliers);
+    const customer = getRelationParty(invoice.customers);
+    const message = buildPaymentReminderMessage({
+      customerName: customer?.name ?? "",
+      invoiceNumber: invoice.invoice_number,
+      payableAmount: Number(invoice.payable_amount ?? 0),
+      dueDate: invoice.due_date,
+      supplierName: supplier?.name ?? "",
+    });
+
+    try {
+      await navigator.clipboard.writeText(message);
+      toast.success("Mesaj de reminder copiat in clipboard.");
+    } catch {
+      toast.error("Nu am putut copia mesajul in clipboard.");
+    }
+  }
 
   async function handleMarkPaid() {
     try {
@@ -261,6 +291,19 @@ function PaymentCell({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {state === "Restanta" && isRevenue ? (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-6 gap-1 px-2 text-xs"
+          title="Copiaza un mesaj de reminder pentru client"
+          onClick={handleCopyReminder}
+        >
+          <ClipboardCopy className="h-3 w-3" />
+          Reminder
+        </Button>
+      ) : null}
     </div>
   );
 }
@@ -271,6 +314,7 @@ function EInvoicesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [companyCui, setCompanyCui] = useState("");
 
   const stats = useMemo(() => {
     const total = invoices.reduce((sum, invoice) => sum + Number(invoice.payable_amount ?? 0), 0);
@@ -353,6 +397,9 @@ function EInvoicesPage() {
 
   useEffect(() => {
     loadInvoices();
+    getActiveCompanyCui()
+      .then(setCompanyCui)
+      .catch(() => setCompanyCui(""));
 
     const handleInvoiceImported = () => {
       loadInvoices();
@@ -540,7 +587,11 @@ function EInvoicesPage() {
                           <StatusBadge status={normalizeStatus(invoice.status)} />
                         </TableCell>
                         <TableCell>
-                          <PaymentCell invoice={invoice} onUpdated={loadInvoices} />
+                          <PaymentCell
+                            invoice={invoice}
+                            companyCui={companyCui}
+                            onUpdated={loadInvoices}
+                          />
                         </TableCell>
                         <TableCell>
                           <div className="flex justify-end gap-2">
