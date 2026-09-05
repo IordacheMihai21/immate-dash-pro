@@ -30,7 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Download, FileCode2, Info, Loader2 } from "lucide-react";
+import { ArrowLeft, Download, FileCode2, FileText, Info, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { RecordDiscussion } from "@/components/record-discussion";
 import { formatRON } from "@/lib/formatters";
@@ -41,7 +41,9 @@ import {
   type PaymentMethod,
 } from "@/lib/invoiceService";
 import { generateUblInvoiceXml } from "@/lib/ublInvoiceGenerator";
+import { InvoicePdfDocument } from "@/lib/pdfInvoiceGenerator";
 import { cn } from "@/lib/utils";
+import { pdf } from "@react-pdf/renderer";
 
 export const Route = createFileRoute("/app/e-facturi/$id")({
   head: ({ params }) => ({ meta: [{ title: `Factura ${params.id} — IMMapp` }] }),
@@ -365,40 +367,44 @@ function InvoiceDetail() {
   const document = getDocument(invoice.documents as DocumentRelation);
   const isDocumentAiDocument = document?.document_type === "document-ai";
 
+  function buildInvoiceExportData() {
+    return {
+      invoiceNumber: invoice.invoice_number,
+      issueDate: invoice.issue_date ?? "",
+      dueDate: invoice.due_date,
+      currency: invoice.currency ?? "RON",
+      taxExclusiveAmount: Number(invoice.tax_exclusive_amount ?? 0),
+      taxAmount: Number(invoice.tax_amount ?? 0),
+      taxInclusiveAmount: Number(invoice.tax_inclusive_amount ?? 0),
+      payableAmount: Number(invoice.payable_amount ?? 0),
+      supplier: {
+        name: supplier?.name ?? "",
+        cui: supplier?.cui ?? "",
+        address: supplier?.address ?? "",
+        city: supplier?.city ?? "",
+        country: supplier?.country ?? "RO",
+      },
+      customer: {
+        name: customer?.name ?? "",
+        cui: customer?.cui ?? "",
+        address: customer?.address ?? "",
+        city: customer?.city ?? "",
+        country: customer?.country ?? "RO",
+      },
+      lines: lines.map((line) => ({
+        lineNumber: line.line_number ?? "1",
+        description: line.description ?? "",
+        quantity: Number(line.quantity ?? 0),
+        unitCode: line.unit_code ?? "buc",
+        unitPrice: Number(line.unit_price ?? 0),
+        lineTotal: Number(line.line_total ?? 0),
+      })),
+    };
+  }
+
   function handleDownloadXml() {
     try {
-      const xml = generateUblInvoiceXml({
-        invoiceNumber: invoice.invoice_number,
-        issueDate: invoice.issue_date ?? "",
-        dueDate: invoice.due_date,
-        currency: invoice.currency ?? "RON",
-        taxExclusiveAmount: Number(invoice.tax_exclusive_amount ?? 0),
-        taxAmount: Number(invoice.tax_amount ?? 0),
-        taxInclusiveAmount: Number(invoice.tax_inclusive_amount ?? 0),
-        payableAmount: Number(invoice.payable_amount ?? 0),
-        supplier: {
-          name: supplier?.name ?? "",
-          cui: supplier?.cui ?? "",
-          address: supplier?.address ?? "",
-          city: supplier?.city ?? "",
-          country: supplier?.country ?? "RO",
-        },
-        customer: {
-          name: customer?.name ?? "",
-          cui: customer?.cui ?? "",
-          address: customer?.address ?? "",
-          city: customer?.city ?? "",
-          country: customer?.country ?? "RO",
-        },
-        lines: lines.map((line) => ({
-          lineNumber: line.line_number ?? "1",
-          description: line.description ?? "",
-          quantity: Number(line.quantity ?? 0),
-          unitCode: line.unit_code ?? "buc",
-          unitPrice: Number(line.unit_price ?? 0),
-          lineTotal: Number(line.line_total ?? 0),
-        })),
-      });
+      const xml = generateUblInvoiceXml(buildInvoiceExportData());
 
       const blob = new Blob([xml], { type: "application/xml" });
       const url = URL.createObjectURL(blob);
@@ -409,6 +415,22 @@ function InvoiceDetail() {
       URL.revokeObjectURL(url);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "XML-ul UBL nu a putut fi generat.");
+    }
+  }
+
+  async function handleDownloadPdf() {
+    try {
+      const blob = await pdf(<InvoicePdfDocument invoice={buildInvoiceExportData()} />).toBlob();
+      const url = URL.createObjectURL(blob);
+      const link = window.document.createElement("a");
+      link.href = url;
+      link.download = `factura-${invoice.invoice_number}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "PDF-ul facturii nu a putut fi generat.",
+      );
     }
   }
 
@@ -425,6 +447,10 @@ function InvoiceDetail() {
         description={`Emisa la ${invoice.issue_date ?? "-"}`}
         actions={
           <>
+            <Button variant="outline" size="sm" className="gap-2" onClick={handleDownloadPdf}>
+              <FileText className="h-4 w-4" />
+              Descarca PDF
+            </Button>
             <Button variant="outline" size="sm" className="gap-2" onClick={handleDownloadXml}>
               <Download className="h-4 w-4" />
               Descarca XML e-Factura
