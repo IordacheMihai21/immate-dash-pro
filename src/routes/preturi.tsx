@@ -25,7 +25,12 @@ type BillingCycle = "monthly" | "annual";
 type Plan = {
   name: string;
   tagline: string;
+  // Must match the real Stripe Price IDs (STRIPE_PRICE_*_MONTHLY/ANNUAL in
+  // .env, see STRIPE_SETUP.md) -- these are display-only numbers, not read
+  // from Stripe, so they can silently drift from what checkout actually
+  // charges if the Stripe prices ever change without updating this file too.
   monthlyPrice: number;
+  annualTotal: number;
   featured?: boolean;
   cta: string;
   ctaTo: "/register" | "/login";
@@ -37,6 +42,7 @@ const plans: Plan[] = [
     name: "Start",
     tagline: "Pentru un IMM care abia incepe cu e-Factura.",
     monthlyPrice: 0,
+    annualTotal: 0,
     cta: "Incepe gratuit",
     ctaTo: "/register",
     features: [
@@ -50,7 +56,8 @@ const plans: Plan[] = [
   {
     name: "Business",
     tagline: "Pentru firme cu activitate lunara constanta si contabil extern.",
-    monthlyPrice: 149,
+    monthlyPrice: 124,
+    annualTotal: 1240,
     featured: true,
     cta: "Incepe gratuit",
     ctaTo: "/register",
@@ -66,7 +73,8 @@ const plans: Plan[] = [
   {
     name: "Companie",
     tagline: "Pentru firme cu mai multi colaboratori si nevoi de conformitate.",
-    monthlyPrice: 349,
+    monthlyPrice: 291,
+    annualTotal: 2910,
     cta: "Contacteaza-ne",
     ctaTo: "/register",
     features: [
@@ -168,8 +176,8 @@ function PricingPage() {
           </div>
 
           <p className="mx-auto mt-6 max-w-6xl text-center text-xs text-muted-foreground">
-            Preturile includ TVA. Facturarea online (card, plata recurenta) urmeaza sa fie activata
-            — momentan, planurile platite se activeaza prin echipa IMMapp dupa inregistrare.
+            Preturile includ TVA. Plata online cu cardul, recurenta, direct din aplicatie — fara
+            interventie manuala.
           </p>
         </section>
 
@@ -244,8 +252,7 @@ function PricingPage() {
 }
 
 function PricingCard({ plan, cycle }: { plan: Plan; cycle: BillingCycle }) {
-  const displayPrice =
-    cycle === "annual" ? Math.round(plan.monthlyPrice * 0.833) : plan.monthlyPrice;
+  const displayPrice = cycle === "annual" ? Math.round(plan.annualTotal / 12) : plan.monthlyPrice;
 
   return (
     <div
@@ -272,7 +279,9 @@ function PricingCard({ plan, cycle }: { plan: Plan; cycle: BillingCycle }) {
         {displayPrice > 0 ? <span className="text-sm text-muted-foreground">/ luna</span> : null}
       </div>
       {displayPrice > 0 && cycle === "annual" ? (
-        <p className="mt-1 text-xs text-muted-foreground">Facturat anual</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Facturat anual, {plan.annualTotal} RON / an
+        </p>
       ) : null}
 
       <Button className="mt-6 w-full" variant={plan.featured ? "default" : "outline"} asChild>

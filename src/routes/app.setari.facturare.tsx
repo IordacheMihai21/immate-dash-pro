@@ -20,9 +20,16 @@ const planLabels: Record<Plan, string> = {
   companie: "Companie",
 };
 
-const paidPlans: { plan: "business" | "companie"; name: string; monthlyPrice: number }[] = [
-  { plan: "business", name: "Business", monthlyPrice: 149 },
-  { plan: "companie", name: "Companie", monthlyPrice: 349 },
+// Must match the real Stripe Price IDs (STRIPE_PRICE_*_MONTHLY/ANNUAL in
+// .env, see STRIPE_SETUP.md) -- same numbers as preturi.tsx's plans array.
+const paidPlans: {
+  plan: "business" | "companie";
+  name: string;
+  monthlyPrice: number;
+  annualTotal: number;
+}[] = [
+  { plan: "business", name: "Business", monthlyPrice: 124, annualTotal: 1240 },
+  { plan: "companie", name: "Companie", monthlyPrice: 291, annualTotal: 2910 },
 ];
 
 function BillingPage() {
@@ -181,7 +188,7 @@ function BillingPage() {
           <CardContent className="grid gap-4 p-5 sm:grid-cols-2">
             {paidPlans.map((plan) => {
               const price =
-                cycle === "annual" ? Math.round(plan.monthlyPrice * 0.833) : plan.monthlyPrice;
+                cycle === "annual" ? Math.round(plan.annualTotal / 12) : plan.monthlyPrice;
 
               return (
                 <div key={plan.plan} className="rounded-2xl border border-border p-5">
@@ -189,6 +196,11 @@ function BillingPage() {
                   <p className="mt-2 text-2xl font-semibold">
                     {price} RON<span className="text-sm text-muted-foreground"> / luna</span>
                   </p>
+                  {cycle === "annual" ? (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Facturat anual, {plan.annualTotal} RON / an
+                    </p>
+                  ) : null}
                   <Button
                     className="mt-4 w-full"
                     onClick={() => handleUpgrade(plan.plan)}
