@@ -67,8 +67,10 @@ function DocumentsPage() {
 
       const data = await getDocuments();
       setDocuments(data as unknown as DocumentRow[]);
-    } catch {
-      setErrorMessage("Nu s-au putut incarca documentele financiare.");
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Nu s-au putut incarca documentele financiare.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -112,8 +114,12 @@ function DocumentsPage() {
       markFinancialDataChanged();
 
       toast.success("Documentul a fost sters. Indicatorii financiari au fost actualizati.");
-    } catch {
-      toast.error("Documentul nu a putut fi sters. Incearca din nou.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Documentul nu a putut fi sters. Incearca din nou.",
+      );
     } finally {
       setDeletingDocumentId(null);
     }
@@ -144,8 +150,12 @@ function DocumentsPage() {
       toast.success(
         "Documentele selectate au fost sterse. Indicatorii financiari au fost actualizati.",
       );
-    } catch {
-      toast.error("Documentele selectate nu au putut fi sterse. Incearca din nou.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Documentele selectate nu au putut fi sterse. Incearca din nou.",
+      );
     } finally {
       setIsDeletingSelected(false);
     }

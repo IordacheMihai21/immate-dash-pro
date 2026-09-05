@@ -18,6 +18,31 @@ export const Route = createFileRoute("/register")({
   component: RegisterPage,
 });
 
+function getSignupErrorMessage(message: string) {
+  const normalizedMessage = message.toLowerCase();
+
+  if (
+    normalizedMessage.includes("already registered") ||
+    normalizedMessage.includes("already exists")
+  ) {
+    return "Exista deja un cont cu acest email. Incearca sa te autentifici in schimb.";
+  }
+
+  if (normalizedMessage.includes("password")) {
+    return "Parola nu indeplineste cerintele minime (cel putin 6 caractere).";
+  }
+
+  if (normalizedMessage.includes("email") && normalizedMessage.includes("invalid")) {
+    return "Adresa de email nu este valida.";
+  }
+
+  if (normalizedMessage.includes("rate limit")) {
+    return "Prea multe incercari intr-un timp scurt. Asteapta cateva minute si incearca din nou.";
+  }
+
+  return `Contul nu a putut fi creat: ${message}`;
+}
+
 function RegisterPage() {
   const navigate = useNavigate();
   const [cuiVerified, setCuiVerified] = useState(false);
@@ -110,7 +135,7 @@ function RegisterPage() {
       });
 
       if (error) {
-        const message = "Contul nu a putut fi creat. Verifica datele si incearca din nou.";
+        const message = getSignupErrorMessage(error.message);
         setErrorMessage(message);
         toast.error(message);
         return;
@@ -152,8 +177,11 @@ function RegisterPage() {
       }
 
       await navigate({ to: "/app", replace: true });
-    } catch {
-      const message = "Contul nu a putut fi creat. Incearca din nou.";
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? `Contul nu a putut fi creat: ${error.message}`
+          : "Contul nu a putut fi creat. Incearca din nou.";
       setErrorMessage(message);
       toast.error(message);
     } finally {

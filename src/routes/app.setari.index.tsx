@@ -103,9 +103,11 @@ function SettingsPage() {
           setProfile(toEditableProfile(savedProfile));
           setHasSavedProfile(Boolean(savedProfile));
         }
-      } catch {
+      } catch (error) {
         if (isMounted) {
-          setLoadError("Profilul companiei nu a putut fi incarcat.");
+          setLoadError(
+            error instanceof Error ? error.message : "Profilul companiei nu a putut fi incarcat.",
+          );
         }
       } finally {
         if (isMounted) {
@@ -142,8 +144,12 @@ function SettingsPage() {
         }),
       );
       toast.success("Profilul companiei a fost salvat.");
-    } catch {
-      toast.error("Profilul companiei nu a putut fi salvat. Incearca din nou.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Profilul companiei nu a putut fi salvat. Incearca din nou.",
+      );
     } finally {
       setIsSaving(false);
     }
@@ -212,7 +218,9 @@ function SettingsPage() {
                   Salveaza modificarile
                 </Button>
                 {isLoading ? (
-                  <span className="text-sm text-muted-foreground">Se incarca profilul companiei...</span>
+                  <span className="text-sm text-muted-foreground">
+                    Se incarca profilul companiei...
+                  </span>
                 ) : null}
               </div>
             </form>
