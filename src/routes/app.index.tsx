@@ -553,7 +553,12 @@ function OverviewHero({
             comerciale si actiunilor recomandate de AI.
           </p>
 
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <HeroMiniMetric
+              label={`Profit (${getPeriodLabel(selectedPeriod).toLowerCase()})`}
+              value={formatRON(model.periodProfit)}
+              tone={model.periodProfit >= 0 ? "emerald" : "rose"}
+            />
             <HeroMiniMetric label="Status" value={model.status.label} tone={model.status.tone} />
             <HeroMiniMetric
               label="Perioada analizata"
@@ -683,8 +688,7 @@ function CommandKpiCard({
       onClick={onClick}
       className="group rounded-3xl border border-border bg-card p-5 text-left shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       initial={reduce ? false : { opacity: 0, y: 12 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.4 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: index * 0.05 }}
       whileHover={reduce ? undefined : { y: -3 }}
       whileTap={reduce ? undefined : { scale: 0.98 }}
@@ -754,6 +758,7 @@ function HealthSnapshot({ model }: { model: ReturnType<typeof buildExecutiveOver
         <SnapshotRow
           label="Presiune cash-flow"
           value={model.cashFlowSignal}
+          detail={`Estimat pe 30 de zile: ${formatRON(model.cashFlow30Days)}`}
           tone={
             model.cashFlowSignal === "Risc"
               ? "rose"
@@ -765,6 +770,7 @@ function HealthSnapshot({ model }: { model: ReturnType<typeof buildExecutiveOver
         <SnapshotRow
           label="Calitatea documentelor"
           value={model.qualitySignal}
+          detail={`Completitudine campuri: ${model.qualityRate.toFixed(1)}%`}
           tone={
             model.qualitySignal === "Risc"
               ? "rose"
@@ -776,6 +782,7 @@ function HealthSnapshot({ model }: { model: ReturnType<typeof buildExecutiveOver
         <SnapshotRow
           label="Risc relatii comerciale"
           value={model.relationshipSignal}
+          detail={`Concentrare maxima: ${formatPercent(model.maxConcentrationShare)}`}
           tone={
             model.relationshipSignal === "Risc"
               ? "rose"
@@ -1158,7 +1165,17 @@ function HeroMiniMetric({ label, value, tone }: { label: string; value: string; 
   );
 }
 
-function SnapshotRow({ label, value, tone }: { label: string; value: string; tone: Tone }) {
+function SnapshotRow({
+  label,
+  value,
+  detail,
+  tone,
+}: {
+  label: string;
+  value: string;
+  detail?: string;
+  tone: Tone;
+}) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
       <div className="flex items-center justify-between gap-3">
@@ -1169,6 +1186,7 @@ function SnapshotRow({ label, value, tone }: { label: string; value: string; ton
           {value}
         </span>
       </div>
+      {detail ? <p className="mt-2 text-xs text-sidebar-foreground/70">{detail}</p> : null}
     </div>
   );
 }
@@ -1352,10 +1370,18 @@ function buildExecutiveOverview(dashboardData: DashboardData, selectedPeriod: Pe
     unclassifiedShare,
     monthlyPointsCount: fullMonthlyData.length,
   });
+  const periodRevenue = monthlyData.reduce((sum, point) => sum + point.revenue, 0);
+  const periodExpenses = monthlyData.reduce((sum, point) => sum + point.expenses, 0);
 
   return {
     healthScore,
     status,
+    periodRevenue,
+    periodExpenses,
+    periodProfit: periodRevenue - periodExpenses,
+    qualityRate,
+    cashFlow30Days: prediction.cashFlow30Days,
+    maxConcentrationShare: Math.max(topCustomer?.share ?? 0, topSupplierShare),
     qualitySignal: qualityRate < 70 ? "Risc" : qualityRate < 90 ? "Atentie" : "Stabil",
     cashFlowSignal:
       prediction.cashFlow30Days < 0
