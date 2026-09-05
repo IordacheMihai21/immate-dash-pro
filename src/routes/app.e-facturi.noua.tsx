@@ -33,6 +33,40 @@ const emptyLine: LineDraft = { description: "", quantity: "1", unitCode: "buc", 
 const vatRateOptions = ["19", "9", "5", "0"];
 const currencyOptions = ["RON", "EUR", "USD"];
 
+const lineTemplates: { label: string; line: LineDraft }[] = [
+  {
+    label: "Servicii consultanta",
+    line: { description: "Servicii de consultanta", quantity: "1", unitCode: "ora", unitPrice: "" },
+  },
+  {
+    label: "Contabilitate lunara",
+    line: {
+      description: "Servicii de contabilitate lunara",
+      quantity: "1",
+      unitCode: "luna",
+      unitPrice: "",
+    },
+  },
+  {
+    label: "Chirie lunara",
+    line: {
+      description: "Chirie spatiu -- luna curenta",
+      quantity: "1",
+      unitCode: "luna",
+      unitPrice: "",
+    },
+  },
+  {
+    label: "Servicii IT",
+    line: {
+      description: "Servicii de dezvoltare software",
+      quantity: "1",
+      unitCode: "ora",
+      unitPrice: "",
+    },
+  },
+];
+
 function toNumber(value: string): number {
   const parsed = Number(value.replace(",", "."));
   return Number.isFinite(parsed) ? parsed : 0;
@@ -74,6 +108,10 @@ function NewInvoicePage() {
     setLines((current) => (current.length > 1 ? current.filter((_, i) => i !== index) : current));
   }
 
+  function applyLineTemplate(template: LineDraft) {
+    setLines((current) => [{ ...template }, ...current.slice(1)]);
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmitting(true);
@@ -112,6 +150,22 @@ function NewInvoicePage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Factura noua" description="Emite o factura noua catre un client." />
+
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm text-muted-foreground">Porneste de la:</span>
+        {lineTemplates.map((template) => (
+          <Button
+            key={template.label}
+            type="button"
+            variant="outline"
+            size="sm"
+            className="bg-card"
+            onClick={() => applyLineTemplate(template.line)}
+          >
+            {template.label}
+          </Button>
+        ))}
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card>
@@ -294,7 +348,9 @@ function NewInvoicePage() {
                       disabled={isSubmitting}
                     />
                   </div>
-                  <div className="text-sm text-muted-foreground sm:text-right">{formatRON(lineTotal)}</div>
+                  <div className="text-sm text-muted-foreground sm:text-right">
+                    {formatRON(lineTotal)}
+                  </div>
                   <Button
                     type="button"
                     variant="ghost"
