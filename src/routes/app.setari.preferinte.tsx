@@ -31,6 +31,7 @@ function PreferencesPage() {
         documentNotifications: preferences.documentNotifications,
         forecastNotifications: preferences.forecastNotifications,
         riskNotifications: preferences.riskNotifications,
+        paymentNotifications: preferences.paymentNotifications,
         showTechnicalMetrics: preferences.showTechnicalMetrics,
         tableDensity: preferences.tableDensity,
       });
@@ -107,6 +108,11 @@ function PreferencesPage() {
             label="Notificare pentru risc ridicat"
             checked={draft.riskNotifications}
             onCheckedChange={(value) => setDraft({ ...draft, riskNotifications: value })}
+          />
+          <SwitchPreference
+            label="Notificare pentru facturi restante"
+            checked={draft.paymentNotifications}
+            onCheckedChange={(value) => setDraft({ ...draft, paymentNotifications: value })}
           />
         </SettingsCard>
 

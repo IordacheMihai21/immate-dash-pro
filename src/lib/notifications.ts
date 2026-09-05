@@ -1,6 +1,7 @@
 import type { getDashboardData } from "@/lib/dashboardService";
 import type { CompanyPreferences } from "@/lib/companyPreferencesService";
 import { DEFAULT_COMPANY_PREFERENCES } from "@/lib/companyPreferencesService";
+import { formatRON } from "@/lib/formatters";
 
 type DashboardData = Awaited<ReturnType<typeof getDashboardData>>;
 
@@ -14,7 +15,7 @@ export type AppNotification = {
 
 type NotificationPreferences = Pick<
   CompanyPreferences,
-  "documentNotifications" | "forecastNotifications" | "riskNotifications"
+  "documentNotifications" | "forecastNotifications" | "riskNotifications" | "paymentNotifications"
 >;
 
 /** Set in ai-forecast-page.tsx / document-ai-upload.tsx / upload-modal.tsx /
@@ -70,6 +71,16 @@ export function getDashboardNotifications(
       description: data.riskClassification.explanation || "Verifica raportul de cash-flow.",
       tone: "risk",
       href: "/app/rapoarte/cash-flow",
+    });
+  }
+
+  if (preferences.paymentNotifications && data.overdueInvoiceCount > 0) {
+    notifications.push({
+      id: "invoices-overdue",
+      title: `${data.overdueInvoiceCount} facturi restante`,
+      description: `${formatRON(data.overdueInvoiceTotal)} neincasate dupa data scadentei.`,
+      tone: "risk",
+      href: "/app/e-facturi",
     });
   }
 

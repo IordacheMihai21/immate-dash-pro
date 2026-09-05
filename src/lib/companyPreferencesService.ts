@@ -6,6 +6,7 @@ export type CompanyPreferences = {
   documentNotifications: boolean;
   forecastNotifications: boolean;
   riskNotifications: boolean;
+  paymentNotifications: boolean;
   showTechnicalMetrics: boolean;
   tableDensity: "comfortable" | "compact";
 };
@@ -14,6 +15,7 @@ export const DEFAULT_COMPANY_PREFERENCES: Omit<CompanyPreferences, "companyId"> 
   documentNotifications: true,
   forecastNotifications: true,
   riskNotifications: true,
+  paymentNotifications: true,
   showTechnicalMetrics: false,
   tableDensity: "comfortable",
 };
@@ -23,6 +25,7 @@ type PreferencesRow = {
   document_notifications: boolean;
   forecast_notifications: boolean;
   risk_notifications: boolean;
+  payment_notifications: boolean;
   show_technical_metrics: boolean;
   table_density: string;
 };
@@ -33,13 +36,14 @@ function fromRow(row: PreferencesRow): CompanyPreferences {
     documentNotifications: row.document_notifications,
     forecastNotifications: row.forecast_notifications,
     riskNotifications: row.risk_notifications,
+    paymentNotifications: row.payment_notifications,
     showTechnicalMetrics: row.show_technical_metrics,
     tableDensity: row.table_density === "compact" ? "compact" : "comfortable",
   };
 }
 
 const preferencesColumns =
-  "company_id, document_notifications, forecast_notifications, risk_notifications, show_technical_metrics, table_density";
+  "company_id, document_notifications, forecast_notifications, risk_notifications, payment_notifications, show_technical_metrics, table_density";
 
 export async function getCompanyPreferences(): Promise<CompanyPreferences> {
   const companyId = await getActiveCompanyId();
@@ -74,6 +78,9 @@ export async function updateCompanyPreferences(
   }
   if (updates.riskNotifications !== undefined) {
     patch.risk_notifications = updates.riskNotifications;
+  }
+  if (updates.paymentNotifications !== undefined) {
+    patch.payment_notifications = updates.paymentNotifications;
   }
   if (updates.showTechnicalMetrics !== undefined) {
     patch.show_technical_metrics = updates.showTechnicalMetrics;

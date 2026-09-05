@@ -104,6 +104,7 @@ export async function getDashboardData() {
       id,
       invoice_number,
       issue_date,
+      due_date,
       created_at,
       supplier_id,
       customer_id,
@@ -111,6 +112,7 @@ export async function getDashboardData() {
       tax_amount,
       payable_amount,
       status,
+      payment_status,
       suppliers (
         name,
         cui
@@ -165,6 +167,22 @@ export async function getDashboardData() {
   );
 
   const invoiceCount = invoices.length;
+
+  const now = Date.now();
+  const overdueInvoices = invoices.filter((invoice) => {
+    if (invoice.payment_status === "platita" || !invoice.due_date) {
+      return false;
+    }
+
+    const dueDate = new Date(invoice.due_date);
+
+    return !Number.isNaN(dueDate.getTime()) && dueDate.getTime() < now;
+  });
+  const overdueInvoiceCount = overdueInvoices.length;
+  const overdueInvoiceTotal = overdueInvoices.reduce(
+    (sum, invoice) => sum + toNumber(invoice.payable_amount),
+    0,
+  );
 
   const totalValue = classifiedInvoices.reduce((sum, item) => sum + item.value, 0);
   const totalRevenue = revenueInvoices.reduce((sum, item) => sum + item.value, 0);
@@ -395,6 +413,8 @@ export async function getDashboardData() {
     classifiedInvoiceValue,
     unclassifiedInvoiceCount,
     unclassifiedInvoiceValue,
+    overdueInvoiceCount,
+    overdueInvoiceTotal,
     supplierCount: supplierIds.size,
     customerCount: customerIds.size,
     documentsProcessed: documents.length,
