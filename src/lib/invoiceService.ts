@@ -640,6 +640,7 @@ export async function getInvoiceDetails(invoiceId: string) {
       payment_status,
       payment_date,
       payment_method,
+      share_token,
       created_at,
       document_id,
       documents (

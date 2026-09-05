@@ -37,7 +37,9 @@ import {
   FileCode2,
   FileText,
   Info,
+  Link2,
   Loader2,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { RecordDiscussion } from "@/components/record-discussion";
@@ -51,6 +53,7 @@ import {
 import { getActiveCompanyCui } from "@/lib/companyService";
 import { classifyInvoiceForCompany } from "@/lib/cuiUtils";
 import { buildPaymentReminderMessage } from "@/lib/paymentReminder";
+import { enableInvoiceShare, disableInvoiceShare } from "@/lib/invoiceShareService";
 import { generateUblInvoiceXml } from "@/lib/ublInvoiceGenerator";
 import { InvoicePdfDocument } from "@/lib/pdfInvoiceGenerator";
 import { cn } from "@/lib/utils";
@@ -356,6 +359,108 @@ function PaymentStatusRow({
   );
 }
 
+function InvoiceShareCard({
+  invoiceId,
+  invoiceNumber,
+  shareToken,
+  onUpdated,
+}: {
+  invoiceId: string;
+  invoiceNumber: string;
+  shareToken: string | null;
+  onUpdated: () => void | Promise<void>;
+}) {
+  const [isWorking, setIsWorking] = useState(false);
+
+  const shareUrl = shareToken
+    ? `${typeof window !== "undefined" ? window.location.origin : ""}/factura/${shareToken}`
+    : "";
+
+  async function handleEnable() {
+    try {
+      setIsWorking(true);
+      await enableInvoiceShare(invoiceId);
+      toast.success("Link public generat.");
+      await onUpdated();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Linkul nu a putut fi generat.");
+    } finally {
+      setIsWorking(false);
+    }
+  }
+
+  async function handleDisable() {
+    try {
+      setIsWorking(true);
+      await disableInvoiceShare(invoiceId);
+      toast.success("Link public revocat.");
+      await onUpdated();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Linkul nu a putut fi revocat.");
+    } finally {
+      setIsWorking(false);
+    }
+  }
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("Link copiat in clipboard.");
+    } catch {
+      toast.error("Nu am putut copia linkul in clipboard.");
+    }
+  }
+
+  return (
+    <Card className="mb-4">
+      <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-2.5">
+          <Link2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Link public pentru client</p>
+            <p className="text-xs text-muted-foreground">
+              {shareToken
+                ? "Oricine are acest link poate vedea si descarca factura, fara cont."
+                : `Genereaza un link pe care sa il trimiti clientului pentru factura ${invoiceNumber}.`}
+            </p>
+          </div>
+        </div>
+
+        {shareToken ? (
+          <div className="flex items-center gap-2">
+            <Input readOnly value={shareUrl} className="h-8 w-64 bg-card text-xs" />
+            <Button variant="outline" size="sm" onClick={handleCopy} className="gap-1.5">
+              <ClipboardCopy className="h-3.5 w-3.5" />
+              Copiaza
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDisable}
+              disabled={isWorking}
+              className="gap-1.5 text-destructive hover:text-destructive"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Revoca
+            </Button>
+          </div>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleEnable}
+            disabled={isWorking}
+            className="gap-1.5"
+          >
+            <Link2 className="h-3.5 w-3.5" />
+            Genereaza link
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function InvoiceDetail() {
   const { id } = Route.useParams();
 
@@ -525,6 +630,13 @@ function InvoiceDetail() {
           identificate si relatiile dintre acestea.
         </p>
       </div>
+
+      <InvoiceShareCard
+        invoiceId={invoice.id}
+        invoiceNumber={invoice.invoice_number}
+        shareToken={invoice.share_token}
+        onUpdated={loadInvoiceDetails}
+      />
 
       <div className="mb-4">
         <RecordDiscussion entityType="invoice" entityId={invoice.id} />
