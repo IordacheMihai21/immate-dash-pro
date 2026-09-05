@@ -16,6 +16,7 @@ import {
   ScanText,
   Settings,
   ShieldCheck,
+  Timer,
   TrendingUp,
   Users,
   Wallet,
@@ -55,6 +56,7 @@ export const menuGroups: SidebarGroup[] = [
     icon: FileCode2,
     items: [
       { label: "Toate facturile", to: "/app/e-facturi", icon: ReceiptText },
+      { label: "Colectare", to: "/app/e-facturi/colectare", icon: Timer },
       { label: "Furnizori", to: "/app/furnizori", icon: Handshake },
       { label: "Clienti", to: "/app/clienti", icon: Users },
     ],

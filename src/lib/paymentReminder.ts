@@ -8,7 +8,7 @@ export type PaymentReminderInput = {
   supplierName: string;
 };
 
-function daysOverdue(dueDate: string): number {
+export function daysOverdue(dueDate: string): number {
   const due = new Date(dueDate);
 
   if (Number.isNaN(due.getTime())) {
