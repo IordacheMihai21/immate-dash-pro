@@ -53,6 +53,7 @@ import {
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/status-badge";
 import { TrendBadge } from "@/components/trend-badge";
+import { OnboardingChecklist } from "@/components/onboarding-checklist";
 import { useRecentActivity } from "@/hooks/use-activity-log";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { getDashboardData } from "@/lib/dashboardService";
@@ -182,7 +183,7 @@ function Dashboard() {
         onSelectPeriod={setSelectedPeriod}
       />
 
-      <OnboardingChecklist dashboardData={dashboardData} />
+      <OnboardingChecklist />
 
       <section className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
         <CommandKpiCard
@@ -885,87 +886,6 @@ function ActionQueue({ actions }: { actions: ActionItem[] }) {
               {action.nextStep}
             </div>
           </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function OnboardingChecklist({ dashboardData }: { dashboardData: DashboardData }) {
-  const steps = [
-    {
-      title: "Completeaza profilul companiei",
-      description: "CUI, denumire si date de contact folosite in facturi si rapoarte.",
-      done: Boolean(dashboardData.companyCui),
-      href: "/app/setari" as const,
-      icon: <Building2 className="h-4 w-4" />,
-    },
-    {
-      title: "Incarca primul document",
-      description: "O factura PDF sau imagine, analizata automat de Document AI.",
-      done: dashboardData.documentsProcessed > 0,
-      href: "/app/ai-center/document-ai" as const,
-      icon: <UploadCloud className="h-4 w-4" />,
-    },
-    {
-      title: "Importa sau creeaza prima factura",
-      description: "XML e-Factura importat sau factura noua, pentru rapoarte si cash-flow.",
-      done: dashboardData.invoiceCount > 0,
-      href: "/app/e-facturi" as const,
-      icon: <ReceiptText className="h-4 w-4" />,
-    },
-  ];
-
-  const completedCount = steps.filter((step) => step.done).length;
-
-  if (completedCount === steps.length) {
-    return null;
-  }
-
-  return (
-    <section className="rounded-3xl border border-border bg-card p-5 shadow-sm">
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase text-primary">Primii pasi</p>
-          <h2 className="mt-1 text-lg font-semibold text-foreground">
-            Pregateste compania pentru rapoarte complete
-          </h2>
-        </div>
-        <span className="text-sm font-medium text-muted-foreground">
-          {completedCount}/{steps.length} finalizati
-        </span>
-      </div>
-
-      <div className="mt-5 grid gap-3 md:grid-cols-3">
-        {steps.map((step) => (
-          <Link
-            key={step.title}
-            to={step.href}
-            className={cn(
-              "group flex flex-col gap-3 rounded-2xl border p-4 transition",
-              step.done
-                ? "border-success/30 bg-success/10"
-                : "border-border bg-background hover:border-primary/40 hover:bg-accent/40",
-            )}
-          >
-            <div className="flex items-center justify-between">
-              <span
-                className={cn(
-                  "flex h-8 w-8 items-center justify-center rounded-full",
-                  step.done ? "bg-success/20 text-success" : "bg-accent text-primary",
-                )}
-              >
-                {step.done ? <CheckCircle2 className="h-4 w-4" /> : step.icon}
-              </span>
-              {!step.done ? (
-                <ArrowRight className="h-4 w-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />
-              ) : null}
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-foreground">{step.title}</p>
-              <p className="mt-1 text-xs leading-5 text-muted-foreground">{step.description}</p>
-            </div>
-          </Link>
         ))}
       </div>
     </section>
