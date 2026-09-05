@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, ChevronDown, Gauge } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 
 export function SiteNav() {
@@ -20,7 +21,9 @@ export function SiteNav() {
       <div
         className={cn(
           "mx-auto flex h-16 w-full max-w-6xl items-center rounded-2xl border bg-card/85 px-3 text-sm backdrop-blur-xl transition-all duration-300 sm:px-5",
-          scrolled ? "border-border shadow-[0_14px_40px_rgba(37,58,146,0.1)]" : "border-black/5",
+          scrolled
+            ? "border-border shadow-[0_14px_40px_rgba(37,58,146,0.1)]"
+            : "border-foreground/5",
         )}
       >
         <Link to="/" className="flex shrink-0 items-center gap-2.5" aria-label="IMMapp">
@@ -53,6 +56,8 @@ export function SiteNav() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
+          <ThemeToggle className="hidden sm:inline-flex" />
+
           <Button variant="ghost" size="sm" asChild className="hidden h-9 rounded-lg px-3 sm:flex">
             <Link to="/login">Autentificare</Link>
           </Button>

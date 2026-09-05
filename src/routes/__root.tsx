@@ -12,6 +12,8 @@ import * as Sentry from "@sentry/tanstackstart-react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { ThemeProvider } from "../components/theme-provider";
+import { THEME_INIT_SCRIPT } from "../lib/theme";
 
 function NotFoundComponent() {
   return (
@@ -122,8 +124,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="ro">
+    // suppressHydrationWarning: the inline script below sets the .dark
+    // class synchronously before hydration, based on localStorage/system
+    // preference the server can't know -- without this, React would warn
+    // (harmlessly) about a client/server mismatch on this one attribute.
+    <html lang="ro" suppressHydrationWarning>
       <head>
+        {/* Must run before the stylesheet paints anything, or the page
+            flashes the wrong theme for a frame on every load. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />
       </head>
       <body>
@@ -139,8 +148,10 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <ThemeProvider>
+        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        <Outlet />
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

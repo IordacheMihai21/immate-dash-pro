@@ -369,6 +369,54 @@
   letter-spacing: 0;
 }
 
+/*
+ * Dark variant of the marketing site above. Same hue signature (262,
+ * bright blue), inverted lightness -- same relationship as :root -> .dark
+ * for the app tokens (primary gets lighter/more saturated to stay legible
+ * against a dark surface; semantic status colors are reused as-is from
+ * .dark since they're hue-defined, not surface-defined).
+ */
+.dark .immapp-landing {
+  --background: oklch(0.15 0.018 262);
+  --foreground: oklch(0.96 0.006 260);
+  --card: oklch(0.19 0.02 262);
+  --card-foreground: oklch(0.96 0.006 260);
+  --popover: oklch(0.19 0.02 262);
+  --popover-foreground: oklch(0.96 0.006 260);
+  --primary: oklch(0.64 0.19 262);
+  --primary-foreground: oklch(0.99 0.003 260);
+  --secondary: oklch(0.24 0.02 262);
+  --secondary-foreground: oklch(0.95 0.006 260);
+  --muted: oklch(0.23 0.018 262);
+  --muted-foreground: oklch(0.66 0.015 262);
+  --accent: oklch(0.28 0.045 262);
+  --accent-foreground: oklch(0.85 0.06 262);
+  --destructive: oklch(0.62 0.2 25);
+  --destructive-foreground: oklch(0.98 0.003 95);
+  --success: oklch(0.65 0.14 155);
+  --success-foreground: oklch(0.15 0.018 262);
+  --warning: oklch(0.78 0.15 75);
+  --warning-foreground: oklch(0.2 0.02 95);
+  --info: oklch(0.65 0.1 235);
+  --info-foreground: oklch(0.15 0.018 262);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.64 0.19 262);
+  --chart-1: oklch(0.64 0.19 262);
+  --chart-2: oklch(0.72 0.15 220);
+  --chart-3: oklch(0.78 0.15 75);
+  --chart-4: oklch(0.64 0.17 20);
+  --chart-5: oklch(0.62 0.006 95);
+  --sidebar: oklch(0.13 0.03 262);
+  --sidebar-foreground: oklch(0.92 0.01 260);
+  --sidebar-primary: oklch(0.985 0.003 95);
+  --sidebar-primary-foreground: oklch(0.15 0.018 262);
+  --sidebar-accent: oklch(1 0 0 / 8%);
+  --sidebar-accent-foreground: oklch(0.985 0.003 95);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.68 0.18 262);
+}
+
 @layer base {
   * {
     border-color: var(--color-border);

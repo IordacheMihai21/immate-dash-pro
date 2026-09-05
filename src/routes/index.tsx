@@ -1555,16 +1555,23 @@ function DraggableScenarioWidget() {
   };
 
   return (
-    <article className="relative overflow-hidden rounded-[28px] border border-border bg-foreground p-5 text-background shadow-[0_20px_65px_rgba(30,41,110,0.16)]">
+    // Deliberately fixed-dark regardless of light/dark mode -- a
+    // "device mockup" card, same idea as the app shell's own always-dark
+    // sidebar. Was `bg-foreground text-background`, which looked right in
+    // light mode by coincidence (foreground is dark there) but inverts to
+    // a jarring light card once .dark flips foreground/background too.
+    <article className="relative overflow-hidden rounded-[28px] border border-border bg-[oklch(0.19_0.02_262)] p-5 text-[oklch(0.99_0.003_260)] shadow-[0_20px_65px_rgba(30,41,110,0.16)]">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm font-semibold">Scenariu cash-flow</p>
-          <p className="mt-1 text-sm text-background/55">Intarzieri si impact estimat</p>
+          <p className="mt-1 text-sm text-[oklch(0.99_0.003_260)]/55">
+            Intarzieri si impact estimat
+          </p>
         </div>
         <button
           type="button"
           onClick={resetScenario}
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/8 text-background/70 transition hover:bg-white/14 hover:text-background"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/8 text-[oklch(0.99_0.003_260)]/70 transition hover:bg-white/14 hover:text-[oklch(0.99_0.003_260)]"
           aria-label="Reseteaza scenariul"
         >
           <RotateCcw className="h-4 w-4" />
@@ -1573,7 +1580,7 @@ function DraggableScenarioWidget() {
 
       <div className="mt-5 grid gap-4 sm:grid-cols-[1fr_160px] sm:items-end">
         <div>
-          <div className="flex items-center gap-2 text-xs text-background/55">
+          <div className="flex items-center gap-2 text-xs text-[oklch(0.99_0.003_260)]/55">
             <MousePointer2 className="h-4 w-4" />
             Trage nivelul intarzierii incasarilor
           </div>
@@ -1584,7 +1591,7 @@ function DraggableScenarioWidget() {
             <div className="absolute inset-y-1 left-1 rounded-full bg-white/10" />
             <div
               ref={fillRef}
-              className="absolute inset-y-1 left-1 rounded-full bg-background transition-[width] duration-200"
+              className="absolute inset-y-1 left-1 rounded-full bg-[oklch(0.99_0.003_260)] transition-[width] duration-200"
               style={{ width: "44%" }}
             />
             <button
@@ -1599,15 +1606,15 @@ function DraggableScenarioWidget() {
         </div>
 
         <div className="rounded-2xl border border-white/10 bg-white/8 p-4">
-          <p className="text-xs text-background/50">Runway estimat</p>
+          <p className="text-xs text-[oklch(0.99_0.003_260)]/50">Runway estimat</p>
           <p className="mt-2 text-3xl font-semibold">
             <span ref={valueRef}>16 zile</span>
           </p>
-          <p className="mt-3 text-xs text-background/50">TVA impact</p>
+          <p className="mt-3 text-xs text-[oklch(0.99_0.003_260)]/50">TVA impact</p>
           <p className="mt-1 font-mono text-sm">
             <span ref={amountRef}>4.184 RON</span>
           </p>
-          <p className="mt-3 rounded-full bg-white/10 px-2.5 py-1 text-center text-xs text-background/65">
+          <p className="mt-3 rounded-full bg-white/10 px-2.5 py-1 text-center text-xs text-[oklch(0.99_0.003_260)]/65">
             <span ref={stateRef}>presiune medie</span>
           </p>
         </div>
@@ -1668,12 +1675,14 @@ function ReportsSection() {
             </div>
 
             <div className="space-y-4">
-              <div className="rounded-[26px] border border-border bg-foreground p-5 text-background shadow-[0_24px_70px_rgba(30,41,110,0.18)]">
-                <p className="text-xs text-background/55">Total estimat</p>
+              <div className="rounded-[26px] border border-border bg-primary p-5 text-primary-foreground shadow-[0_24px_70px_rgba(30,41,110,0.18)]">
+                <p className="text-xs text-primary-foreground/70">Total estimat</p>
                 <p className="mt-3 text-4xl font-semibold">
                   <NumberTicker value={4120} currency="RON" />
                 </p>
-                <p className="mt-2 text-xs text-background/55">TVA de verificat luna aceasta</p>
+                <p className="mt-2 text-xs text-primary-foreground/70">
+                  TVA de verificat luna aceasta
+                </p>
               </div>
               <div className="rounded-[26px] border border-border bg-card p-5">
                 <p className="text-sm font-semibold">Scor date</p>
@@ -1691,7 +1700,7 @@ function ReportsSection() {
                                 ? "var(--color-primary)"
                                 : index === 2
                                   ? "var(--color-chart-3)"
-                                  : "var(--color-muted)"
+                                  : "var(--color-chart-5)"
                             }
                           />
                         ))}

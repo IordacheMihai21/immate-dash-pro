@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CommandMenu } from "@/components/command-menu";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { useCompanyMemberships } from "@/hooks/use-company-memberships";
 import { useCompanyPreferences } from "@/hooks/use-company-preferences";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
@@ -179,6 +180,8 @@ export function AppHeader({ onSidebarToggle }: { onSidebarToggle: () => void }) 
         <CommandMenu open={commandMenuOpen} onOpenChange={setCommandMenuOpen} />
 
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+          <ThemeToggle className="hidden sm:inline-flex" />
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button

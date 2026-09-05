@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { Bell, BrainCircuit, Eye, Loader2, Save, Wallet } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -114,7 +115,10 @@ function PreferencesPage() {
           icon={<Eye className="h-5 w-5" />}
           description="Controleaza modul de prezentare a interfetei."
         >
-          <StaticPreference label="Tema interfata" value="Luminos" />
+          <div className="flex items-center justify-between gap-3 rounded-xl bg-muted p-4">
+            <span className="text-sm font-medium text-foreground">Tema interfata</span>
+            <ThemeToggle />
+          </div>
           <ChoicePreference
             label="Densitate tabele"
             value={draft.tableDensity === "compact" ? "Compact" : "Confortabil"}
