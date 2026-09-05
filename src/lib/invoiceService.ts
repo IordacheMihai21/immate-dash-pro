@@ -547,12 +547,16 @@ export async function getInvoices() {
       id,
       invoice_number,
       issue_date,
+      due_date,
       currency,
       tax_exclusive_amount,
       tax_amount,
       tax_inclusive_amount,
       payable_amount,
       status,
+      payment_status,
+      payment_date,
+      payment_method,
       created_at,
       suppliers (
         name,
@@ -574,6 +578,48 @@ export async function getInvoices() {
   return data ?? [];
 }
 
+export type InvoicePaymentStatus = "platita" | "neplatita";
+
+export const PAYMENT_METHODS = ["Transfer bancar", "Card", "Numerar", "Alt"] as const;
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+
+/**
+ * The only place invoices.payment_status/payment_date/payment_method are
+ * ever written. Those columns existed in the schema already (part of the
+ * original e-Factura import shape) but nothing in the app ever updated
+ * them -- every invoice sat at the default 'neplatita' forever, which is
+ * why per-client risk scoring (clientRiskService.ts) is deliberately NOT
+ * based on payment lateness: that data didn't exist. This is what makes
+ * it start existing, going forward.
+ */
+export async function updateInvoicePaymentStatus(
+  invoiceId: string,
+  update:
+    | { status: "platita"; paymentDate: string; paymentMethod: PaymentMethod }
+    | { status: "neplatita" },
+): Promise<void> {
+  const companyId = await getActiveCompanyId();
+
+  const patch =
+    update.status === "platita"
+      ? {
+          payment_status: "platita",
+          payment_date: update.paymentDate,
+          payment_method: update.paymentMethod,
+        }
+      : { payment_status: "neplatita", payment_date: null, payment_method: null };
+
+  const { error } = await supabase
+    .from("invoices")
+    .update(patch)
+    .eq("id", invoiceId)
+    .eq("company_id", companyId);
+
+  if (error) {
+    throw new Error(`Statusul platii nu a putut fi actualizat: ${error.message}`);
+  }
+}
+
 export async function getInvoiceDetails(invoiceId: string) {
   const companyId = await getActiveCompanyId();
 
@@ -591,6 +637,9 @@ export async function getInvoiceDetails(invoiceId: string) {
       tax_inclusive_amount,
       payable_amount,
       status,
+      payment_status,
+      payment_date,
+      payment_method,
       created_at,
       document_id,
       documents (

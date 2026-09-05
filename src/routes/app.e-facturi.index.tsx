@@ -20,12 +20,29 @@ import { StatusBadge } from "@/components/status-badge";
 import { UploadModal } from "@/components/upload-modal";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -36,8 +53,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { downloadCsv, todayForFilename } from "@/lib/csvExport";
-import { getInvoices } from "@/lib/invoiceService";
+import {
+  getInvoices,
+  updateInvoicePaymentStatus,
+  PAYMENT_METHODS,
+  type PaymentMethod,
+} from "@/lib/invoiceService";
 import { formatRON } from "@/lib/formatters";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/app/e-facturi/")({
@@ -63,16 +86,184 @@ type InvoiceRow = {
   id: string;
   invoice_number: string;
   issue_date: string | null;
+  due_date: string | null;
   currency: string | null;
   tax_exclusive_amount: number | null;
   tax_amount: number | null;
   tax_inclusive_amount: number | null;
   payable_amount: number | null;
   status: string | null;
+  payment_status: string | null;
+  payment_date: string | null;
+  payment_method: string | null;
   created_at: string | null;
   suppliers?: RelationParty;
   customers?: RelationParty;
 };
+
+type PaymentBadgeState = "Platita" | "Restanta" | "Neplatita";
+
+function getPaymentBadgeState(invoice: InvoiceRow): PaymentBadgeState {
+  if (invoice.payment_status === "platita") {
+    return "Platita";
+  }
+
+  if (invoice.due_date) {
+    const dueDate = new Date(invoice.due_date);
+
+    if (!Number.isNaN(dueDate.getTime()) && dueDate.getTime() < Date.now()) {
+      return "Restanta";
+    }
+  }
+
+  return "Neplatita";
+}
+
+const paymentBadgeStyles: Record<PaymentBadgeState, string> = {
+  Platita: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  Restanta: "border-destructive/30 bg-destructive/10 text-destructive",
+  Neplatita: "border-border bg-muted text-muted-foreground",
+};
+
+function PaymentCell({
+  invoice,
+  onUpdated,
+}: {
+  invoice: InvoiceRow;
+  onUpdated: () => void | Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(PAYMENT_METHODS[0]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const state = getPaymentBadgeState(invoice);
+
+  async function handleMarkPaid() {
+    try {
+      setIsSubmitting(true);
+      await updateInvoicePaymentStatus(invoice.id, {
+        status: "platita",
+        paymentDate,
+        paymentMethod,
+      });
+      toast.success(`Factura ${invoice.invoice_number} marcata ca platita.`);
+      setOpen(false);
+      await onUpdated();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Statusul platii nu a putut fi actualizat.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleMarkUnpaid() {
+    try {
+      await updateInvoicePaymentStatus(invoice.id, { status: "neplatita" });
+      toast.success(`Factura ${invoice.invoice_number} marcata ca neplatita.`);
+      await onUpdated();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Statusul platii nu a putut fi actualizat.",
+      );
+    }
+  }
+
+  if (state === "Platita") {
+    return (
+      <div className="flex flex-col gap-1">
+        <span
+          className={cn(
+            "inline-flex w-fit items-center rounded-full border px-2 py-0.5 text-xs font-medium",
+            paymentBadgeStyles.Platita,
+          )}
+        >
+          Platita
+        </span>
+        <button
+          type="button"
+          onClick={handleMarkUnpaid}
+          className="text-left text-xs text-muted-foreground transition hover:text-foreground"
+        >
+          {invoice.payment_date ? formatDate(invoice.payment_date) : null}
+          {invoice.payment_method ? ` · ${invoice.payment_method}` : null}
+          {" · anuleaza"}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <span
+        className={cn(
+          "inline-flex w-fit items-center rounded-full border px-2 py-0.5 text-xs font-medium",
+          paymentBadgeStyles[state],
+        )}
+      >
+        {state}
+      </span>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
+            Marcheaza platita
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Marcheaza factura ca platita</DialogTitle>
+            <DialogDescription>
+              Factura {invoice.invoice_number} va fi marcata ca incasata.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="payment-date">Data platii</Label>
+              <Input
+                id="payment-date"
+                type="date"
+                value={paymentDate}
+                onChange={(event) => setPaymentDate(event.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="payment-method">Metoda de plata</Label>
+              <Select
+                value={paymentMethod}
+                onValueChange={(value) => setPaymentMethod(value as PaymentMethod)}
+              >
+                <SelectTrigger id="payment-method">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAYMENT_METHODS.map((method) => (
+                    <SelectItem key={method} value={method}>
+                      {method}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={isSubmitting}>
+              Anuleaza
+            </Button>
+            <Button onClick={handleMarkPaid} disabled={isSubmitting || !paymentDate}>
+              {isSubmitting ? "Se salveaza..." : "Confirma plata"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
 
 function EInvoicesPage() {
   const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
@@ -84,15 +275,19 @@ function EInvoicesPage() {
   const stats = useMemo(() => {
     const total = invoices.reduce((sum, invoice) => sum + Number(invoice.payable_amount ?? 0), 0);
     const vat = invoices.reduce((sum, invoice) => sum + Number(invoice.tax_amount ?? 0), 0);
-    const processed = invoices.filter(
-      (invoice) => normalizeStatus(invoice.status) === "Activ",
-    ).length;
+    const overdueInvoices = invoices.filter(
+      (invoice) => getPaymentBadgeState(invoice) === "Restanta",
+    );
+    const overdueTotal = overdueInvoices.reduce(
+      (sum, invoice) => sum + Number(invoice.payable_amount ?? 0),
+      0,
+    );
 
     return {
       total,
       vat,
-      processed,
-      processingRate: invoices.length > 0 ? Math.round((processed / invoices.length) * 100) : 0,
+      overdueCount: overdueInvoices.length,
+      overdueTotal,
     };
   }, [invoices]);
 
@@ -220,11 +415,15 @@ function EInvoicesPage() {
           tone="amber"
         />
         <StatCard
-          title="Status procesare"
-          value={`${stats.processingRate}%`}
-          description={`${stats.processed} facturi procesate`}
+          title="Facturi restante"
+          value={String(stats.overdueCount)}
+          description={
+            stats.overdueCount > 0
+              ? `${formatRON(stats.overdueTotal)} neincasate dupa scadenta`
+              : "Nicio factura restanta"
+          }
           icon={<Timer className="h-5 w-5" />}
-          tone="slate"
+          tone={stats.overdueCount > 0 ? "rose" : "slate"}
         />
       </div>
 
@@ -304,6 +503,7 @@ function EInvoicesPage() {
                   <TableHead className="text-right">Total</TableHead>
                   <TableHead className="text-right">TVA</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Plata</TableHead>
                   <TableHead className="text-right">Actiuni</TableHead>
                 </TableRow>
               </TableHeader>
@@ -311,7 +511,7 @@ function EInvoicesPage() {
               <TableBody>
                 {filteredInvoices.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
+                    <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
                       Nu exista facturi pentru filtrul selectat.
                     </TableCell>
                   </TableRow>
@@ -338,6 +538,9 @@ function EInvoicesPage() {
                         </TableCell>
                         <TableCell>
                           <StatusBadge status={normalizeStatus(invoice.status)} />
+                        </TableCell>
+                        <TableCell>
+                          <PaymentCell invoice={invoice} onUpdated={loadInvoices} />
                         </TableCell>
                         <TableCell>
                           <div className="flex justify-end gap-2">
@@ -402,6 +605,9 @@ const invoiceCsvHeaders = [
   "Total de plata",
   "Moneda",
   "Status",
+  "Status plata",
+  "Data platii",
+  "Metoda de plata",
 ];
 
 function buildInvoiceCsvRow(invoice: InvoiceRow) {
@@ -420,6 +626,9 @@ function buildInvoiceCsvRow(invoice: InvoiceRow) {
     Number(invoice.payable_amount ?? 0).toFixed(2),
     invoice.currency ?? "RON",
     normalizeStatus(invoice.status),
+    getPaymentBadgeState(invoice),
+    invoice.payment_date ? formatDate(invoice.payment_date) : "",
+    invoice.payment_method ?? "",
   ];
 }
 
