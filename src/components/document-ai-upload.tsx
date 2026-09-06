@@ -36,6 +36,7 @@ import {
 } from "@/lib/documentAiHybridService";
 import { buildUiSafeDocumentRelations } from "@/lib/documentAiRelations";
 import { classifyInvoiceByCui, type InvoiceClassification } from "@/lib/cuiUtils";
+import { validateDocumentAiFile } from "@/lib/uploadValidation";
 import { cn } from "@/lib/utils";
 
 export type DocumentAiEditableFields = Record<DocumentAiFieldKey, string>;
@@ -160,6 +161,15 @@ export function DocumentAiUpload({
 
     if (!isSupportedDocumentAiFile(file)) {
       toast.error("Document AI accepta fisiere PDF, PNG, JPG sau JPEG.");
+      event.currentTarget.value = "";
+      setSelectedFile(null);
+      return;
+    }
+
+    const sizeCheck = validateDocumentAiFile(file);
+
+    if (!sizeCheck.ok) {
+      toast.error(sizeCheck.reason);
       event.currentTarget.value = "";
       setSelectedFile(null);
       return;

@@ -46,6 +46,7 @@ import {
   type LayoutAiStatus,
 } from "@/lib/layoutAiService";
 import { mergeLayoutXlmWithCandidateEngine } from "@/lib/layoutAiHybridMerge";
+import { validateDocumentAiFile } from "@/lib/uploadValidation";
 import { cn } from "@/lib/utils";
 import {
   clearLayoutAiSession,
@@ -150,6 +151,15 @@ export function LayoutAiAnalysis({
       event.currentTarget.value = "";
       return;
     }
+
+    const sizeCheck = validateDocumentAiFile(file);
+
+    if (!sizeCheck.ok) {
+      toast.error(sizeCheck.reason);
+      event.currentTarget.value = "";
+      return;
+    }
+
     setSelectedFile(file);
     setResult(null);
     setComparisonFields(null);

@@ -22,6 +22,7 @@ import {
 import { UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import { importEFacturaXml } from "@/lib/invoiceService";
+import { validateEFacturaXmlSelection } from "@/lib/uploadValidation";
 
 const XML_ONLY_MESSAGE = "Acest modul accepta doar fisiere XML e-Factura.";
 
@@ -121,7 +122,7 @@ export function UploadModal({ trigger }: { trigger: ReactNode }) {
     const xmlFiles = files.filter((file) => file.name.toLowerCase().endsWith(".xml"));
 
     const invalidFiles = files.filter((file) => !file.name.toLowerCase().endsWith(".xml"));
-    const skipped = invalidFiles.map((file) => ({
+    const invalidSkipped = invalidFiles.map((file) => ({
       fileName: file.name,
       error: XML_ONLY_MESSAGE,
     }));
@@ -130,11 +131,32 @@ export function UploadModal({ trigger }: { trigger: ReactNode }) {
       toast.error(`${XML_ONLY_MESSAGE} ${invalidFiles.length} fisier(e) au fost ignorate.`);
     }
 
-    setSelectedFiles(xmlFiles);
+    const { accepted, rejected, truncatedCount } = validateEFacturaXmlSelection(xmlFiles);
+
+    if (rejected.length > 0) {
+      toast.error(
+        rejected.length === 1
+          ? `${rejected[0].fileName}: ${rejected[0].reason}`
+          : `${rejected.length} fisiere depasesc limita de dimensiune si au fost ignorate.`,
+      );
+    }
+
+    if (truncatedCount > 0) {
+      toast.warning(
+        `Se pot incarca cel mult 50 de fisiere o data. ${truncatedCount} fisier(e) suplimentare au fost ignorate.`,
+      );
+    }
+
+    const skipped = [
+      ...invalidSkipped,
+      ...rejected.map((r) => ({ fileName: r.fileName, error: r.reason })),
+    ];
+
+    setSelectedFiles(accepted);
     setSkippedFiles(skipped);
     setFailedImports(skipped);
 
-    if (xmlFiles.length === 0) {
+    if (accepted.length === 0) {
       event.currentTarget.value = "";
     }
   }
