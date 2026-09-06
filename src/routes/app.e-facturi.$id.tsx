@@ -43,6 +43,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { RecordDiscussion } from "@/components/record-discussion";
+import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { formatRON } from "@/lib/formatters";
 import {
   getInvoiceDetails,
@@ -195,6 +196,7 @@ function PaymentStatusRow({
   const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(PAYMENT_METHODS[0]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { confirm, ConfirmDialog } = useConfirmDialog();
 
   const state = getPaymentBadgeState(invoice);
 
@@ -240,6 +242,17 @@ function PaymentStatusRow({
   }
 
   async function handleMarkUnpaid() {
+    const ok = await confirm({
+      title: "Marchezi factura ca neplatita?",
+      description: `Data si metoda de plata inregistrate pentru factura ${invoice.invoice_number} vor fi sterse.`,
+      confirmLabel: "Marcheaza neplatita",
+      variant: "destructive",
+    });
+
+    if (!ok) {
+      return;
+    }
+
     try {
       await updateInvoicePaymentStatus(invoice.id, { status: "neplatita" });
       toast.success(`Factura ${invoice.invoice_number} marcata ca neplatita.`);
@@ -253,6 +266,7 @@ function PaymentStatusRow({
 
   return (
     <>
+      {ConfirmDialog}
       <div className="flex items-center justify-between gap-2">
         <span className="text-muted-foreground">Status plata</span>
         <div className="flex items-center gap-2">
@@ -373,6 +387,7 @@ function InvoiceShareCard({
   onUpdated: () => void | Promise<void>;
 }) {
   const [isWorking, setIsWorking] = useState(false);
+  const { confirm, ConfirmDialog } = useConfirmDialog();
 
   const isExpired = Boolean(
     shareTokenExpiresAt && new Date(shareTokenExpiresAt).getTime() <= Date.now(),
@@ -399,6 +414,17 @@ function InvoiceShareCard({
   }
 
   async function handleDisable() {
+    const ok = await confirm({
+      title: "Revoci linkul public?",
+      description: `Oricine avea acest link pentru factura ${invoiceNumber} nu va mai putea sa o vada dupa ce il revoci.`,
+      confirmLabel: "Revoca linkul",
+      variant: "destructive",
+    });
+
+    if (!ok) {
+      return;
+    }
+
     try {
       setIsWorking(true);
       await disableInvoiceShare(invoiceId);
@@ -421,54 +447,57 @@ function InvoiceShareCard({
   }
 
   return (
-    <Card className="mb-4">
-      <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-start gap-2.5">
-          <Link2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-          <div>
-            <p className="text-sm font-medium text-foreground">Link public pentru client</p>
-            <p className="text-xs text-muted-foreground">
-              {isActive
-                ? `Valabil pana la ${new Date(shareTokenExpiresAt as string).toLocaleDateString("ro-RO")}. Oricine are acest link poate vedea si descarca factura, fara cont.`
-                : isExpired
-                  ? "Linkul anterior a expirat. Genereaza unul nou daca mai e nevoie."
-                  : `Genereaza un link pe care sa il trimiti clientului pentru factura ${invoiceNumber}.`}
-            </p>
+    <>
+      {ConfirmDialog}
+      <Card className="mb-4">
+        <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-2.5">
+            <Link2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+            <div>
+              <p className="text-sm font-medium text-foreground">Link public pentru client</p>
+              <p className="text-xs text-muted-foreground">
+                {isActive
+                  ? `Valabil pana la ${new Date(shareTokenExpiresAt as string).toLocaleDateString("ro-RO")}. Oricine are acest link poate vedea si descarca factura, fara cont.`
+                  : isExpired
+                    ? "Linkul anterior a expirat. Genereaza unul nou daca mai e nevoie."
+                    : `Genereaza un link pe care sa il trimiti clientului pentru factura ${invoiceNumber}.`}
+              </p>
+            </div>
           </div>
-        </div>
 
-        {isActive ? (
-          <div className="flex items-center gap-2">
-            <Input readOnly value={shareUrl} className="h-8 w-64 bg-card text-xs" />
-            <Button variant="outline" size="sm" onClick={handleCopy} className="gap-1.5">
-              <ClipboardCopy className="h-3.5 w-3.5" />
-              Copiaza
-            </Button>
+          {isActive ? (
+            <div className="flex items-center gap-2">
+              <Input readOnly value={shareUrl} className="h-8 w-64 bg-card text-xs" />
+              <Button variant="outline" size="sm" onClick={handleCopy} className="gap-1.5">
+                <ClipboardCopy className="h-3.5 w-3.5" />
+                Copiaza
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDisable}
+                disabled={isWorking}
+                className="gap-1.5 text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Revoca
+              </Button>
+            </div>
+          ) : (
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              onClick={handleDisable}
+              onClick={handleEnable}
               disabled={isWorking}
-              className="gap-1.5 text-destructive hover:text-destructive"
+              className="gap-1.5"
             >
-              <Trash2 className="h-3.5 w-3.5" />
-              Revoca
+              <Link2 className="h-3.5 w-3.5" />
+              Genereaza link
             </Button>
-          </div>
-        ) : (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleEnable}
-            disabled={isWorking}
-            className="gap-1.5"
-          >
-            <Link2 className="h-3.5 w-3.5" />
-            Genereaza link
-          </Button>
-        )}
-      </CardContent>
-    </Card>
+          )}
+        </CardContent>
+      </Card>
+    </>
   );
 }
 

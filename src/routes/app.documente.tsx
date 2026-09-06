@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { deleteDocument, deleteDocuments, getDocuments } from "@/lib/invoiceService";
 import { formatRON } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
@@ -51,6 +52,7 @@ function DocumentsPage() {
   const [isDeletingSelected, setIsDeletingSelected] = useState(false);
   const [deletingDocumentId, setDeletingDocumentId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const { confirm, ConfirmDialog } = useConfirmDialog();
 
   const selectedCount = selectedDocumentIds.length;
   const allVisibleDocumentsSelected = useMemo(() => {
@@ -96,9 +98,12 @@ function DocumentsPage() {
   }
 
   async function handleDeleteSingleDocument(documentId: string, fileName: string) {
-    const confirmed = window.confirm(
-      `Sigur vrei sa stergi documentul "${fileName}"?\n\nDatele asociate acestui document vor fi eliminate din dashboard, e-Facturi si predictii.`,
-    );
+    const confirmed = await confirm({
+      title: "Stergi documentul?",
+      description: `Documentul "${fileName}" va fi sters definitiv. Datele asociate vor fi eliminate din dashboard, e-Facturi si predictii.`,
+      confirmLabel: "Sterge documentul",
+      variant: "destructive",
+    });
 
     if (!confirmed) {
       return;
@@ -130,9 +135,12 @@ function DocumentsPage() {
       return;
     }
 
-    const confirmed = window.confirm(
-      `Sigur vrei sa stergi ${selectedDocumentIds.length} documente selectate?\n\nDatele asociate vor fi eliminate din dashboard, e-Facturi si predictii.`,
-    );
+    const confirmed = await confirm({
+      title: "Stergi documentele selectate?",
+      description: `${selectedDocumentIds.length} documente vor fi sterse definitiv. Datele asociate vor fi eliminate din dashboard, e-Facturi si predictii.`,
+      confirmLabel: "Sterge documentele",
+      variant: "destructive",
+    });
 
     if (!confirmed) {
       return;
@@ -177,6 +185,7 @@ function DocumentsPage() {
 
   return (
     <div className="space-y-6">
+      {ConfirmDialog}
       <PageHeader
         title="Documente financiare"
         description="Încarcă e-Facturi XML și gestionează documentele financiare importate."

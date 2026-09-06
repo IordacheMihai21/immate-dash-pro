@@ -66,6 +66,7 @@ import { buildPaymentReminderMessage } from "@/lib/paymentReminder";
 import { formatRON } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 
 export const Route = createFileRoute("/app/e-facturi/")({
   head: () => ({ meta: [{ title: "e-Facturi - IMMapp" }] }),
@@ -142,6 +143,7 @@ function PaymentCell({
   const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(PAYMENT_METHODS[0]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { confirm, ConfirmDialog } = useConfirmDialog();
 
   const state = getPaymentBadgeState(invoice);
   const isRevenue = classifyInvoiceForCompany(invoice, companyCui) === "revenue";
@@ -190,6 +192,17 @@ function PaymentCell({
   }
 
   async function handleMarkUnpaid() {
+    const ok = await confirm({
+      title: "Marchezi factura ca neplatita?",
+      description: `Data si metoda de plata inregistrate pentru factura ${invoice.invoice_number} vor fi sterse.`,
+      confirmLabel: "Marcheaza neplatita",
+      variant: "destructive",
+    });
+
+    if (!ok) {
+      return;
+    }
+
     try {
       await updateInvoicePaymentStatus(invoice.id, { status: "neplatita" });
       toast.success(`Factura ${invoice.invoice_number} marcata ca neplatita.`);
@@ -203,25 +216,28 @@ function PaymentCell({
 
   if (state === "Platita") {
     return (
-      <div className="flex flex-col gap-1">
-        <span
-          className={cn(
-            "inline-flex w-fit items-center rounded-full border px-2 py-0.5 text-xs font-medium",
-            paymentBadgeStyles.Platita,
-          )}
-        >
-          Platita
-        </span>
-        <button
-          type="button"
-          onClick={handleMarkUnpaid}
-          className="text-left text-xs text-muted-foreground transition hover:text-foreground"
-        >
-          {invoice.payment_date ? formatDate(invoice.payment_date) : null}
-          {invoice.payment_method ? ` · ${invoice.payment_method}` : null}
-          {" · anuleaza"}
-        </button>
-      </div>
+      <>
+        {ConfirmDialog}
+        <div className="flex flex-col gap-1">
+          <span
+            className={cn(
+              "inline-flex w-fit items-center rounded-full border px-2 py-0.5 text-xs font-medium",
+              paymentBadgeStyles.Platita,
+            )}
+          >
+            Platita
+          </span>
+          <button
+            type="button"
+            onClick={handleMarkUnpaid}
+            className="text-left text-xs text-muted-foreground transition hover:text-foreground"
+          >
+            {invoice.payment_date ? formatDate(invoice.payment_date) : null}
+            {invoice.payment_method ? ` · ${invoice.payment_method}` : null}
+            {" · anuleaza"}
+          </button>
+        </div>
+      </>
     );
   }
 

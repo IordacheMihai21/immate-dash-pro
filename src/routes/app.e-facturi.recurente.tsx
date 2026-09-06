@@ -31,6 +31,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import {
   FREQUENCY_LABELS,
   RECURRING_FREQUENCIES,
@@ -87,6 +88,7 @@ function RecurringInvoicesPage() {
   const [form, setForm] = useState(emptyFormState);
   const [isSaving, setIsSaving] = useState(false);
   const [generatingId, setGeneratingId] = useState<string | null>(null);
+  const { confirm, ConfirmDialog } = useConfirmDialog();
 
   async function loadTemplates() {
     try {
@@ -165,6 +167,17 @@ function RecurringInvoicesPage() {
   }
 
   async function handleDelete(template: RecurringInvoiceTemplate) {
+    const ok = await confirm({
+      title: "Stergi sablonul?",
+      description: `Sablonul "${template.template_name}" va fi sters definitiv. Facturile deja generate din el nu sunt afectate.`,
+      confirmLabel: "Sterge sablonul",
+      variant: "destructive",
+    });
+
+    if (!ok) {
+      return;
+    }
+
     try {
       await deleteRecurringTemplate(template.id);
       toast.success(`Sablonul "${template.template_name}" a fost sters.`);
@@ -196,6 +209,7 @@ function RecurringInvoicesPage() {
 
   return (
     <div className="space-y-6">
+      {ConfirmDialog}
       <PageHeader
         title="Facturi recurente"
         description="Sabloane pentru clienti cu abonament sau contracte lunare -- genereaza factura din doua click-uri, in loc sa o retastezi."
