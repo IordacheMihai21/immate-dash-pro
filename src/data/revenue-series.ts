@@ -14,8 +14,6 @@ export const revenueSeries = [
 ];
 
 export const revenueStats = {
-  average:
-    revenueSeries.reduce((sum, point) => sum + point.value, 0) /
-    revenueSeries.length,
+  average: revenueSeries.reduce((sum, point) => sum + point.value, 0) / revenueSeries.length,
   trend: 12.4,
 };

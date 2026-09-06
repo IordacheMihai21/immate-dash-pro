@@ -43,8 +43,7 @@ export function MorphicNavbar({
             const isFirst = index === 0;
             const isLast = index === array.length - 1;
             const prevPath = index > 0 ? array[index - 1][0] : null;
-            const nextPath =
-              index < array.length - 1 ? array[index + 1][0] : null;
+            const nextPath = index < array.length - 1 ? array[index + 1][0] : null;
 
             return (
               <a
@@ -53,11 +52,9 @@ export function MorphicNavbar({
                   isActive
                     ? "mx-2 rounded-xl font-semibold text-sm"
                     : clsx(
-                        (isActiveLink(prevPath || "") || isFirst) &&
-                          "rounded-l-xl",
-                        (isActiveLink(nextPath || "") || isLast) &&
-                          "rounded-r-xl"
-                      )
+                        (isActiveLink(prevPath || "") || isFirst) && "rounded-l-xl",
+                        (isActiveLink(nextPath || "") || isLast) && "rounded-r-xl",
+                      ),
                 )}
                 href="#"
                 key={path}

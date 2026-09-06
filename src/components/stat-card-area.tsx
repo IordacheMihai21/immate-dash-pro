@@ -1,26 +1,11 @@
 "use client";
 
-import {
-  Area,
-  AreaChart,
-  ChartStatFlow,
-  LinearGradient,
-} from "@/components/charts";
+import { Area, AreaChart, ChartStatFlow, LinearGradient } from "@/components/charts";
 import { curveCardinal } from "@visx/curve";
 import { useState } from "react";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { revenueSeries, revenueStats } from "../data/revenue-series";
-import {
-  StatCardChart,
-  statCardLabelClassName,
-  statCardValueClassName,
-} from "./stat-card-chart";
+import { StatCardChart, statCardLabelClassName, statCardValueClassName } from "./stat-card-chart";
 import {
   formatStatCardMonth,
   StatCardHoverBridge,

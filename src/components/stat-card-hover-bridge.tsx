@@ -27,7 +27,7 @@ function parsePointDate(raw: unknown): Date | null {
 function computePeriodTrend(
   data: Record<string, unknown>[],
   index: number,
-  dataKey: string
+  dataKey: string,
 ): number | null {
   if (index <= 0) {
     return null;
@@ -36,11 +36,7 @@ function computePeriodTrend(
   const current = data[index]?.[dataKey];
   const previous = data[index - 1]?.[dataKey];
 
-  if (
-    typeof current !== "number" ||
-    typeof previous !== "number" ||
-    previous === 0
-  ) {
+  if (typeof current !== "number" || typeof previous !== "number" || previous === 0) {
     return null;
   }
 

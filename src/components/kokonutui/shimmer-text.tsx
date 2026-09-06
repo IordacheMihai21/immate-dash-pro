@@ -18,10 +18,7 @@ interface Text_01Props {
   className?: string;
 }
 
-export default function ShimmerText({
-  text = "Text Shimmer",
-  className,
-}: Text_01Props) {
+export default function ShimmerText({ text = "Text Shimmer", className }: Text_01Props) {
   return (
     <div className="flex items-center justify-center p-8">
       <motion.div
@@ -36,7 +33,7 @@ export default function ShimmerText({
           }}
           className={cn(
             "bg-[length:200%_100%] bg-gradient-to-r from-neutral-950 via-neutral-400 to-neutral-950 bg-clip-text font-bold text-3xl text-transparent dark:from-white dark:via-neutral-600 dark:to-white",
-            className
+            className,
           )}
           transition={{
             duration: 2.5,

@@ -44,7 +44,7 @@ function useCountUpDisplay(value: string | number): string {
       return;
     }
 
-    const decimals = raw.includes(".") ? raw.split(".")[1]?.length ?? 0 : 0;
+    const decimals = raw.includes(".") ? (raw.split(".")[1]?.length ?? 0) : 0;
     const duration = 500;
     const start = performance.now();
     let frame: number;
@@ -96,9 +96,7 @@ export function KpiCard({ label, value, hint, icon, tone = "primary", trend }: K
             <p className="mt-2 text-2xl font-semibold tabular-nums text-foreground">{display}</p>
             {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
           </div>
-          {icon && (
-            <div className={cn("rounded-lg p-2", TONE_ICON_CLASSES[tone])}>{icon}</div>
-          )}
+          {icon && <div className={cn("rounded-lg p-2", TONE_ICON_CLASSES[tone])}>{icon}</div>}
         </div>
         {trend && (
           <p

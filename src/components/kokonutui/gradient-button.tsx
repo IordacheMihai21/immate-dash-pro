@@ -24,8 +24,7 @@ interface GradientColors {
   };
 }
 
-interface GradientButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface GradientButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: string;
   label?: string;
   className?: string;
@@ -107,7 +106,7 @@ export default function GradientButton({
     <Button
       className={cn(
         "group relative h-12 overflow-hidden rounded-lg px-4 transition-all duration-500",
-        className
+        className,
       )}
       variant="ghost"
       {...props}
@@ -117,14 +116,14 @@ export default function GradientButton({
           "absolute inset-0 rounded-lg bg-linear-to-b p-[2px]",
           "dark:bg-none",
           colors.light.border,
-          colors.dark.border
+          colors.dark.border,
         )}
       >
         <div
           className={cn(
             "absolute inset-0 rounded-lg opacity-90",
             "bg-white/80",
-            "dark:bg-[#0C1F21]"
+            "dark:bg-[#0C1F21]",
           )}
         />
       </div>
@@ -133,7 +132,7 @@ export default function GradientButton({
         className={cn(
           "absolute inset-[2px] rounded-lg opacity-95",
           "bg-white/80",
-          "dark:bg-[#0C1F21]"
+          "dark:bg-[#0C1F21]",
         )}
       />
 
@@ -141,21 +140,21 @@ export default function GradientButton({
         className={cn(
           "absolute inset-[2px] rounded-lg bg-linear-to-r opacity-90",
           colors.light.base,
-          "dark:from-[#0C1F21] dark:via-[#0C1F21] dark:to-[#0C1F21]"
+          "dark:from-[#0C1F21] dark:via-[#0C1F21] dark:to-[#0C1F21]",
         )}
       />
       <div
         className={cn(
           "absolute inset-[2px] rounded-lg bg-linear-to-b opacity-80",
           colors.light.overlay,
-          colors.dark.overlay
+          colors.dark.overlay,
         )}
       />
       <div
         className={cn(
           "absolute inset-[2px] rounded-lg bg-linear-to-br",
           colors.light.accent,
-          colors.dark.accent
+          colors.dark.accent,
         )}
       />
 
@@ -163,7 +162,7 @@ export default function GradientButton({
         className={cn(
           "absolute inset-[2px] rounded-lg",
           `shadow-[inset_0_0_10px_${colors.light.glow}]`,
-          `dark:shadow-[inset_0_0_10px_${colors.dark.glow}]`
+          `dark:shadow-[inset_0_0_10px_${colors.dark.glow}]`,
         )}
       />
 
@@ -173,7 +172,7 @@ export default function GradientButton({
             "bg-linear-to-b bg-clip-text font-light text-lg text-transparent tracking-tighter",
             colors.light.text,
             colors.dark.text,
-            `dark:drop-shadow-[0_0_12px_${colors.dark.textGlow}]`
+            `dark:drop-shadow-[0_0_12px_${colors.dark.textGlow}]`,
           )}
         >
           {label}
@@ -184,7 +183,7 @@ export default function GradientButton({
         className={cn(
           "absolute inset-[2px] rounded-lg bg-linear-to-r opacity-0 transition-opacity duration-300 group-hover:opacity-100",
           colors.light.hover,
-          colors.dark.hover
+          colors.dark.hover,
         )}
       />
     </Button>

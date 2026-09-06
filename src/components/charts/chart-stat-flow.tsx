@@ -29,11 +29,9 @@ function formatStatValue(
   value: number,
   formatOptions: ChartStatFlowFormat,
   prefix?: string,
-  suffix?: string
+  suffix?: string,
 ): string {
-  const formatted = new Intl.NumberFormat(undefined, formatOptions).format(
-    value
-  );
+  const formatted = new Intl.NumberFormat(undefined, formatOptions).format(value);
   return `${prefix ?? ""}${formatted}${suffix ?? ""}`;
 }
 
@@ -90,7 +88,7 @@ export function ChartStatFlow({
   const numberFlowReady = useNumberFlowElementReady();
   const staticValue = useMemo(
     () => formatStatValue(value, formatOptions, prefix, suffix),
-    [value, formatOptions, prefix, suffix]
+    [value, formatOptions, prefix, suffix],
   );
 
   return (
@@ -114,9 +112,7 @@ export function ChartStatFlow({
           staticValue
         )}
       </span>
-      <span className={cn("mt-0.5 text-chart-label", labelClassName)}>
-        {label}
-      </span>
+      <span className={cn("mt-0.5 text-chart-label", labelClassName)}>{label}</span>
     </>
   );
 }

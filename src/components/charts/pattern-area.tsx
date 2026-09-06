@@ -2,10 +2,8 @@
 
 import { curveMonotoneX } from "@visx/curve";
 import { AreaClosed } from "@visx/shape";
+import type { CurveFactory } from "d3-shape";
 import { useChartStable } from "./chart-context";
-
-// biome-ignore lint/suspicious/noExplicitAny: d3 curve factory type
-type CurveFactory = any;
 
 export interface PatternAreaProps {
   /** Key in data to use for y values */
@@ -22,11 +20,7 @@ export interface PatternAreaProps {
  * Filled area using an SVG pattern (`url(#id)`).
  * Pair with `PatternLines` in `AreaChart` children and an `Area` with `fillOpacity={0}` for the stroke line.
  */
-export function PatternArea({
-  dataKey,
-  fill,
-  curve = curveMonotoneX,
-}: PatternAreaProps) {
+export function PatternArea({ dataKey, fill, curve = curveMonotoneX }: PatternAreaProps) {
   const { renderData, xScale, yScale, xAccessor } = useChartStable();
 
   return (

@@ -16,8 +16,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-interface AttractButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface AttractButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   particleCount?: number;
   attractRadius?: number;
 }
@@ -82,7 +81,7 @@ export default function AttractButton({
         "text-violet-600 dark:text-violet-300",
         "border border-violet-300 dark:border-violet-700",
         "transition-all duration-300",
-        className
+        className,
       )}
       onMouseEnter={handleInteractionStart}
       onMouseLeave={handleInteractionEnd}
@@ -97,7 +96,7 @@ export default function AttractButton({
             "absolute h-1.5 w-1.5 rounded-full",
             "bg-violet-400 dark:bg-violet-300",
             "transition-opacity duration-300",
-            isAttracting ? "opacity-100" : "opacity-40"
+            isAttracting ? "opacity-100" : "opacity-40",
           )}
           custom={index}
           initial={{ x: particles[index].x, y: particles[index].y }}
@@ -106,10 +105,7 @@ export default function AttractButton({
       ))}
       <span className="relative flex w-full items-center justify-center gap-2">
         <Magnet
-          className={cn(
-            "h-4 w-4 transition-transform duration-300",
-            isAttracting && "scale-110"
-          )}
+          className={cn("h-4 w-4 transition-transform duration-300", isAttracting && "scale-110")}
         />
         {isAttracting ? "Attracting" : "Hover me"}
       </span>

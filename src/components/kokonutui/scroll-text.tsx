@@ -51,9 +51,7 @@ export default function ScrollText({
   const handleIntersection = (entries: IntersectionObserverEntry[]) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
-        const index = itemsRef.current.findIndex(
-          (item) => item === entry.target
-        );
+        const index = itemsRef.current.findIndex((item) => item === entry.target);
         setActiveIndex(index);
       }
     });
@@ -112,7 +110,7 @@ export default function ScrollText({
         className={cn(
           "scrollbar-none h-[300px] overflow-y-auto",
           "relative flex flex-col items-center",
-          "[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          "[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
         )}
         ref={containerRef}
       >
@@ -130,7 +128,7 @@ export default function ScrollText({
                 "transition-colors duration-300",
                 activeIndex === index
                   ? "text-black dark:text-white"
-                  : "text-neutral-500/50 dark:text-neutral-600"
+                  : "text-neutral-500/50 dark:text-neutral-600",
               )}
               custom={index}
               initial="hidden"

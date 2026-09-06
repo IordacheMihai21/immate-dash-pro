@@ -224,7 +224,9 @@ function UsersSettingsPage() {
                         <TableRow key={member.id}>
                           <TableCell className="font-medium text-foreground">
                             {displayEmail}
-                            {isMe && <span className="ml-2 text-xs text-muted-foreground">(tu)</span>}
+                            {isMe && (
+                              <span className="ml-2 text-xs text-muted-foreground">(tu)</span>
+                            )}
                           </TableCell>
                           <TableCell>
                             {canManage && member.role !== "owner" ? (

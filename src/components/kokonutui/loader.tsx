@@ -44,10 +44,7 @@ export default function Loader({
 
   return (
     <div
-      className={cn(
-        "flex flex-col items-center justify-center gap-8 p-8",
-        className
-      )}
+      className={cn("flex flex-col items-center justify-center gap-8 p-8", className)}
       {...props}
     >
       {/* Enhanced Monochrome Loader */}
@@ -250,7 +247,7 @@ export default function Loader({
           }}
           className={cn(
             config.titleClass,
-            "font-medium text-black/90 leading-[1.15] tracking-[-0.02em] antialiased dark:text-white/90"
+            "font-medium text-black/90 leading-[1.15] tracking-[-0.02em] antialiased dark:text-white/90",
           )}
           initial={{ opacity: 0, y: 12 }}
           transition={{
@@ -281,7 +278,7 @@ export default function Loader({
           }}
           className={cn(
             config.subtitleClass,
-            "font-normal text-black/60 leading-[1.45] tracking-[-0.01em] antialiased dark:text-white/60"
+            "font-normal text-black/60 leading-[1.45] tracking-[-0.01em] antialiased dark:text-white/60",
           )}
           initial={{ opacity: 0, y: 8 }}
           transition={{

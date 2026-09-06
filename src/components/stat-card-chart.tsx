@@ -9,8 +9,7 @@ export interface StatCardHoverState {
   trend: number | null;
 }
 
-export const statCardValueClassName =
-  "text-3xl font-semibold leading-none tracking-tight";
+export const statCardValueClassName = "text-3xl font-semibold leading-none tracking-tight";
 
 export const statCardLabelClassName = "mt-0 text-xs";
 
@@ -36,7 +35,7 @@ export function StatCardChart({
         "relative -mx-4 -mb-3 overflow-hidden",
         "[&_.relative.w-full]:aspect-auto! [&_.relative.w-full]:h-[var(--stat-card-chart-h)]!",
         statCardChartHeights[size],
-        className
+        className,
       )}
     >
       {children}

@@ -9,8 +9,6 @@ export const sessionsSeries = [
 ];
 
 export const sessionsStats = {
-  average:
-    sessionsSeries.reduce((sum, point) => sum + point.value, 0) /
-    sessionsSeries.length,
+  average: sessionsSeries.reduce((sum, point) => sum + point.value, 0) / sessionsSeries.length,
   trend: 8.2,
 };

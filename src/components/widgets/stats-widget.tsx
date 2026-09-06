@@ -114,7 +114,11 @@ export function StatsWidget({
               )}
             >
               {Math.abs(stats.change)}%
-              {isPositive ? <ArrowUp className="ml-1 h-3.5 w-3.5" /> : <ArrowDown className="ml-1 h-3.5 w-3.5" />}
+              {isPositive ? (
+                <ArrowUp className="ml-1 h-3.5 w-3.5" />
+              ) : (
+                <ArrowDown className="ml-1 h-3.5 w-3.5" />
+              )}
             </span>
           </div>
           <p className="mt-2 text-3xl font-bold text-foreground">
@@ -123,7 +127,11 @@ export function StatsWidget({
         </div>
 
         <div className="h-16 w-1/2">
-          <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="h-full w-full" preserveAspectRatio="none">
+          <svg
+            viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+            className="h-full w-full"
+            preserveAspectRatio="none"
+          >
             <defs>
               <linearGradient id="stats-widget-gradient-up" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="var(--color-success)" stopOpacity={0.4} />

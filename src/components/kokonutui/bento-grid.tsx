@@ -10,21 +10,8 @@
  * @github: https://github.com/kokonut-labs/kokonutui
  */
 
-import {
-  ArrowUpRight,
-  CheckCircle2,
-  Clock,
-  Mic,
-  Plus,
-  Sparkles,
-  Zap,
-} from "lucide-react";
-import {
-  motion,
-  useMotionValue,
-  useTransform,
-  type Variants,
-} from "motion/react";
+import { ArrowUpRight, CheckCircle2, Clock, Mic, Plus, Sparkles, Zap } from "lucide-react";
+import { motion, useMotionValue, useTransform, type Variants } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import Anthropic from "@/components/kokonutui/anthropic";
 import AnthropicDark from "@/components/kokonutui/anthropic-dark";
@@ -93,8 +80,7 @@ const bentoItems: BentoItem[] = [
   {
     id: "stat1",
     title: "AI Agents & Automation",
-    description:
-      "Intelligent agents that learn, adapt, and automate complex workflows",
+    description: "Intelligent agents that learn, adapt, and automate complex workflows",
     href: "#",
     feature: "typing",
     typingText:
@@ -116,8 +102,7 @@ const bentoItems: BentoItem[] = [
   {
     id: "innovation",
     title: "Innovation timeline",
-    description:
-      "Pioneering the future of AI and cloud computing with breakthrough innovations",
+    description: "Pioneering the future of AI and cloud computing with breakthrough innovations",
     href: "#",
     feature: "timeline",
     timeline: [
@@ -169,9 +154,7 @@ const SpotlightFeature = ({ items }: { items: string[] }) => (
         transition={{ delay: 0.1 * index }}
       >
         <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-500 dark:text-emerald-400" />
-        <span className="text-neutral-700 text-sm dark:text-neutral-300">
-          {item}
-        </span>
+        <span className="text-neutral-700 text-sm dark:text-neutral-300">{item}</span>
       </motion.li>
     ))}
   </ul>
@@ -215,9 +198,7 @@ const CounterAnimation = ({
       <span className="font-bold text-3xl text-neutral-900 dark:text-neutral-100">
         {count.toFixed(1).replace(/\.0$/, "")}
       </span>
-      <span className="font-medium text-neutral-900 text-xl dark:text-neutral-100">
-        {suffix}
-      </span>
+      <span className="font-medium text-neutral-900 text-xl dark:text-neutral-100">{suffix}</span>
     </div>
   );
 };
@@ -288,11 +269,7 @@ const IconsFeature = () => (
   </div>
 );
 
-const TimelineFeature = ({
-  timeline,
-}: {
-  timeline: Array<{ year: string; event: string }>;
-}) => (
+const TimelineFeature = ({ timeline }: { timeline: Array<{ year: string; event: string }> }) => (
   <div className="relative mt-3">
     <div className="absolute top-0 bottom-0 left-[9px] w-[2px] bg-neutral-200 dark:bg-neutral-700" />
     {timeline.map((item) => (
@@ -300,9 +277,7 @@ const TimelineFeature = ({
         animate={{ opacity: 1, x: 0 }}
         className="relative mb-3 flex gap-3"
         initial={{ opacity: 0, x: -10 }}
-        key={`timeline-${item.year}-${item.event
-          .toLowerCase()
-          .replace(/\s+/g, "-")}`}
+        key={`timeline-${item.year}-${item.event.toLowerCase().replace(/\s+/g, "-")}`}
         transition={{
           delay: (0.15 * Number.parseInt(item.year)) % 10,
         }}
@@ -312,9 +287,7 @@ const TimelineFeature = ({
           <div className="font-medium text-neutral-900 text-sm dark:text-neutral-100">
             {item.year}
           </div>
-          <div className="text-neutral-600 text-xs dark:text-neutral-400">
-            {item.event}
-          </div>
+          <div className="text-neutral-600 text-xs dark:text-neutral-400">{item.event}</div>
         </div>
       </motion.div>
     ))}
@@ -337,7 +310,7 @@ const TypingCodeFeature = ({ text }: { text: string }) => {
             terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
           }
         },
-        Math.random() * 30 + 10
+        Math.random() * 30 + 10,
       ); // Random typing speed for realistic effect
 
       return () => clearTimeout(timeout);
@@ -348,15 +321,12 @@ const TypingCodeFeature = ({ text }: { text: string }) => {
   useEffect(() => {
     setDisplayedText("");
     setCurrentIndex(0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <div className="relative mt-3">
       <div className="mb-2 flex items-center gap-2">
-        <div className="text-neutral-500 text-xs dark:text-neutral-400">
-          server.ts
-        </div>
+        <div className="text-neutral-500 text-xs dark:text-neutral-400">server.ts</div>
       </div>
       <div
         className="h-[150px] overflow-y-auto rounded-md bg-neutral-900 p-3 font-mono text-neutral-100 text-xs dark:bg-black"
@@ -405,12 +375,8 @@ const MetricsFeature = ({
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-1.5 font-medium text-neutral-700 dark:text-neutral-300">
               {metric.label === "Uptime" && <Clock className="h-3.5 w-3.5" />}
-              {metric.label === "Response time" && (
-                <Zap className="h-3.5 w-3.5" />
-              )}
-              {metric.label === "Cost reduction" && (
-                <Sparkles className="h-3.5 w-3.5" />
-              )}
+              {metric.label === "Response time" && <Zap className="h-3.5 w-3.5" />}
+              {metric.label === "Cost reduction" && <Sparkles className="h-3.5 w-3.5" />}
               {metric.label}
             </div>
             <div className="font-semibold text-neutral-700 dark:text-neutral-300">
@@ -465,9 +431,7 @@ function AIInput_Voice() {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs
-      .toString()
-      .padStart(2, "0")}`;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   useEffect(() => {
@@ -504,9 +468,7 @@ function AIInput_Voice() {
         <button
           className={cn(
             "group flex h-16 w-16 items-center justify-center rounded-xl transition-colors",
-            submitted
-              ? "bg-none"
-              : "bg-none hover:bg-black/10 dark:hover:bg-white/10"
+            submitted ? "bg-none" : "bg-none hover:bg-black/10 dark:hover:bg-white/10",
           )}
           onClick={handleClick}
           type="button"
@@ -524,9 +486,7 @@ function AIInput_Voice() {
         <span
           className={cn(
             "font-mono text-sm transition-opacity duration-300",
-            submitted
-              ? "text-black/70 dark:text-white/70"
-              : "text-black/30 dark:text-white/30"
+            submitted ? "text-black/70 dark:text-white/70" : "text-black/30 dark:text-white/30",
           )}
         >
           {formatTime(time)}
@@ -539,7 +499,7 @@ function AIInput_Voice() {
                 "w-0.5 rounded-full transition-all duration-300",
                 submitted
                   ? "animate-pulse bg-black/50 dark:bg-white/50"
-                  : "h-1 bg-black/10 dark:bg-white/10"
+                  : "h-1 bg-black/10 dark:bg-white/10",
               )}
               key={`voice-bar-${i}`}
               style={
@@ -724,9 +684,8 @@ export default function BentoGrid() {
                   </h3>
                 </div>
                 <p className="mb-4 text-neutral-600 text-sm tracking-tight dark:text-neutral-400">
-                  Interact with our AI using natural voice commands. Experience
-                  seamless voice-driven interactions with advanced speech
-                  recognition.
+                  Interact with our AI using natural voice commands. Experience seamless
+                  voice-driven interactions with advanced speech recognition.
                 </p>
                 <AIInput_Voice />
               </div>
