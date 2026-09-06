@@ -363,14 +363,21 @@ function InvoiceShareCard({
   invoiceId,
   invoiceNumber,
   shareToken,
+  shareTokenExpiresAt,
   onUpdated,
 }: {
   invoiceId: string;
   invoiceNumber: string;
   shareToken: string | null;
+  shareTokenExpiresAt: string | null;
   onUpdated: () => void | Promise<void>;
 }) {
   const [isWorking, setIsWorking] = useState(false);
+
+  const isExpired = Boolean(
+    shareTokenExpiresAt && new Date(shareTokenExpiresAt).getTime() <= Date.now(),
+  );
+  const isActive = Boolean(shareToken) && !isExpired;
 
   const shareUrl = shareToken
     ? `${typeof window !== "undefined" ? window.location.origin : ""}/factura/${shareToken}`
@@ -379,8 +386,10 @@ function InvoiceShareCard({
   async function handleEnable() {
     try {
       setIsWorking(true);
-      await enableInvoiceShare(invoiceId);
-      toast.success("Link public generat.");
+      const { expiresAt } = await enableInvoiceShare(invoiceId);
+      toast.success(
+        `Link public generat -- valabil pana la ${new Date(expiresAt).toLocaleDateString("ro-RO")}.`,
+      );
       await onUpdated();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Linkul nu a putut fi generat.");
@@ -419,14 +428,16 @@ function InvoiceShareCard({
           <div>
             <p className="text-sm font-medium text-foreground">Link public pentru client</p>
             <p className="text-xs text-muted-foreground">
-              {shareToken
-                ? "Oricine are acest link poate vedea si descarca factura, fara cont."
-                : `Genereaza un link pe care sa il trimiti clientului pentru factura ${invoiceNumber}.`}
+              {isActive
+                ? `Valabil pana la ${new Date(shareTokenExpiresAt as string).toLocaleDateString("ro-RO")}. Oricine are acest link poate vedea si descarca factura, fara cont.`
+                : isExpired
+                  ? "Linkul anterior a expirat. Genereaza unul nou daca mai e nevoie."
+                  : `Genereaza un link pe care sa il trimiti clientului pentru factura ${invoiceNumber}.`}
             </p>
           </div>
         </div>
 
-        {shareToken ? (
+        {isActive ? (
           <div className="flex items-center gap-2">
             <Input readOnly value={shareUrl} className="h-8 w-64 bg-card text-xs" />
             <Button variant="outline" size="sm" onClick={handleCopy} className="gap-1.5">
@@ -635,6 +646,7 @@ function InvoiceDetail() {
         invoiceId={invoice.id}
         invoiceNumber={invoice.invoice_number}
         shareToken={invoice.share_token}
+        shareTokenExpiresAt={invoice.share_token_expires_at}
         onUpdated={loadInvoiceDetails}
       />
 

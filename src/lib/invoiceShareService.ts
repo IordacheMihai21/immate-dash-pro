@@ -33,13 +33,20 @@ export type SharedInvoice = {
   lines: SharedInvoiceLine[];
 };
 
-export async function enableInvoiceShare(invoiceId: string): Promise<string> {
+export const INVOICE_SHARE_LINK_TTL_DAYS = 30;
+
+export async function enableInvoiceShare(
+  invoiceId: string,
+): Promise<{ token: string; expiresAt: string }> {
   const companyId = await getActiveCompanyId();
   const token = crypto.randomUUID();
+  const expiresAt = new Date(
+    Date.now() + INVOICE_SHARE_LINK_TTL_DAYS * 24 * 60 * 60 * 1000,
+  ).toISOString();
 
   const { error } = await supabase
     .from("invoices")
-    .update({ share_token: token })
+    .update({ share_token: token, share_token_expires_at: expiresAt })
     .eq("id", invoiceId)
     .eq("company_id", companyId);
 
@@ -47,7 +54,7 @@ export async function enableInvoiceShare(invoiceId: string): Promise<string> {
     throw new Error(`Linkul public nu a putut fi generat: ${error.message}`);
   }
 
-  return token;
+  return { token, expiresAt };
 }
 
 export async function disableInvoiceShare(invoiceId: string): Promise<void> {
@@ -55,7 +62,7 @@ export async function disableInvoiceShare(invoiceId: string): Promise<void> {
 
   const { error } = await supabase
     .from("invoices")
-    .update({ share_token: null })
+    .update({ share_token: null, share_token_expires_at: null })
     .eq("id", invoiceId)
     .eq("company_id", companyId);
 
