@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -6,9 +6,25 @@ import { AppHeader } from "@/components/app-header";
 import { MfaVerifyForm } from "@/components/mfa-verify-form";
 import { Toaster } from "@/components/ui/sonner";
 import { useCompanyPreferences } from "@/hooks/use-company-preferences";
+import { getCurrentAuthUser } from "@/lib/appUserService";
 import { needsMfaChallenge } from "@/lib/mfaService";
 
 export const Route = createFileRoute("/app")({
+  // Real auth guard: supabase.auth.getUser() re-verifies the JWT against
+  // Supabase itself (not just "is there something in localStorage"), so a
+  // cleared/expired/forged session can't slip past this. Before this guard,
+  // /app rendered the full authenticated shell (sidebar, nav, header) for
+  // anyone with no session at all -- confirmed live -- and only failed
+  // silently once it tried to fetch real data (which RLS correctly blocked,
+  // so no data ever leaked, but the UX was wrong and the boundary was in
+  // the wrong place).
+  beforeLoad: async () => {
+    const user = await getCurrentAuthUser();
+
+    if (!user) {
+      throw redirect({ to: "/login" });
+    }
+  },
   component: AppLayout,
 });
 
