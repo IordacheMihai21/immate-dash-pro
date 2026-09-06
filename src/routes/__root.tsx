@@ -115,6 +115,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "manifest", href: "/site.webmanifest" },
     ],
+    // Routed through head()'s managed scripts (rendered by <HeadContent />)
+    // rather than a hand-placed <script> in RootShell: TanStack Router's
+    // <Asset>/<Script> renderer applies suppressHydrationWarning directly on
+    // this element on both server and client, and produces byte-identical
+    // output both times. A raw JSX <script> before <HeadContent /> doesn't
+    // get that same-element guarantee and caused a real hydration mismatch
+    // on every single page load (server head order didn't match client head
+    // order) -- confirmed live via console errors, fixed by this change.
+    // Still runs before first paint: the stylesheet <link> above blocks
+    // painting, not this script's (synchronous, in-order) execution.
+    scripts: [{ children: THEME_INIT_SCRIPT }],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -124,15 +135,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    // suppressHydrationWarning: the inline script below sets the .dark
-    // class synchronously before hydration, based on localStorage/system
-    // preference the server can't know -- without this, React would warn
-    // (harmlessly) about a client/server mismatch on this one attribute.
+    // suppressHydrationWarning: THEME_INIT_SCRIPT (rendered via head().scripts
+    // above, inside HeadContent) sets the .dark class synchronously before
+    // hydration, based on localStorage/system preference the server can't
+    // know -- without this, React would warn (harmlessly) about a
+    // client/server mismatch on this one attribute.
     <html lang="ro" suppressHydrationWarning>
       <head>
-        {/* Must run before the stylesheet paints anything, or the page
-            flashes the wrong theme for a frame on every load. */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />
       </head>
       <body>
