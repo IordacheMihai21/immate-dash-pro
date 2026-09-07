@@ -274,8 +274,12 @@ function isValidTaxIdentifier(value: unknown) {
   return normalized.length >= 6 && normalized.length <= 24 && /\d/.test(normalized);
 }
 
+// Threshold set from real calibration data, not a guess -- see the matching
+// comment in documentAiHybridService.ts. Fields the merge reports at
+// 0.6-0.79 confidence were empirically only ~42% correct on a 100-doc
+// benchmark; 0.8+ was ~93% correct. Keep the two thresholds in sync.
 function isConfidentlyDetected(value: unknown, confidence: number) {
-  return hasValue(value) && normalizedConfidence(value, confidence) >= 0.6;
+  return hasValue(value) && normalizedConfidence(value, confidence) >= 0.8;
 }
 
 function normalizedConfidence(value: unknown, confidence: number) {

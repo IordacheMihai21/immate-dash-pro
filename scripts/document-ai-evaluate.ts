@@ -129,6 +129,9 @@ process.stdout.write(
 await mkdir(cacheRoot, { recursive: true });
 const worker = await createWorker("eng", OEM.LSTM_ONLY, { cachePath: cacheRoot });
 const items: BatchEvaluationItem[] = [];
+// documentId -> field -> confidence, so accuracy can be cross-tabulated
+// against reported confidence after evaluateBatch runs (calibration check).
+const confidenceByDocument = new Map<string, Partial<Record<string, number>>>();
 
 try {
   for (const pair of pairs) {
@@ -164,11 +167,13 @@ try {
       benchmarkInferenceMode === "candidate_engine_baseline"
         ? null
         : await analyzeWithFineTunedBackend(pair.imagePath, ocr, backendUrl);
-    const predicted = selectPrediction(
+    const { fields: predicted, confidences: predictedConfidences } = selectPrediction(
       benchmarkInferenceMode,
       candidatePrediction,
       layoutPrediction,
     );
+    const documentKey = `${pair.documentId} [${pair.split}]`;
+    confidenceByDocument.set(documentKey, predictedConfidences);
 
     if (exportOcrRoot) {
       const exportPath = join(
@@ -179,7 +184,7 @@ try {
       await mkdir(dirname(exportPath), { recursive: true });
       await writeFile(exportPath, JSON.stringify(ocr, null, 2), "utf8");
     }
-    items.push({ documentId: `${pair.documentId} [${pair.split}]`, predicted, expected });
+    items.push({ documentId: documentKey, predicted, expected });
     process.stdout.write(`Analizat: ${pair.documentId} (${pair.split})\n`);
   }
 } finally {
@@ -209,6 +214,43 @@ process.stdout.write(
 for (const metric of result.fieldMetrics.filter((field) => field.total > 0)) {
   process.stdout.write(
     `  ${metric.field}: ${percent(metric.accuracy)} (${metric.correct}/${metric.total})\n`,
+  );
+}
+
+// Calibration check: when the pipeline reports a given confidence, how
+// often is that value actually correct? A well-calibrated gate should have
+// the "auto-accept" bucket sit close to 100% -- if it doesn't, whatever
+// downstream threshold is treating that bucket as trustworthy is wrong,
+// regardless of what the number looks like in isolation.
+process.stdout.write("\nCalibrare încredere (acuratețe pe interval de confidence)\n");
+const confidenceBuckets = [
+  { label: "0.00-0.59 (needs review)", min: 0, max: 0.6 },
+  { label: "0.60-0.79", min: 0.6, max: 0.8 },
+  { label: "0.80-1.00 (auto-accept)", min: 0.8, max: 1.000001 },
+];
+const bucketStats = confidenceBuckets.map((bucket) => ({ ...bucket, correct: 0, total: 0 }));
+for (const document of result.documents) {
+  const confidences = confidenceByDocument.get(document.documentId) ?? {};
+  for (const field of document.fields) {
+    // A field with no expected value at all (not evaluated for this
+    // benchmark, e.g. supplierName/currency) has correct=incorrect=missing
+    // all false -- exclude those, and exclude true recall misses (nothing
+    // was predicted), leaving only "a value was produced and compared".
+    if (!field.correct && !field.incorrect) continue;
+    const confidence = confidences[field.field] ?? 0;
+    const bucket = bucketStats.find((b) => confidence >= b.min && confidence < b.max);
+    if (!bucket) continue;
+    bucket.total += 1;
+    if (field.correct) bucket.correct += 1;
+  }
+}
+for (const bucket of bucketStats) {
+  if (bucket.total === 0) {
+    process.stdout.write(`  ${bucket.label}: (niciun câmp în acest interval)\n`);
+    continue;
+  }
+  process.stdout.write(
+    `  ${bucket.label}: ${percent(bucket.correct / bucket.total)} corect (${bucket.correct}/${bucket.total})\n`,
   );
 }
 
@@ -351,17 +393,22 @@ function selectPrediction(
   mode: BenchmarkInferenceMode,
   candidate: BenchmarkPrediction | null,
   layout: BenchmarkPrediction | null,
-): DocumentAiEvaluationFields {
-  if (mode === "candidate_engine_baseline" && candidate) return candidate.fields;
-  if (mode === "fine_tuned_layoutxlm_backend" && layout) return layout.fields;
+): { fields: DocumentAiEvaluationFields; confidences: Partial<Record<string, number>> } {
+  if (mode === "candidate_engine_baseline" && candidate) {
+    return { fields: candidate.fields, confidences: candidate.confidences };
+  }
+  if (mode === "fine_tuned_layoutxlm_backend" && layout) {
+    return { fields: layout.fields, confidences: layout.confidences };
+  }
   if (mode === "hybrid_layoutxlm_candidate_engine" && candidate && layout) {
-    return mergeLayoutXlmWithCandidateEngine({
+    const hybrid = mergeLayoutXlmWithCandidateEngine({
       candidateFields: candidate.fields,
       candidateConfidences: candidate.confidences,
       layoutFields: layout.fields,
       layoutConfidences: layout.confidences,
       layoutMethods: layout.methods,
-    }).fields;
+    });
+    return { fields: hybrid.fields, confidences: hybrid.confidences };
   }
   throw new Error(`Sursele de inferență nu sunt disponibile pentru modul ${mode}.`);
 }

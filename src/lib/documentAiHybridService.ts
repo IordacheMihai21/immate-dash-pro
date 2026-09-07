@@ -164,9 +164,16 @@ function applyHybridResult(
       normalizedValue: value,
       confidence: value ? confidence : 0,
       method: "Hybrid LayoutXLM + candidate engine",
+      // Threshold set from real calibration data (100-doc Romanian invoice
+      // benchmark, see scripts/document-ai-evaluate.ts's calibration
+      // report): fields the merge reports at 0.6-0.79 confidence were only
+      // 42% actually correct -- barely better than the sub-0.6 bucket, and
+      // nowhere close to a "you can trust this" signal. 0.8+ was 93%
+      // correct. The gate has to sit where the data says it's reliable,
+      // not at a number that merely looks reassuring.
       warning: !value
         ? fieldDetails[field].warning
-        : confidence < 0.6
+        : confidence < 0.8
           ? "Încredere redusă; necesită verificare manuală."
           : undefined,
     };
