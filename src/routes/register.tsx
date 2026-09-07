@@ -9,6 +9,7 @@ import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { verifyCuiWithAnaf } from "@/lib/api/anaf.functions";
 import { ensureAppUser } from "@/lib/appUserService";
+import { syncAuthSessionCookie } from "@/lib/authCookieClient";
 import { claimPendingCompanyInvite } from "@/lib/companyMembersService";
 import { upsertCompanyProfile } from "@/lib/companyService";
 import { supabase } from "@/lib/supabaseClient";
@@ -148,6 +149,10 @@ function RegisterPage() {
         toast.success(message);
         return;
       }
+
+      await syncAuthSessionCookie(data.session).catch((error) => {
+        console.warn("Server auth cookie sync failed after registration.", error);
+      });
 
       await ensureAppUser();
 

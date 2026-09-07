@@ -7,21 +7,22 @@ import { MfaVerifyForm } from "@/components/mfa-verify-form";
 import { Toaster } from "@/components/ui/sonner";
 import { useCompanyPreferences } from "@/hooks/use-company-preferences";
 import { getCurrentAuthUser } from "@/lib/appUserService";
+import { clearAuthSessionCookie } from "@/lib/authCookieClient";
 import { needsMfaChallenge } from "@/lib/mfaService";
 
 export const Route = createFileRoute("/app")({
-  // Real auth guard: supabase.auth.getUser() re-verifies the JWT against
-  // Supabase itself (not just "is there something in localStorage"), so a
-  // cleared/expired/forged session can't slip past this. Before this guard,
-  // /app rendered the full authenticated shell (sidebar, nav, header) for
-  // anyone with no session at all -- confirmed live -- and only failed
-  // silently once it tried to fetch real data (which RLS correctly blocked,
-  // so no data ever leaked, but the UX was wrong and the boundary was in
-  // the wrong place).
-  beforeLoad: async () => {
+  beforeLoad: async ({ serverContext }) => {
+    if (typeof window === "undefined") {
+      if (!(serverContext as { authUser?: unknown } | undefined)?.authUser) {
+        throw redirect({ to: "/login" });
+      }
+      return;
+    }
+
     const user = await getCurrentAuthUser();
 
     if (!user) {
+      await clearAuthSessionCookie().catch(() => undefined);
       throw redirect({ to: "/login" });
     }
   },

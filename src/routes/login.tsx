@@ -9,6 +9,7 @@ import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { MfaVerifyForm } from "@/components/mfa-verify-form";
 import { ensureAppUser } from "@/lib/appUserService";
+import { clearAuthSessionCookie, syncCurrentAuthSessionCookie } from "@/lib/authCookieClient";
 import { claimPendingCompanyInvite } from "@/lib/companyMembersService";
 import { needsMfaChallenge } from "@/lib/mfaService";
 import { supabase } from "@/lib/supabaseClient";
@@ -42,6 +43,10 @@ function LoginPage() {
   }
 
   const completeLogin = async () => {
+    await syncCurrentAuthSessionCookie().catch((error) => {
+      console.warn("Server auth cookie sync failed after login.", error);
+    });
+
     try {
       await ensureAppUser();
     } catch (error) {
@@ -61,7 +66,9 @@ function LoginPage() {
 
   const handleMfaCancelled = () => {
     setAwaitingMfa(false);
-    void supabase.auth.signOut();
+    void supabase.auth.signOut().finally(() => {
+      void clearAuthSessionCookie().catch(() => undefined);
+    });
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {

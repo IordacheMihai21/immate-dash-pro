@@ -13,7 +13,7 @@ import {
   Settings,
   User,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,6 +37,7 @@ import {
   setSelectedCompanyId,
   type CompanyProfile,
 } from "@/lib/companyService";
+import { clearAuthSessionCookie, syncAuthSessionCookie } from "@/lib/authCookieClient";
 import { getCurrentUserProfile, type CurrentUserProfile } from "@/lib/authUserService";
 import { getDashboardNotifications, type AppNotification } from "@/lib/notifications";
 import { supabase } from "@/lib/supabaseClient";
@@ -127,7 +128,10 @@ export function AppHeader({ onSidebarToggle }: { onSidebarToggle: () => void }) 
 
     void refreshUserProfile();
 
-    const { data } = supabase.auth.onAuthStateChange(() => {
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      void syncAuthSessionCookie(session).catch((error) => {
+        console.warn("Server auth cookie sync failed after auth state change.", error);
+      });
       void refreshUserProfile();
       window.dispatchEvent(new Event("immapp:auth-user-updated"));
     });
@@ -138,8 +142,12 @@ export function AppHeader({ onSidebarToggle }: { onSidebarToggle: () => void }) 
     };
   }, []);
 
-  function handleSignOut() {
-    void supabase.auth.signOut();
+  function handleSignOut(event: MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault();
+    void supabase.auth.signOut().finally(async () => {
+      await clearAuthSessionCookie().catch(() => undefined);
+      window.location.assign("/login");
+    });
   }
 
   function handleSwitchCompany(companyId: string) {

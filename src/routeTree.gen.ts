@@ -9,86 +9,57 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TermeniRouteImport } from './routes/termeni'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as RegisterRouteImport } from './routes/register'
-import { Route as PreturiRouteImport } from './routes/preturi'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as ConfidentialitateRouteImport } from './routes/confidentialitate'
-import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppRouteImport } from './routes/app'
+import { Route as ConfidentialitateRouteImport } from './routes/confidentialitate'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as PreturiRouteImport } from './routes/preturi'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as TermeniRouteImport } from './routes/termeni'
 import { Route as AppIndexRouteImport } from './routes/app.index'
-import { Route as FacturaTokenRouteImport } from './routes/factura.$token'
-import { Route as AppSetariRouteImport } from './routes/app.setari'
-import { Route as AppRapoarteRouteImport } from './routes/app.rapoarte'
-import { Route as AppPortofoliuRouteImport } from './routes/app.portofoliu'
-import { Route as AppGhidUtilizareRouteImport } from './routes/app.ghid-utilizare'
-import { Route as AppFurnizoriRouteImport } from './routes/app.furnizori'
-import { Route as AppDocumenteRouteImport } from './routes/app.documente'
-import { Route as AppClientiRouteImport } from './routes/app.clienti'
-import { Route as AppAjutorRouteImport } from './routes/app.ajutor'
-import { Route as AppAiForecastRouteImport } from './routes/app.ai-forecast'
 import { Route as AppAiCenterRouteImport } from './routes/app.ai-center'
-import { Route as AppSetariIndexRouteImport } from './routes/app.setari.index'
-import { Route as AppRapoarteIndexRouteImport } from './routes/app.rapoarte.index'
-import { Route as AppEFacturiIndexRouteImport } from './routes/app.e-facturi.index'
-import { Route as AppAiCenterIndexRouteImport } from './routes/app.ai-center.index'
-import { Route as AppSetariUtilizatoriRouteImport } from './routes/app.setari.utilizatori'
-import { Route as AppSetariSecuritateRouteImport } from './routes/app.setari.securitate'
-import { Route as AppSetariPreferinteRouteImport } from './routes/app.setari.preferinte'
-import { Route as AppSetariFacturareRouteImport } from './routes/app.setari.facturare'
-import { Route as AppRapoarteTvaRouteImport } from './routes/app.rapoarte.tva'
-import { Route as AppRapoarteRevenueRouteImport } from './routes/app.rapoarte.revenue'
-import { Route as AppRapoarteProfitabilitateRouteImport } from './routes/app.rapoarte.profitabilitate'
-import { Route as AppRapoarteExpensesRouteImport } from './routes/app.rapoarte.expenses'
-import { Route as AppRapoarteCashFlowRouteImport } from './routes/app.rapoarte.cash-flow'
-import { Route as AppRapoarteActivitateLunaraRouteImport } from './routes/app.rapoarte.activitate-lunara'
-import { Route as AppEFacturiRecurenteRouteImport } from './routes/app.e-facturi.recurente'
-import { Route as AppEFacturiNouaRouteImport } from './routes/app.e-facturi.noua'
-import { Route as AppEFacturiColectareRouteImport } from './routes/app.e-facturi.colectare'
-import { Route as AppEFacturiIdRouteImport } from './routes/app.e-facturi.$id'
-import { Route as AppAiCenterPredictiiFinanciareRouteImport } from './routes/app.ai-center.predictii-financiare'
-import { Route as AppAiCenterMonitorizareAiRouteImport } from './routes/app.ai-center.monitorizare-ai'
-import { Route as AppAiCenterLayoutAiRouteImport } from './routes/app.ai-center.layout-ai'
-import { Route as AppAiCenterEvaluareAiRouteImport } from './routes/app.ai-center.evaluare-ai'
-import { Route as AppAiCenterDocumentAiRouteImport } from './routes/app.ai-center.document-ai'
-import { Route as AppAiCenterAsistentRouteImport } from './routes/app.ai-center.asistent'
+import { Route as AppAiForecastRouteImport } from './routes/app.ai-forecast'
+import { Route as AppAjutorRouteImport } from './routes/app.ajutor'
+import { Route as AppClientiRouteImport } from './routes/app.clienti'
+import { Route as AppDocumenteRouteImport } from './routes/app.documente'
+import { Route as AppFurnizoriRouteImport } from './routes/app.furnizori'
+import { Route as AppGhidUtilizareRouteImport } from './routes/app.ghid-utilizare'
+import { Route as AppPortofoliuRouteImport } from './routes/app.portofoliu'
+import { Route as AppRapoarteRouteImport } from './routes/app.rapoarte'
+import { Route as AppSetariRouteImport } from './routes/app.setari'
+import { Route as FacturaTokenRouteImport } from './routes/factura.$token'
+import { Route as ApiAuthSessionRouteImport } from './routes/api.auth.session'
 import { Route as ApiWebhooksStripeRouteImport } from './routes/api.webhooks.stripe'
+import { Route as AppAiCenterIndexRouteImport } from './routes/app.ai-center.index'
+import { Route as AppAiCenterAsistentRouteImport } from './routes/app.ai-center.asistent'
+import { Route as AppAiCenterDocumentAiRouteImport } from './routes/app.ai-center.document-ai'
+import { Route as AppAiCenterEvaluareAiRouteImport } from './routes/app.ai-center.evaluare-ai'
+import { Route as AppAiCenterLayoutAiRouteImport } from './routes/app.ai-center.layout-ai'
+import { Route as AppAiCenterMonitorizareAiRouteImport } from './routes/app.ai-center.monitorizare-ai'
+import { Route as AppAiCenterPredictiiFinanciareRouteImport } from './routes/app.ai-center.predictii-financiare'
+import { Route as AppEFacturiIndexRouteImport } from './routes/app.e-facturi.index'
+import { Route as AppEFacturiIdRouteImport } from './routes/app.e-facturi.$id'
+import { Route as AppEFacturiColectareRouteImport } from './routes/app.e-facturi.colectare'
+import { Route as AppEFacturiNouaRouteImport } from './routes/app.e-facturi.noua'
+import { Route as AppEFacturiRecurenteRouteImport } from './routes/app.e-facturi.recurente'
+import { Route as AppRapoarteIndexRouteImport } from './routes/app.rapoarte.index'
+import { Route as AppRapoarteActivitateLunaraRouteImport } from './routes/app.rapoarte.activitate-lunara'
+import { Route as AppRapoarteCashFlowRouteImport } from './routes/app.rapoarte.cash-flow'
+import { Route as AppRapoarteExpensesRouteImport } from './routes/app.rapoarte.expenses'
+import { Route as AppRapoarteProfitabilitateRouteImport } from './routes/app.rapoarte.profitabilitate'
+import { Route as AppRapoarteRevenueRouteImport } from './routes/app.rapoarte.revenue'
+import { Route as AppRapoarteTvaRouteImport } from './routes/app.rapoarte.tva'
+import { Route as AppSetariIndexRouteImport } from './routes/app.setari.index'
+import { Route as AppSetariFacturareRouteImport } from './routes/app.setari.facturare'
+import { Route as AppSetariPreferinteRouteImport } from './routes/app.setari.preferinte'
+import { Route as AppSetariSecuritateRouteImport } from './routes/app.setari.securitate'
+import { Route as AppSetariUtilizatoriRouteImport } from './routes/app.setari.utilizatori'
 
-const TermeniRoute = TermeniRouteImport.update({
-  id: '/termeni',
-  path: '/termeni',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PreturiRoute = PreturiRouteImport.update({
-  id: '/preturi',
-  path: '/preturi',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ConfidentialitateRoute = ConfidentialitateRouteImport.update({
-  id: '/confidentialitate',
-  path: '/confidentialitate',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRoute = AppRouteImport.update({
@@ -96,9 +67,39 @@ const AppRoute = AppRouteImport.update({
   path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const ConfidentialitateRoute = ConfidentialitateRouteImport.update({
+  id: '/confidentialitate',
+  path: '/confidentialitate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PreturiRoute = PreturiRouteImport.update({
+  id: '/preturi',
+  path: '/preturi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermeniRoute = TermeniRouteImport.update({
+  id: '/termeni',
+  path: '/termeni',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
@@ -106,49 +107,9 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
-const FacturaTokenRoute = FacturaTokenRouteImport.update({
-  id: '/factura/$token',
-  path: '/factura/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppSetariRoute = AppSetariRouteImport.update({
-  id: '/setari',
-  path: '/setari',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppRapoarteRoute = AppRapoarteRouteImport.update({
-  id: '/rapoarte',
-  path: '/rapoarte',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppPortofoliuRoute = AppPortofoliuRouteImport.update({
-  id: '/portofoliu',
-  path: '/portofoliu',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppGhidUtilizareRoute = AppGhidUtilizareRouteImport.update({
-  id: '/ghid-utilizare',
-  path: '/ghid-utilizare',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppFurnizoriRoute = AppFurnizoriRouteImport.update({
-  id: '/furnizori',
-  path: '/furnizori',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppDocumenteRoute = AppDocumenteRouteImport.update({
-  id: '/documente',
-  path: '/documente',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppClientiRoute = AppClientiRouteImport.update({
-  id: '/clienti',
-  path: '/clienti',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAjutorRoute = AppAjutorRouteImport.update({
-  id: '/ajutor',
-  path: '/ajutor',
+const AppAiCenterRoute = AppAiCenterRouteImport.update({
+  id: '/ai-center',
+  path: '/ai-center',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAiForecastRoute = AppAiForecastRouteImport.update({
@@ -156,75 +117,126 @@ const AppAiForecastRoute = AppAiForecastRouteImport.update({
   path: '/ai-forecast',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAiCenterRoute = AppAiCenterRouteImport.update({
-  id: '/ai-center',
-  path: '/ai-center',
+const AppAjutorRoute = AppAjutorRouteImport.update({
+  id: '/ajutor',
+  path: '/ajutor',
   getParentRoute: () => AppRoute,
 } as any)
-const AppSetariIndexRoute = AppSetariIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppSetariRoute,
-} as any)
-const AppRapoarteIndexRoute = AppRapoarteIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppRapoarteRoute,
-} as any)
-const AppEFacturiIndexRoute = AppEFacturiIndexRouteImport.update({
-  id: '/e-facturi/',
-  path: '/e-facturi/',
+const AppClientiRoute = AppClientiRouteImport.update({
+  id: '/clienti',
+  path: '/clienti',
   getParentRoute: () => AppRoute,
+} as any)
+const AppDocumenteRoute = AppDocumenteRouteImport.update({
+  id: '/documente',
+  path: '/documente',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFurnizoriRoute = AppFurnizoriRouteImport.update({
+  id: '/furnizori',
+  path: '/furnizori',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppGhidUtilizareRoute = AppGhidUtilizareRouteImport.update({
+  id: '/ghid-utilizare',
+  path: '/ghid-utilizare',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPortofoliuRoute = AppPortofoliuRouteImport.update({
+  id: '/portofoliu',
+  path: '/portofoliu',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRapoarteRoute = AppRapoarteRouteImport.update({
+  id: '/rapoarte',
+  path: '/rapoarte',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSetariRoute = AppSetariRouteImport.update({
+  id: '/setari',
+  path: '/setari',
+  getParentRoute: () => AppRoute,
+} as any)
+const FacturaTokenRoute = FacturaTokenRouteImport.update({
+  id: '/factura/$token',
+  path: '/factura/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthSessionRoute = ApiAuthSessionRouteImport.update({
+  id: '/api/auth/session',
+  path: '/api/auth/session',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWebhooksStripeRoute = ApiWebhooksStripeRouteImport.update({
+  id: '/api/webhooks/stripe',
+  path: '/api/webhooks/stripe',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AppAiCenterIndexRoute = AppAiCenterIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppAiCenterRoute,
 } as any)
-const AppSetariUtilizatoriRoute = AppSetariUtilizatoriRouteImport.update({
-  id: '/utilizatori',
-  path: '/utilizatori',
-  getParentRoute: () => AppSetariRoute,
+const AppAiCenterAsistentRoute = AppAiCenterAsistentRouteImport.update({
+  id: '/asistent',
+  path: '/asistent',
+  getParentRoute: () => AppAiCenterRoute,
 } as any)
-const AppSetariSecuritateRoute = AppSetariSecuritateRouteImport.update({
-  id: '/securitate',
-  path: '/securitate',
-  getParentRoute: () => AppSetariRoute,
+const AppAiCenterDocumentAiRoute = AppAiCenterDocumentAiRouteImport.update({
+  id: '/document-ai',
+  path: '/document-ai',
+  getParentRoute: () => AppAiCenterRoute,
 } as any)
-const AppSetariPreferinteRoute = AppSetariPreferinteRouteImport.update({
-  id: '/preferinte',
-  path: '/preferinte',
-  getParentRoute: () => AppSetariRoute,
+const AppAiCenterEvaluareAiRoute = AppAiCenterEvaluareAiRouteImport.update({
+  id: '/evaluare-ai',
+  path: '/evaluare-ai',
+  getParentRoute: () => AppAiCenterRoute,
 } as any)
-const AppSetariFacturareRoute = AppSetariFacturareRouteImport.update({
-  id: '/facturare',
-  path: '/facturare',
-  getParentRoute: () => AppSetariRoute,
+const AppAiCenterLayoutAiRoute = AppAiCenterLayoutAiRouteImport.update({
+  id: '/layout-ai',
+  path: '/layout-ai',
+  getParentRoute: () => AppAiCenterRoute,
 } as any)
-const AppRapoarteTvaRoute = AppRapoarteTvaRouteImport.update({
-  id: '/tva',
-  path: '/tva',
-  getParentRoute: () => AppRapoarteRoute,
-} as any)
-const AppRapoarteRevenueRoute = AppRapoarteRevenueRouteImport.update({
-  id: '/revenue',
-  path: '/revenue',
-  getParentRoute: () => AppRapoarteRoute,
-} as any)
-const AppRapoarteProfitabilitateRoute =
-  AppRapoarteProfitabilitateRouteImport.update({
-    id: '/profitabilitate',
-    path: '/profitabilitate',
-    getParentRoute: () => AppRapoarteRoute,
+const AppAiCenterMonitorizareAiRoute =
+  AppAiCenterMonitorizareAiRouteImport.update({
+    id: '/monitorizare-ai',
+    path: '/monitorizare-ai',
+    getParentRoute: () => AppAiCenterRoute,
   } as any)
-const AppRapoarteExpensesRoute = AppRapoarteExpensesRouteImport.update({
-  id: '/expenses',
-  path: '/expenses',
-  getParentRoute: () => AppRapoarteRoute,
+const AppAiCenterPredictiiFinanciareRoute =
+  AppAiCenterPredictiiFinanciareRouteImport.update({
+    id: '/predictii-financiare',
+    path: '/predictii-financiare',
+    getParentRoute: () => AppAiCenterRoute,
+  } as any)
+const AppEFacturiIndexRoute = AppEFacturiIndexRouteImport.update({
+  id: '/e-facturi/',
+  path: '/e-facturi/',
+  getParentRoute: () => AppRoute,
 } as any)
-const AppRapoarteCashFlowRoute = AppRapoarteCashFlowRouteImport.update({
-  id: '/cash-flow',
-  path: '/cash-flow',
+const AppEFacturiIdRoute = AppEFacturiIdRouteImport.update({
+  id: '/e-facturi/$id',
+  path: '/e-facturi/$id',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEFacturiColectareRoute = AppEFacturiColectareRouteImport.update({
+  id: '/e-facturi/colectare',
+  path: '/e-facturi/colectare',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEFacturiNouaRoute = AppEFacturiNouaRouteImport.update({
+  id: '/e-facturi/noua',
+  path: '/e-facturi/noua',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEFacturiRecurenteRoute = AppEFacturiRecurenteRouteImport.update({
+  id: '/e-facturi/recurente',
+  path: '/e-facturi/recurente',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRapoarteIndexRoute = AppRapoarteIndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => AppRapoarteRoute,
 } as any)
 const AppRapoarteActivitateLunaraRoute =
@@ -233,62 +245,56 @@ const AppRapoarteActivitateLunaraRoute =
     path: '/activitate-lunara',
     getParentRoute: () => AppRapoarteRoute,
   } as any)
-const AppEFacturiRecurenteRoute = AppEFacturiRecurenteRouteImport.update({
-  id: '/e-facturi/recurente',
-  path: '/e-facturi/recurente',
-  getParentRoute: () => AppRoute,
+const AppRapoarteCashFlowRoute = AppRapoarteCashFlowRouteImport.update({
+  id: '/cash-flow',
+  path: '/cash-flow',
+  getParentRoute: () => AppRapoarteRoute,
 } as any)
-const AppEFacturiNouaRoute = AppEFacturiNouaRouteImport.update({
-  id: '/e-facturi/noua',
-  path: '/e-facturi/noua',
-  getParentRoute: () => AppRoute,
+const AppRapoarteExpensesRoute = AppRapoarteExpensesRouteImport.update({
+  id: '/expenses',
+  path: '/expenses',
+  getParentRoute: () => AppRapoarteRoute,
 } as any)
-const AppEFacturiColectareRoute = AppEFacturiColectareRouteImport.update({
-  id: '/e-facturi/colectare',
-  path: '/e-facturi/colectare',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppEFacturiIdRoute = AppEFacturiIdRouteImport.update({
-  id: '/e-facturi/$id',
-  path: '/e-facturi/$id',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAiCenterPredictiiFinanciareRoute =
-  AppAiCenterPredictiiFinanciareRouteImport.update({
-    id: '/predictii-financiare',
-    path: '/predictii-financiare',
-    getParentRoute: () => AppAiCenterRoute,
+const AppRapoarteProfitabilitateRoute =
+  AppRapoarteProfitabilitateRouteImport.update({
+    id: '/profitabilitate',
+    path: '/profitabilitate',
+    getParentRoute: () => AppRapoarteRoute,
   } as any)
-const AppAiCenterMonitorizareAiRoute =
-  AppAiCenterMonitorizareAiRouteImport.update({
-    id: '/monitorizare-ai',
-    path: '/monitorizare-ai',
-    getParentRoute: () => AppAiCenterRoute,
-  } as any)
-const AppAiCenterLayoutAiRoute = AppAiCenterLayoutAiRouteImport.update({
-  id: '/layout-ai',
-  path: '/layout-ai',
-  getParentRoute: () => AppAiCenterRoute,
+const AppRapoarteRevenueRoute = AppRapoarteRevenueRouteImport.update({
+  id: '/revenue',
+  path: '/revenue',
+  getParentRoute: () => AppRapoarteRoute,
 } as any)
-const AppAiCenterEvaluareAiRoute = AppAiCenterEvaluareAiRouteImport.update({
-  id: '/evaluare-ai',
-  path: '/evaluare-ai',
-  getParentRoute: () => AppAiCenterRoute,
+const AppRapoarteTvaRoute = AppRapoarteTvaRouteImport.update({
+  id: '/tva',
+  path: '/tva',
+  getParentRoute: () => AppRapoarteRoute,
 } as any)
-const AppAiCenterDocumentAiRoute = AppAiCenterDocumentAiRouteImport.update({
-  id: '/document-ai',
-  path: '/document-ai',
-  getParentRoute: () => AppAiCenterRoute,
+const AppSetariIndexRoute = AppSetariIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppSetariRoute,
 } as any)
-const AppAiCenterAsistentRoute = AppAiCenterAsistentRouteImport.update({
-  id: '/asistent',
-  path: '/asistent',
-  getParentRoute: () => AppAiCenterRoute,
+const AppSetariFacturareRoute = AppSetariFacturareRouteImport.update({
+  id: '/facturare',
+  path: '/facturare',
+  getParentRoute: () => AppSetariRoute,
 } as any)
-const ApiWebhooksStripeRoute = ApiWebhooksStripeRouteImport.update({
-  id: '/api/webhooks/stripe',
-  path: '/api/webhooks/stripe',
-  getParentRoute: () => rootRouteImport,
+const AppSetariPreferinteRoute = AppSetariPreferinteRouteImport.update({
+  id: '/preferinte',
+  path: '/preferinte',
+  getParentRoute: () => AppSetariRoute,
+} as any)
+const AppSetariSecuritateRoute = AppSetariSecuritateRouteImport.update({
+  id: '/securitate',
+  path: '/securitate',
+  getParentRoute: () => AppSetariRoute,
+} as any)
+const AppSetariUtilizatoriRoute = AppSetariUtilizatoriRouteImport.update({
+  id: '/utilizatori',
+  path: '/utilizatori',
+  getParentRoute: () => AppSetariRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -313,6 +319,7 @@ export interface FileRoutesByFullPath {
   '/app/setari': typeof AppSetariRouteWithChildren
   '/factura/$token': typeof FacturaTokenRoute
   '/app/': typeof AppIndexRoute
+  '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
   '/app/ai-center/asistent': typeof AppAiCenterAsistentRoute
   '/app/ai-center/document-ai': typeof AppAiCenterDocumentAiRoute
@@ -357,6 +364,7 @@ export interface FileRoutesByTo {
   '/app/portofoliu': typeof AppPortofoliuRoute
   '/factura/$token': typeof FacturaTokenRoute
   '/app': typeof AppIndexRoute
+  '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
   '/app/ai-center/asistent': typeof AppAiCenterAsistentRoute
   '/app/ai-center/document-ai': typeof AppAiCenterDocumentAiRoute
@@ -406,6 +414,7 @@ export interface FileRoutesById {
   '/app/setari': typeof AppSetariRouteWithChildren
   '/factura/$token': typeof FacturaTokenRoute
   '/app/': typeof AppIndexRoute
+  '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
   '/app/ai-center/asistent': typeof AppAiCenterAsistentRoute
   '/app/ai-center/document-ai': typeof AppAiCenterDocumentAiRoute
@@ -456,6 +465,7 @@ export interface FileRouteTypes {
     | '/app/setari'
     | '/factura/$token'
     | '/app/'
+    | '/api/auth/session'
     | '/api/webhooks/stripe'
     | '/app/ai-center/asistent'
     | '/app/ai-center/document-ai'
@@ -500,6 +510,7 @@ export interface FileRouteTypes {
     | '/app/portofoliu'
     | '/factura/$token'
     | '/app'
+    | '/api/auth/session'
     | '/api/webhooks/stripe'
     | '/app/ai-center/asistent'
     | '/app/ai-center/document-ai'
@@ -548,6 +559,7 @@ export interface FileRouteTypes {
     | '/app/setari'
     | '/factura/$token'
     | '/app/'
+    | '/api/auth/session'
     | '/api/webhooks/stripe'
     | '/app/ai-center/asistent'
     | '/app/ai-center/document-ai'
@@ -586,58 +598,17 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   TermeniRoute: typeof TermeniRoute
   FacturaTokenRoute: typeof FacturaTokenRoute
+  ApiAuthSessionRoute: typeof ApiAuthSessionRoute
   ApiWebhooksStripeRoute: typeof ApiWebhooksStripeRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/termeni': {
-      id: '/termeni'
-      path: '/termeni'
-      fullPath: '/termeni'
-      preLoaderRoute: typeof TermeniRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/preturi': {
-      id: '/preturi'
-      path: '/preturi'
-      fullPath: '/preturi'
-      preLoaderRoute: typeof PreturiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/confidentialitate': {
-      id: '/confidentialitate'
-      path: '/confidentialitate'
-      fullPath: '/confidentialitate'
-      preLoaderRoute: typeof ConfidentialitateRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app': {
@@ -647,11 +618,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/confidentialitate': {
+      id: '/confidentialitate'
+      path: '/confidentialitate'
+      fullPath: '/confidentialitate'
+      preLoaderRoute: typeof ConfidentialitateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/preturi': {
+      id: '/preturi'
+      path: '/preturi'
+      fullPath: '/preturi'
+      preLoaderRoute: typeof PreturiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/termeni': {
+      id: '/termeni'
+      path: '/termeni'
+      fullPath: '/termeni'
+      preLoaderRoute: typeof TermeniRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/': {
@@ -661,67 +674,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    '/factura/$token': {
-      id: '/factura/$token'
-      path: '/factura/$token'
-      fullPath: '/factura/$token'
-      preLoaderRoute: typeof FacturaTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app/setari': {
-      id: '/app/setari'
-      path: '/setari'
-      fullPath: '/app/setari'
-      preLoaderRoute: typeof AppSetariRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/rapoarte': {
-      id: '/app/rapoarte'
-      path: '/rapoarte'
-      fullPath: '/app/rapoarte'
-      preLoaderRoute: typeof AppRapoarteRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/portofoliu': {
-      id: '/app/portofoliu'
-      path: '/portofoliu'
-      fullPath: '/app/portofoliu'
-      preLoaderRoute: typeof AppPortofoliuRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/ghid-utilizare': {
-      id: '/app/ghid-utilizare'
-      path: '/ghid-utilizare'
-      fullPath: '/app/ghid-utilizare'
-      preLoaderRoute: typeof AppGhidUtilizareRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/furnizori': {
-      id: '/app/furnizori'
-      path: '/furnizori'
-      fullPath: '/app/furnizori'
-      preLoaderRoute: typeof AppFurnizoriRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/documente': {
-      id: '/app/documente'
-      path: '/documente'
-      fullPath: '/app/documente'
-      preLoaderRoute: typeof AppDocumenteRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/clienti': {
-      id: '/app/clienti'
-      path: '/clienti'
-      fullPath: '/app/clienti'
-      preLoaderRoute: typeof AppClientiRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/ajutor': {
-      id: '/app/ajutor'
-      path: '/ajutor'
-      fullPath: '/app/ajutor'
-      preLoaderRoute: typeof AppAjutorRouteImport
+    '/app/ai-center': {
+      id: '/app/ai-center'
+      path: '/ai-center'
+      fullPath: '/app/ai-center'
+      preLoaderRoute: typeof AppAiCenterRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/ai-forecast': {
@@ -731,172 +688,88 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAiForecastRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/ai-center': {
-      id: '/app/ai-center'
-      path: '/ai-center'
-      fullPath: '/app/ai-center'
-      preLoaderRoute: typeof AppAiCenterRouteImport
+    '/app/ajutor': {
+      id: '/app/ajutor'
+      path: '/ajutor'
+      fullPath: '/app/ajutor'
+      preLoaderRoute: typeof AppAjutorRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/setari/': {
-      id: '/app/setari/'
-      path: '/'
-      fullPath: '/app/setari/'
-      preLoaderRoute: typeof AppSetariIndexRouteImport
-      parentRoute: typeof AppSetariRoute
-    }
-    '/app/rapoarte/': {
-      id: '/app/rapoarte/'
-      path: '/'
-      fullPath: '/app/rapoarte/'
-      preLoaderRoute: typeof AppRapoarteIndexRouteImport
-      parentRoute: typeof AppRapoarteRoute
-    }
-    '/app/e-facturi/': {
-      id: '/app/e-facturi/'
-      path: '/e-facturi'
-      fullPath: '/app/e-facturi/'
-      preLoaderRoute: typeof AppEFacturiIndexRouteImport
+    '/app/clienti': {
+      id: '/app/clienti'
+      path: '/clienti'
+      fullPath: '/app/clienti'
+      preLoaderRoute: typeof AppClientiRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/app/documente': {
+      id: '/app/documente'
+      path: '/documente'
+      fullPath: '/app/documente'
+      preLoaderRoute: typeof AppDocumenteRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/furnizori': {
+      id: '/app/furnizori'
+      path: '/furnizori'
+      fullPath: '/app/furnizori'
+      preLoaderRoute: typeof AppFurnizoriRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/ghid-utilizare': {
+      id: '/app/ghid-utilizare'
+      path: '/ghid-utilizare'
+      fullPath: '/app/ghid-utilizare'
+      preLoaderRoute: typeof AppGhidUtilizareRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/portofoliu': {
+      id: '/app/portofoliu'
+      path: '/portofoliu'
+      fullPath: '/app/portofoliu'
+      preLoaderRoute: typeof AppPortofoliuRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/rapoarte': {
+      id: '/app/rapoarte'
+      path: '/rapoarte'
+      fullPath: '/app/rapoarte'
+      preLoaderRoute: typeof AppRapoarteRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/setari': {
+      id: '/app/setari'
+      path: '/setari'
+      fullPath: '/app/setari'
+      preLoaderRoute: typeof AppSetariRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/factura/$token': {
+      id: '/factura/$token'
+      path: '/factura/$token'
+      fullPath: '/factura/$token'
+      preLoaderRoute: typeof FacturaTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/session': {
+      id: '/api/auth/session'
+      path: '/api/auth/session'
+      fullPath: '/api/auth/session'
+      preLoaderRoute: typeof ApiAuthSessionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/stripe': {
+      id: '/api/webhooks/stripe'
+      path: '/api/webhooks/stripe'
+      fullPath: '/api/webhooks/stripe'
+      preLoaderRoute: typeof ApiWebhooksStripeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/app/ai-center/': {
       id: '/app/ai-center/'
       path: '/'
       fullPath: '/app/ai-center/'
       preLoaderRoute: typeof AppAiCenterIndexRouteImport
-      parentRoute: typeof AppAiCenterRoute
-    }
-    '/app/setari/utilizatori': {
-      id: '/app/setari/utilizatori'
-      path: '/utilizatori'
-      fullPath: '/app/setari/utilizatori'
-      preLoaderRoute: typeof AppSetariUtilizatoriRouteImport
-      parentRoute: typeof AppSetariRoute
-    }
-    '/app/setari/securitate': {
-      id: '/app/setari/securitate'
-      path: '/securitate'
-      fullPath: '/app/setari/securitate'
-      preLoaderRoute: typeof AppSetariSecuritateRouteImport
-      parentRoute: typeof AppSetariRoute
-    }
-    '/app/setari/preferinte': {
-      id: '/app/setari/preferinte'
-      path: '/preferinte'
-      fullPath: '/app/setari/preferinte'
-      preLoaderRoute: typeof AppSetariPreferinteRouteImport
-      parentRoute: typeof AppSetariRoute
-    }
-    '/app/setari/facturare': {
-      id: '/app/setari/facturare'
-      path: '/facturare'
-      fullPath: '/app/setari/facturare'
-      preLoaderRoute: typeof AppSetariFacturareRouteImport
-      parentRoute: typeof AppSetariRoute
-    }
-    '/app/rapoarte/tva': {
-      id: '/app/rapoarte/tva'
-      path: '/tva'
-      fullPath: '/app/rapoarte/tva'
-      preLoaderRoute: typeof AppRapoarteTvaRouteImport
-      parentRoute: typeof AppRapoarteRoute
-    }
-    '/app/rapoarte/revenue': {
-      id: '/app/rapoarte/revenue'
-      path: '/revenue'
-      fullPath: '/app/rapoarte/revenue'
-      preLoaderRoute: typeof AppRapoarteRevenueRouteImport
-      parentRoute: typeof AppRapoarteRoute
-    }
-    '/app/rapoarte/profitabilitate': {
-      id: '/app/rapoarte/profitabilitate'
-      path: '/profitabilitate'
-      fullPath: '/app/rapoarte/profitabilitate'
-      preLoaderRoute: typeof AppRapoarteProfitabilitateRouteImport
-      parentRoute: typeof AppRapoarteRoute
-    }
-    '/app/rapoarte/expenses': {
-      id: '/app/rapoarte/expenses'
-      path: '/expenses'
-      fullPath: '/app/rapoarte/expenses'
-      preLoaderRoute: typeof AppRapoarteExpensesRouteImport
-      parentRoute: typeof AppRapoarteRoute
-    }
-    '/app/rapoarte/cash-flow': {
-      id: '/app/rapoarte/cash-flow'
-      path: '/cash-flow'
-      fullPath: '/app/rapoarte/cash-flow'
-      preLoaderRoute: typeof AppRapoarteCashFlowRouteImport
-      parentRoute: typeof AppRapoarteRoute
-    }
-    '/app/rapoarte/activitate-lunara': {
-      id: '/app/rapoarte/activitate-lunara'
-      path: '/activitate-lunara'
-      fullPath: '/app/rapoarte/activitate-lunara'
-      preLoaderRoute: typeof AppRapoarteActivitateLunaraRouteImport
-      parentRoute: typeof AppRapoarteRoute
-    }
-    '/app/e-facturi/recurente': {
-      id: '/app/e-facturi/recurente'
-      path: '/e-facturi/recurente'
-      fullPath: '/app/e-facturi/recurente'
-      preLoaderRoute: typeof AppEFacturiRecurenteRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/e-facturi/noua': {
-      id: '/app/e-facturi/noua'
-      path: '/e-facturi/noua'
-      fullPath: '/app/e-facturi/noua'
-      preLoaderRoute: typeof AppEFacturiNouaRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/e-facturi/colectare': {
-      id: '/app/e-facturi/colectare'
-      path: '/e-facturi/colectare'
-      fullPath: '/app/e-facturi/colectare'
-      preLoaderRoute: typeof AppEFacturiColectareRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/e-facturi/$id': {
-      id: '/app/e-facturi/$id'
-      path: '/e-facturi/$id'
-      fullPath: '/app/e-facturi/$id'
-      preLoaderRoute: typeof AppEFacturiIdRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/ai-center/predictii-financiare': {
-      id: '/app/ai-center/predictii-financiare'
-      path: '/predictii-financiare'
-      fullPath: '/app/ai-center/predictii-financiare'
-      preLoaderRoute: typeof AppAiCenterPredictiiFinanciareRouteImport
-      parentRoute: typeof AppAiCenterRoute
-    }
-    '/app/ai-center/monitorizare-ai': {
-      id: '/app/ai-center/monitorizare-ai'
-      path: '/monitorizare-ai'
-      fullPath: '/app/ai-center/monitorizare-ai'
-      preLoaderRoute: typeof AppAiCenterMonitorizareAiRouteImport
-      parentRoute: typeof AppAiCenterRoute
-    }
-    '/app/ai-center/layout-ai': {
-      id: '/app/ai-center/layout-ai'
-      path: '/layout-ai'
-      fullPath: '/app/ai-center/layout-ai'
-      preLoaderRoute: typeof AppAiCenterLayoutAiRouteImport
-      parentRoute: typeof AppAiCenterRoute
-    }
-    '/app/ai-center/evaluare-ai': {
-      id: '/app/ai-center/evaluare-ai'
-      path: '/evaluare-ai'
-      fullPath: '/app/ai-center/evaluare-ai'
-      preLoaderRoute: typeof AppAiCenterEvaluareAiRouteImport
-      parentRoute: typeof AppAiCenterRoute
-    }
-    '/app/ai-center/document-ai': {
-      id: '/app/ai-center/document-ai'
-      path: '/document-ai'
-      fullPath: '/app/ai-center/document-ai'
-      preLoaderRoute: typeof AppAiCenterDocumentAiRouteImport
       parentRoute: typeof AppAiCenterRoute
     }
     '/app/ai-center/asistent': {
@@ -906,12 +779,159 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAiCenterAsistentRouteImport
       parentRoute: typeof AppAiCenterRoute
     }
-    '/api/webhooks/stripe': {
-      id: '/api/webhooks/stripe'
-      path: '/api/webhooks/stripe'
-      fullPath: '/api/webhooks/stripe'
-      preLoaderRoute: typeof ApiWebhooksStripeRouteImport
-      parentRoute: typeof rootRouteImport
+    '/app/ai-center/document-ai': {
+      id: '/app/ai-center/document-ai'
+      path: '/document-ai'
+      fullPath: '/app/ai-center/document-ai'
+      preLoaderRoute: typeof AppAiCenterDocumentAiRouteImport
+      parentRoute: typeof AppAiCenterRoute
+    }
+    '/app/ai-center/evaluare-ai': {
+      id: '/app/ai-center/evaluare-ai'
+      path: '/evaluare-ai'
+      fullPath: '/app/ai-center/evaluare-ai'
+      preLoaderRoute: typeof AppAiCenterEvaluareAiRouteImport
+      parentRoute: typeof AppAiCenterRoute
+    }
+    '/app/ai-center/layout-ai': {
+      id: '/app/ai-center/layout-ai'
+      path: '/layout-ai'
+      fullPath: '/app/ai-center/layout-ai'
+      preLoaderRoute: typeof AppAiCenterLayoutAiRouteImport
+      parentRoute: typeof AppAiCenterRoute
+    }
+    '/app/ai-center/monitorizare-ai': {
+      id: '/app/ai-center/monitorizare-ai'
+      path: '/monitorizare-ai'
+      fullPath: '/app/ai-center/monitorizare-ai'
+      preLoaderRoute: typeof AppAiCenterMonitorizareAiRouteImport
+      parentRoute: typeof AppAiCenterRoute
+    }
+    '/app/ai-center/predictii-financiare': {
+      id: '/app/ai-center/predictii-financiare'
+      path: '/predictii-financiare'
+      fullPath: '/app/ai-center/predictii-financiare'
+      preLoaderRoute: typeof AppAiCenterPredictiiFinanciareRouteImport
+      parentRoute: typeof AppAiCenterRoute
+    }
+    '/app/e-facturi/': {
+      id: '/app/e-facturi/'
+      path: '/e-facturi'
+      fullPath: '/app/e-facturi/'
+      preLoaderRoute: typeof AppEFacturiIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/e-facturi/$id': {
+      id: '/app/e-facturi/$id'
+      path: '/e-facturi/$id'
+      fullPath: '/app/e-facturi/$id'
+      preLoaderRoute: typeof AppEFacturiIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/e-facturi/colectare': {
+      id: '/app/e-facturi/colectare'
+      path: '/e-facturi/colectare'
+      fullPath: '/app/e-facturi/colectare'
+      preLoaderRoute: typeof AppEFacturiColectareRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/e-facturi/noua': {
+      id: '/app/e-facturi/noua'
+      path: '/e-facturi/noua'
+      fullPath: '/app/e-facturi/noua'
+      preLoaderRoute: typeof AppEFacturiNouaRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/e-facturi/recurente': {
+      id: '/app/e-facturi/recurente'
+      path: '/e-facturi/recurente'
+      fullPath: '/app/e-facturi/recurente'
+      preLoaderRoute: typeof AppEFacturiRecurenteRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/rapoarte/': {
+      id: '/app/rapoarte/'
+      path: '/'
+      fullPath: '/app/rapoarte/'
+      preLoaderRoute: typeof AppRapoarteIndexRouteImport
+      parentRoute: typeof AppRapoarteRoute
+    }
+    '/app/rapoarte/activitate-lunara': {
+      id: '/app/rapoarte/activitate-lunara'
+      path: '/activitate-lunara'
+      fullPath: '/app/rapoarte/activitate-lunara'
+      preLoaderRoute: typeof AppRapoarteActivitateLunaraRouteImport
+      parentRoute: typeof AppRapoarteRoute
+    }
+    '/app/rapoarte/cash-flow': {
+      id: '/app/rapoarte/cash-flow'
+      path: '/cash-flow'
+      fullPath: '/app/rapoarte/cash-flow'
+      preLoaderRoute: typeof AppRapoarteCashFlowRouteImport
+      parentRoute: typeof AppRapoarteRoute
+    }
+    '/app/rapoarte/expenses': {
+      id: '/app/rapoarte/expenses'
+      path: '/expenses'
+      fullPath: '/app/rapoarte/expenses'
+      preLoaderRoute: typeof AppRapoarteExpensesRouteImport
+      parentRoute: typeof AppRapoarteRoute
+    }
+    '/app/rapoarte/profitabilitate': {
+      id: '/app/rapoarte/profitabilitate'
+      path: '/profitabilitate'
+      fullPath: '/app/rapoarte/profitabilitate'
+      preLoaderRoute: typeof AppRapoarteProfitabilitateRouteImport
+      parentRoute: typeof AppRapoarteRoute
+    }
+    '/app/rapoarte/revenue': {
+      id: '/app/rapoarte/revenue'
+      path: '/revenue'
+      fullPath: '/app/rapoarte/revenue'
+      preLoaderRoute: typeof AppRapoarteRevenueRouteImport
+      parentRoute: typeof AppRapoarteRoute
+    }
+    '/app/rapoarte/tva': {
+      id: '/app/rapoarte/tva'
+      path: '/tva'
+      fullPath: '/app/rapoarte/tva'
+      preLoaderRoute: typeof AppRapoarteTvaRouteImport
+      parentRoute: typeof AppRapoarteRoute
+    }
+    '/app/setari/': {
+      id: '/app/setari/'
+      path: '/'
+      fullPath: '/app/setari/'
+      preLoaderRoute: typeof AppSetariIndexRouteImport
+      parentRoute: typeof AppSetariRoute
+    }
+    '/app/setari/facturare': {
+      id: '/app/setari/facturare'
+      path: '/facturare'
+      fullPath: '/app/setari/facturare'
+      preLoaderRoute: typeof AppSetariFacturareRouteImport
+      parentRoute: typeof AppSetariRoute
+    }
+    '/app/setari/preferinte': {
+      id: '/app/setari/preferinte'
+      path: '/preferinte'
+      fullPath: '/app/setari/preferinte'
+      preLoaderRoute: typeof AppSetariPreferinteRouteImport
+      parentRoute: typeof AppSetariRoute
+    }
+    '/app/setari/securitate': {
+      id: '/app/setari/securitate'
+      path: '/securitate'
+      fullPath: '/app/setari/securitate'
+      preLoaderRoute: typeof AppSetariSecuritateRouteImport
+      parentRoute: typeof AppSetariRoute
+    }
+    '/app/setari/utilizatori': {
+      id: '/app/setari/utilizatori'
+      path: '/utilizatori'
+      fullPath: '/app/setari/utilizatori'
+      preLoaderRoute: typeof AppSetariUtilizatoriRouteImport
+      parentRoute: typeof AppSetariRoute
     }
   }
 }
@@ -1035,6 +1055,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   TermeniRoute: TermeniRoute,
   FacturaTokenRoute: FacturaTokenRoute,
+  ApiAuthSessionRoute: ApiAuthSessionRoute,
   ApiWebhooksStripeRoute: ApiWebhooksStripeRoute,
 }
 export const routeTree = rootRouteImport

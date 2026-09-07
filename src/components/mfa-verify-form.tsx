@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { clearAuthSessionCookie, syncCurrentAuthSessionCookie } from "@/lib/authCookieClient";
 import { listVerifiedTotpFactors, verifyTotpCode } from "@/lib/mfaService";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -68,6 +69,9 @@ export function MfaVerifyForm({
 
     try {
       await verifyTotpCode(factorId, code);
+      await syncCurrentAuthSessionCookie().catch((error) => {
+        console.warn("Server auth cookie sync failed after MFA verification.", error);
+      });
       onVerified();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Cod incorect. Incearca din nou.");
@@ -139,7 +143,11 @@ export function MfaVerifyForm({
                   type="button"
                   variant="ghost"
                   className="w-full"
-                  onClick={() => void supabase.auth.signOut()}
+                  onClick={() =>
+                    void supabase.auth.signOut().finally(() => {
+                      void clearAuthSessionCookie().catch(() => undefined);
+                    })
+                  }
                   disabled={isSubmitting}
                 >
                   Deconectare
