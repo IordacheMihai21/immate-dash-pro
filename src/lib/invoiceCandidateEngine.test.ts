@@ -189,4 +189,144 @@ describe("extractInvoiceCandidates - amount extraction", () => {
 
     expect(result.fields.totalAmount.value).toBe(13500);
   });
+
+  it("does not treat a large space-grouped bare number as a total amount", () => {
+    const lines = [
+      { text: "Al el F Total General 600 114" },
+      { text: "TOTAL DE PLATA" },
+      { text: "714" },
+    ];
+    const result = extractInvoiceCandidates({
+      text: lines.map((l) => l.text).join("\n"),
+      lines,
+    });
+
+    expect(result.fields.totalAmount.value).toBe(714);
+  });
+});
+
+describe("extractInvoiceCandidates - totalAmount selection among multiple candidates", () => {
+  it("picks the strong-labeled total over a plain 'total' table header nearby", () => {
+    const lines = [
+      { text: "Nr. crt. Denumire Cantitate Pret unitar Valoare Total" },
+      { text: "1 Serviciu consultanta 2 100.00 200.00" },
+      { text: "Total de plata: 1780.02 RON" },
+    ];
+    const result = extractInvoiceCandidates({
+      text: lines.map((l) => l.text).join("\n"),
+      lines,
+    });
+    expect(result.fields.totalAmount.value).toBe(1780.02);
+  });
+
+  it("finds the amount when it sits 1-2 lines below the label (OCR table-row split)", () => {
+    const lines = [
+      { text: "Total de plati (col. 5 +col. 6):" },
+      { text: "" },
+      { text: "RON 1780.02" },
+    ];
+    const result = extractInvoiceCandidates({
+      text: lines.map((l) => l.text).join("\n"),
+      lines,
+    });
+    expect(result.fields.totalAmount.value).toBe(1780.02);
+  });
+
+  it("reconstructs the gross total when OCR splits net and VAT into adjacent compact rows", () => {
+    const lines = [
+      { text: "Valoarea" },
+      { text: "Valoarea T.V.A." },
+      { text: "Total" },
+      { text: "1600,51" },
+      { text: "304,10" },
+      { text: "Total de plata" },
+    ];
+    const result = extractInvoiceCandidates({
+      text: lines.map((l) => l.text).join("\n"),
+      lines,
+    });
+
+    expect(result.fields.totalAmount.value).toBe(1904.61);
+  });
+
+  it("prefers a reconstructed gross total over same-line subtotal and VAT components", () => {
+    const lines = [{ text: "Total de plata (col.5+col.6)" }, { text: "-20.225,20 -3.842,79" }];
+    const result = extractInvoiceCandidates({
+      text: lines.map((l) => l.text).join("\n"),
+      lines,
+    });
+
+    expect(result.fields.totalAmount.value).toBe(24067.99);
+  });
+
+  it("resolves a subtotal/VAT/total trio to the correct total via cross-field consistency", () => {
+    const lines = [
+      { text: "Subtotal: 1000.00" },
+      { text: "TVA (19%): 190.00" },
+      { text: "Total: 1190.00" },
+    ];
+    const result = extractInvoiceCandidates({
+      text: lines.map((l) => l.text).join("\n"),
+      lines,
+    });
+    expect(result.fields.subtotal.value).toBe(1000);
+    expect(result.fields.vatAmount.value).toBe(190);
+    expect(result.fields.totalAmount.value).toBe(1190);
+  });
+
+  it("ignores a Romanian legal citation and table/reference noise near total-shaped numbers", () => {
+    const lines = [
+      { text: "Emisa conform art. 319 alin. 29 din legea 227/2015" },
+      { text: "Nr. contract: 445/2021" },
+      { text: "Total de plata: 795.98 RON" },
+    ];
+    const result = extractInvoiceCandidates({
+      text: lines.map((l) => l.text).join("\n"),
+      lines,
+    });
+    expect(result.fields.totalAmount.value).toBe(795.98);
+  });
+
+  it("parses European comma-decimal and dot-thousands formats", () => {
+    const lines = [{ text: "Total de plata: 85.167,90 RON" }];
+    const result = extractInvoiceCandidates({
+      text: lines[0].text,
+      lines,
+    });
+    expect(result.fields.totalAmount.value).toBe(85167.9);
+  });
+
+  it("parses English dot-decimal and comma-thousands formats", () => {
+    const lines = [{ text: "Grand total: 85,167.90" }];
+    const result = extractInvoiceCandidates({
+      text: lines[0].text,
+      lines,
+    });
+    expect(result.fields.totalAmount.value).toBe(85167.9);
+  });
+
+  it("extracts a negative total on a credit-note-style adjustment", () => {
+    // Real OCR output (roboflow_ro_valid_66): a genuine credit/adjustment
+    // invoice prints its total with a leading minus sign.
+    const lines = [{ text: "Total de plata -41,04" }];
+    const result = extractInvoiceCandidates({
+      text: lines[0].text,
+      lines,
+    });
+    expect(result.fields.totalAmount.value).toBe(-41.04);
+  });
+
+  it("does not pick up a discount, unit price, or previous-balance line as the total", () => {
+    const lines = [
+      { text: "Discount: 50.00" },
+      { text: "Pret unitar: 25.00" },
+      { text: "Sold anterior: 300.00" },
+      { text: "Total de plata: 1250.00" },
+    ];
+    const result = extractInvoiceCandidates({
+      text: lines.map((l) => l.text).join("\n"),
+      lines,
+    });
+    expect(result.fields.totalAmount.value).toBe(1250);
+  });
 });

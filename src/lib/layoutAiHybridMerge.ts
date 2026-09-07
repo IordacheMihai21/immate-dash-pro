@@ -72,7 +72,191 @@ export function mergeLayoutXlmWithCandidateEngine({
     confidences[field] = choice.confidence;
   }
 
+  reconcileTaxIdPair({
+    fields,
+    sources,
+    confidences,
+    candidateFields,
+    candidateConfidences,
+    layoutFields,
+    layoutConfidences,
+  });
+
   return { fields, sources, confidences };
+}
+
+function reconcileTaxIdPair({
+  fields,
+  sources,
+  confidences,
+  candidateFields,
+  candidateConfidences,
+  layoutFields,
+  layoutConfidences,
+}: {
+  fields: Record<DocumentAiFieldKey, string>;
+  sources: Record<DocumentAiFieldKey, HybridFieldSource>;
+  confidences: Record<DocumentAiFieldKey, number>;
+  candidateFields: Partial<Record<DocumentAiFieldKey, unknown>>;
+  candidateConfidences: Partial<Record<DocumentAiFieldKey, number>>;
+  layoutFields: Partial<Record<DocumentAiFieldKey, unknown>>;
+  layoutConfidences: Partial<Record<DocumentAiFieldKey, number>>;
+}) {
+  type Evidence = {
+    value: string;
+    digits: string;
+    role: "supplier" | "customer";
+    source: "candidate_engine" | "layoutxlm";
+    confidence: number;
+  };
+
+  const evidence: Evidence[] = [];
+
+  const pushEvidence = (
+    raw: unknown,
+    role: "supplier" | "customer",
+    source: "candidate_engine" | "layoutxlm",
+    confidence: number | undefined,
+  ) => {
+    const value = normalizeTaxIdentifier(stringify(raw));
+    if (!value) return;
+
+    evidence.push({
+      value,
+      digits: value.replace(/^RO(?=\d)/, ""),
+      role,
+      source,
+      confidence: clampConfidence(confidence, 0),
+    });
+  };
+
+  pushEvidence(
+    candidateFields.supplierCui,
+    "supplier",
+    "candidate_engine",
+    candidateConfidences.supplierCui,
+  );
+  pushEvidence(
+    candidateFields.customerCui,
+    "customer",
+    "candidate_engine",
+    candidateConfidences.customerCui,
+  );
+  pushEvidence(layoutFields.supplierCui, "supplier", "layoutxlm", layoutConfidences.supplierCui);
+  pushEvidence(layoutFields.customerCui, "customer", "layoutxlm", layoutConfidences.customerCui);
+
+  if (!evidence.length) return;
+
+  // Canonical representation for each underlying fiscal number:
+  // if ANY extractor actually observed RO, retain it everywhere for that
+  // same digit sequence. Never fabricate RO when no evidence contains it.
+  const canonical = new Map<string, string>();
+  for (const item of evidence) {
+    const existing = canonical.get(item.digits);
+    if (!existing || (!existing.startsWith("RO") && item.value.startsWith("RO"))) {
+      canonical.set(item.digits, item.value);
+    }
+  }
+
+  const roleScore = (digits: string, role: "supplier" | "customer") => {
+    let score = 0;
+
+    for (const item of evidence) {
+      if (item.digits !== digits) continue;
+
+      const sameRole = item.role === role;
+
+      // LayoutXLM is particularly useful for semantic role assignment,
+      // while the candidate engine contributes independent textual evidence.
+      const sourceWeight = item.source === "layoutxlm" ? 1.06 : 0.94;
+
+      score += (sameRole ? 1 : -0.34) * sourceWeight * Math.max(0.35, item.confidence);
+    }
+
+    return score;
+  };
+
+  const ids = [...canonical.keys()];
+  if (!ids.length) return;
+
+  let bestSupplier = "";
+  let bestCustomer = "";
+  let bestScore = -Infinity;
+
+  // Joint assignment prevents independent supplier/customer decisions from
+  // selecting the same entity or swapping two otherwise correctly detected IDs.
+  for (const supplierDigits of ids) {
+    const customerOptions = ids.length > 1 ? ids.filter((id) => id !== supplierDigits) : [""];
+
+    for (const customerDigits of customerOptions) {
+      const score =
+        roleScore(supplierDigits, "supplier") +
+        (customerDigits ? roleScore(customerDigits, "customer") : 0);
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestSupplier = supplierDigits;
+        bestCustomer = customerDigits;
+      }
+    }
+  }
+
+  const currentSupplier = normalizeTaxIdentifier(fields.supplierCui);
+  const currentCustomer = normalizeTaxIdentifier(fields.customerCui);
+
+  const supplierValue = bestSupplier ? (canonical.get(bestSupplier) ?? "") : "";
+  const customerValue = bestCustomer ? (canonical.get(bestCustomer) ?? "") : "";
+
+  // Require meaningful joint evidence before overriding an already-populated
+  // value; missing values can be filled more readily.
+  if (
+    supplierValue &&
+    (!currentSupplier ||
+      currentSupplier.replace(/^RO(?=\d)/, "") === bestSupplier ||
+      bestScore >= 0.9)
+  ) {
+    fields.supplierCui = supplierValue;
+
+    const supporting = evidence
+      .filter((item) => item.digits === bestSupplier && item.role === "supplier")
+      .sort((a, b) => b.confidence - a.confidence)[0];
+
+    sources.supplierCui = supporting?.source ?? sources.supplierCui;
+    confidences.supplierCui = Math.max(
+      confidences.supplierCui ?? 0,
+      supporting?.confidence ?? 0.72,
+    );
+  }
+
+  if (
+    customerValue &&
+    (!currentCustomer ||
+      currentCustomer.replace(/^RO(?=\d)/, "") === bestCustomer ||
+      bestScore >= 0.9)
+  ) {
+    fields.customerCui = customerValue;
+
+    const supporting = evidence
+      .filter((item) => item.digits === bestCustomer && item.role === "customer")
+      .sort((a, b) => b.confidence - a.confidence)[0];
+
+    sources.customerCui = supporting?.source ?? sources.customerCui;
+    confidences.customerCui = Math.max(
+      confidences.customerCui ?? 0,
+      supporting?.confidence ?? 0.72,
+    );
+  }
+
+  // Final canonicalization when supplier/customer already have the right
+  // digits but one side dropped an explicitly observed RO prefix.
+  for (const field of ["supplierCui", "customerCui"] as const) {
+    const normalized = normalizeTaxIdentifier(fields[field]);
+    if (!normalized) continue;
+
+    const digits = normalized.replace(/^RO(?=\d)/, "");
+    const richer = canonical.get(digits);
+    if (richer?.startsWith("RO")) fields[field] = richer;
+  }
 }
 
 function chooseFieldValue(
@@ -89,6 +273,10 @@ function chooseFieldValue(
   // chooseInvoiceNumber's own agreement fast-path applies that guard too.
   if (field === "invoiceNumber") {
     return chooseInvoiceNumber(candidate, candidateConfidence, layout, layoutConfidence);
+  }
+
+  if (field === "totalAmount") {
+    return chooseTotalAmount(candidate, candidateConfidence, layout, layoutConfidence);
   }
 
   if (valuesEquivalent(field, candidate, layout) && candidate) {
@@ -152,6 +340,36 @@ function chooseAmount(
   return candidate ? selected(candidate, "candidate_engine", candidateConfidence) : missing();
 }
 
+// Dedicated (not the shared chooseAmount) because the grand total is the
+// single highest-value, highest-risk amount field: a real invoice page
+// almost always has several other numbers that look just as plausible
+// (subtotal, VAT, individual line items) and the wrong pick is much more
+// costly here than for subtotal/vatAmount.
+function chooseTotalAmount(
+  candidate: string,
+  candidateConfidence: number,
+  layout: string,
+  layoutConfidence: number,
+) {
+  const normalizedCandidate = normalizeAmount(candidate);
+  const normalizedLayout = normalizeAmount(layout);
+
+  // Model + heuristic agreement: the candidate engine's text/label-based
+  // extraction and LayoutXLM's independent, layout-aware token
+  // classification landing on the exact same number (after normalization)
+  // is strong evidence on its own, even when neither side alone cleared
+  // its normal confidence bar.
+  if (normalizedCandidate && normalizedCandidate === normalizedLayout) {
+    return selected(
+      normalizedCandidate,
+      "candidate_engine",
+      Math.max(candidateConfidence, layoutConfidence, 0.82),
+    );
+  }
+
+  return chooseAmount(candidate, candidateConfidence, layout, layoutConfidence);
+}
+
 function chooseParty(
   field: DocumentAiFieldKey,
   candidate: string,
@@ -204,7 +422,28 @@ function chooseTaxId(
       Math.max(candidateConfidence, layoutConfidence),
     );
   }
+
+  // If both extractors agree on the fiscal number itself but only one
+  // retained the explicit Romanian RO prefix, keep the prefixed form.
+  // This uses evidence from the document rather than inventing RO for
+  // every unprefixed CUI.
   if (normalizedCandidate && normalizedLayout) {
+    const candidateDigits = normalizedCandidate.replace(/^RO(?=\d)/, "");
+    const layoutDigits = normalizedLayout.replace(/^RO(?=\d)/, "");
+
+    if (candidateDigits === layoutDigits) {
+      const preferred = normalizedCandidate.startsWith("RO")
+        ? normalizedCandidate
+        : normalizedLayout.startsWith("RO")
+          ? normalizedLayout
+          : normalizedCandidate;
+
+      return selected(
+        preferred,
+        normalizedCandidate.startsWith("RO") ? "candidate_engine" : "layoutxlm",
+        Math.max(candidateConfidence, layoutConfidence),
+      );
+    }
     return candidateConfidence >= layoutConfidence
       ? selected(normalizedCandidate, "candidate_engine", candidateConfidence)
       : selected(normalizedLayout, "layoutxlm", layoutConfidence);
@@ -344,7 +583,12 @@ function normalizeAmount(value: string) {
     }
   }
   const parsed = Number(numeric);
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed.toFixed(2) : "";
+  // Negative amounts are legitimate on credit notes/adjustments (a real
+  // Romanian invoice can print "Total de plata -41,04") -- this used to
+  // reject any negative value outright, silently falling back to the raw,
+  // un-normalized candidate string further up the merge whenever that
+  // happened.
+  return Number.isFinite(parsed) ? parsed.toFixed(2) : "";
 }
 
 function isSuspiciousLayoutAmount(value: string) {

@@ -169,6 +169,7 @@ try {
       candidatePrediction,
       layoutPrediction,
     );
+
     if (exportOcrRoot) {
       const exportPath = join(
         exportOcrRoot,

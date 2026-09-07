@@ -17,6 +17,11 @@ export type CandidateLine = {
   text: string;
   confidence?: number;
   bbox?: { x: number; y: number; width: number; height: number };
+  words?: Array<{
+    text: string;
+    confidence?: number;
+    bbox?: { x: number; y: number; width: number; height: number };
+  }>;
 };
 
 export type FieldCandidate = {
@@ -127,6 +132,16 @@ const PARTY_INVALID_TERMS = [
 const AMOUNT_PATTERN =
   /(?:[$€£]\s*)?-?(?:\d{1,3}(?:[\s.,']\d{3})+(?:[,.]\d{1,2})?|\d+[,.]\d{1,2}|\d{2,})(?:\s*(?:RON|LEI|EUR|USD|GBP))?/gi;
 
+type MonetaryToken = {
+  raw: string;
+  value: number;
+  index: number;
+  endIndex: number;
+  hasCurrency: boolean;
+  hasDecimal: boolean;
+  hasThousandsSeparator: boolean;
+};
+
 export function extractInvoiceCandidates({
   text,
   lines,
@@ -211,6 +226,7 @@ function matchSeriePlusNr(text: string): { value: string } | null {
 
 export function extractInvoiceNumberCandidates(context: CandidateContext) {
   const candidates: FieldCandidate[] = [];
+
   // factur\w{0,3} (not factur[aă]) tolerates "facturii" (double-i,
   // extremely common in real OCR: "Numărul facturii"), "facturi", "factură".
   const labeledPattern =
@@ -232,6 +248,98 @@ export function extractInvoiceNumberCandidates(context: CandidateContext) {
           method: line.bbox ? "Layout heuristic" : "Regex",
           reasons: ["Etichetă explicită pentru numărul facturii"],
         });
+      }
+    }
+
+    // OCR/layout often separates an explicit invoice-number label from its
+    // value into the next table cell or line. Only use this fallback when the
+    // current line clearly contains an invoice-number label but no inline
+    // value was extracted above.
+    const invoiceNumberLabelOnly =
+      /(?:invoice\s*(?:number|no\.?|#|id)|nr\.?\s*factur\w{0,3}|num[aă]r(?:ul)?\s+factur\w{0,3}|seria\s+(?:si|și|şi)\s+num[aă]rul\s+factur\w{0,3})/i.test(
+        line.text,
+      );
+
+    if (!match?.[1] && invoiceNumberLabelOnly) {
+      for (let offset = 1; offset <= 3 && index + offset < context.lines.length; offset += 1) {
+        const nextLine = context.lines[index + offset];
+        const trimmed = nextLine.text.trim();
+
+        // Stop if we reached another clearly-labelled field rather than the
+        // value belonging to this invoice-number label.
+        if (
+          /\b(?:data|date|scaden|due|cui|cif|vat|tva|iban|subtotal|total|client|customer|buyer|furnizor|supplier|seller)\b/i.test(
+            trimmed,
+          )
+        ) {
+          break;
+        }
+
+        const adjacent = trimmed.match(/^([A-Z0-9][A-Z0-9./_-]{2,40})$/i);
+        if (!adjacent?.[1]) continue;
+
+        const value = adjacent[1];
+        if (looksLikeNonInvoiceIdentifier(value)) continue;
+
+        addCandidate(candidates, {
+          field: "invoiceNumber",
+          value: normalizeInvoiceNumber(value, false),
+          normalizedValue: normalizeInvoiceNumber(value),
+          sourceText: `${line.text} ${nextLine.text}`,
+          lineIndex: index,
+          score:
+            0.86 -
+            offset * 0.04 +
+            lineConfidenceBonus(nextLine) +
+            topRegionBonus(index, context.lines.length, 0.08),
+          method: nextLine.bbox ? "Layout heuristic" : "Regex",
+          reasons: ["Valoare pe linie adiacentă unei etichete explicite de număr factură"],
+        });
+
+        break;
+      }
+    }
+
+    // Table-style invoice headers are common on Romanian invoices:
+    //   "Serie | Numar | Tip | Data emitere | ..."
+    // followed by a data row such as:
+    //   "MS EON 10820828951 estimare 31.01.2021 ..."
+    //
+    // This is structural rather than company-specific: capture one to three
+    // alphabetic series fragments followed by a substantial numeric invoice
+    // number, then concatenate the series fragments as OCR often separates
+    // them into distinct cells/tokens.
+    const serieNumberTableHeader = /\bseri\w{0,2}\b.*\bnum\w{0,5}\b/i.test(line.text);
+
+    if (serieNumberTableHeader) {
+      for (let offset = 1; offset <= 3 && index + offset < context.lines.length; offset += 1) {
+        const dataLine = context.lines[index + offset];
+
+        const tableValue = dataLine.text.match(/(?:^|\s)((?:[A-Z]{1,8}\s+){1,2})(\d{5,20})\b/i);
+
+        if (!tableValue?.[1] || !tableValue?.[2]) continue;
+
+        const series = tableValue[1].replace(/\s+/g, "").toUpperCase();
+        const value = `${series}${tableValue[2]}`;
+
+        if (looksLikeNonInvoiceIdentifier(value)) continue;
+
+        addCandidate(candidates, {
+          field: "invoiceNumber",
+          value: normalizeInvoiceNumber(value, false),
+          normalizedValue: normalizeInvoiceNumber(value),
+          sourceText: `${line.text} ${dataLine.text}`,
+          lineIndex: index,
+          score:
+            0.94 -
+            offset * 0.03 +
+            lineConfidenceBonus(dataLine) +
+            topRegionBonus(index, context.lines.length, 0.08),
+          method: dataLine.bbox ? "Layout heuristic" : "Regex",
+          reasons: ["Rând de date sub antetul Serie + Număr"],
+        });
+
+        break;
       }
     }
 
@@ -319,6 +427,314 @@ export function extractInvoiceNumberCandidates(context: CandidateContext) {
   });
 
   return rankCandidates(candidates, context);
+}
+
+function extractTotalAmountCandidates(context: CandidateContext) {
+  const candidates: FieldCandidate[] = [];
+
+  context.lines.forEach((line, index) => {
+    const normalizedLine = normalizeText(line.text);
+    const labelStrength = totalLabelStrength(normalizedLine);
+    const tokens = extractMonetaryTokenDetails(line.text);
+
+    if (!labelStrength && !shouldConsiderArithmeticTotalLine(context, index, tokens)) return;
+    if (isHardNonTotalAmountLine(normalizedLine)) return;
+
+    if (labelStrength) {
+      addTotalTokenCandidates(candidates, context, {
+        line,
+        lineIndex: index,
+        tokens,
+        labelStrength,
+        relation: "same-line",
+        anchorLineIndex: index,
+      });
+
+      if (labelStrength !== "weak" || tokens.length === 0) {
+        addAdjacentTotalCandidates(candidates, context, index, labelStrength);
+      }
+      addStackedArithmeticTotalCandidates(candidates, context, index, labelStrength);
+    }
+
+    addArithmeticTotalCandidates(candidates, context, line, index, tokens, labelStrength);
+  });
+
+  return rankCandidates(candidates, context);
+}
+
+function addAdjacentTotalCandidates(
+  candidates: FieldCandidate[],
+  context: CandidateContext,
+  labelLineIndex: number,
+  labelStrength: "strong" | "current" | "weak",
+) {
+  const labelLine = normalizeText(context.lines[labelLineIndex]?.text ?? "");
+  const barcodeLabel = /\bcod\s+de\s+bare\b/i.test(labelLine);
+  const before = barcodeLabel ? 1 : labelStrength === "weak" ? 1 : 8;
+  const after = barcodeLabel ? 2 : labelStrength === "weak" ? 3 : 14;
+
+  for (let offset = -before; offset <= after; offset += 1) {
+    if (offset === 0) continue;
+    const lineIndex = labelLineIndex + offset;
+    const line = context.lines[lineIndex];
+    if (!line) continue;
+
+    const normalizedLine = normalizeText(line.text);
+    if (!isPotentialAdjacentTotalValueLine(normalizedLine)) continue;
+    const tokens = extractMonetaryTokenDetails(line.text);
+    if (tokens.length === 0) continue;
+
+    addTotalTokenCandidates(candidates, context, {
+      line,
+      lineIndex,
+      tokens,
+      labelStrength,
+      relation: "adjacent",
+      anchorLineIndex: labelLineIndex,
+    });
+  }
+}
+
+function addStackedArithmeticTotalCandidates(
+  candidates: FieldCandidate[],
+  context: CandidateContext,
+  labelLineIndex: number,
+  labelStrength: "strong" | "current" | "weak",
+) {
+  const start = Math.max(0, labelLineIndex - 8);
+  const end = Math.min(context.lines.length - 1, labelLineIndex + 14);
+  const stack: Array<{ line: CandidateLine; lineIndex: number; token: MonetaryToken }> = [];
+
+  for (let cursor = start; cursor <= end; cursor += 1) {
+    const line = context.lines[cursor];
+    if (!line) continue;
+    const normalizedLine = normalizeText(line.text);
+    if (
+      TOTAL_NON_MONETARY_CONTEXT_PATTERN.test(normalizedLine) ||
+      TOTAL_BALANCE_CONTEXT_PATTERN.test(normalizedLine) ||
+      TOTAL_LINE_ITEM_CONTEXT_PATTERN.test(normalizedLine)
+    ) {
+      continue;
+    }
+    const arithmeticInputLine = TOTAL_TAX_OR_NET_CONTEXT_PATTERN.test(normalizedLine);
+    if (
+      !arithmeticInputLine &&
+      !isPotentialAdjacentTotalValueLine(normalizedLine) &&
+      cursor !== labelLineIndex
+    ) {
+      continue;
+    }
+
+    extractMonetaryTokenDetails(line.text).forEach((token) => {
+      if (!isUsableTotalAmountToken(token, line.text)) return;
+      if (
+        SECONDARY_CURRENCY_CONTEXT_PATTERN.test(line.text) &&
+        hasNearbyDomesticCurrency(context, cursor)
+      ) {
+        return;
+      }
+      if (!token.hasDecimal && !token.hasCurrency && token.value !== 0) return;
+      stack.push({ line, lineIndex: cursor, token });
+    });
+  }
+
+  const pair = findVatLikeAmountPair(stack.map((item) => item.token));
+  if (!pair) return;
+  if (pair.tax === 0) return;
+
+  const observed = stack.some((item) => Math.abs(Math.abs(item.token.value) - pair.total) <= 0.01);
+  const canUseSynthesizedStack =
+    hasNearbyStrongTotalLabel(context, labelLineIndex) &&
+    stack.length >= 2 &&
+    stack.length <= 4 &&
+    stack.every(({ line, lineIndex }) => {
+      const normalizedLine = normalizeText(line.text);
+      return (
+        lineIndex === labelLineIndex ||
+        isCompactAmountLine(normalizedLine) ||
+        TOTAL_TAX_OR_NET_CONTEXT_PATTERN.test(normalizedLine)
+      );
+    });
+  if (!observed && !canUseSynthesizedStack) return;
+  const source = stack
+    .filter((item) =>
+      [pair.net, pair.tax, pair.total].some(
+        (value) => Math.abs(Math.abs(item.token.value) - value) <= 0.01,
+      ),
+    )
+    .map((item) => item.line.text)
+    .filter((line, index, lines) => lines.indexOf(line) === index)
+    .join(" | ");
+
+  let score =
+    0.72 + lowerRegionBonus(labelLineIndex, context.lines.length, 0.08) + (observed ? 0.08 : 0);
+  if (labelStrength === "current") score += 0.14;
+  else if (labelStrength === "strong") score += 0.12;
+  else score += 0.08;
+  if (!observed && canUseSynthesizedStack) score += 0.12;
+  if (hasNearbyTaxTableContext(context, labelLineIndex)) score += 0.04;
+
+  addCandidate(candidates, {
+    field: "totalAmount",
+    value: pair.total,
+    normalizedValue: pair.total,
+    sourceText: source || context.lines[labelLineIndex]?.text || "",
+    lineIndex: labelLineIndex,
+    score,
+    method: context.lines[labelLineIndex]?.bbox ? "Layout heuristic" : "Regex",
+    reasons: ["Total reconstruit din stivă OCR net + TVA"],
+  });
+}
+
+function addTotalTokenCandidates(
+  candidates: FieldCandidate[],
+  context: CandidateContext,
+  {
+    line,
+    lineIndex,
+    tokens,
+    labelStrength,
+    relation,
+    anchorLineIndex,
+  }: {
+    line: CandidateLine;
+    lineIndex: number;
+    tokens: MonetaryToken[];
+    labelStrength: "strong" | "current" | "weak";
+    relation: "same-line" | "adjacent";
+    anchorLineIndex: number;
+  },
+) {
+  const normalizedLine = normalizeText(line.text);
+  const label = findTotalLabelPosition(line.text);
+  const localMaximum = Math.max(...tokens.map((token) => Math.abs(token.value)), 0);
+
+  tokens.forEach((token, tokenIndex) => {
+    if (!isUsableTotalAmountToken(token, line.text)) return;
+    if (
+      SECONDARY_CURRENCY_CONTEXT_PATTERN.test(line.text) &&
+      hasNearbyDomesticCurrency(context, lineIndex)
+    ) {
+      return;
+    }
+    let score =
+      0.4 + lowerRegionBonus(lineIndex, context.lines.length, 0.1) + lineConfidenceBonus(line);
+
+    if (labelStrength === "current") score += 0.3;
+    else if (labelStrength === "strong") score += 0.24;
+    else score += 0.06;
+
+    if (relation === "same-line") {
+      if (label && token.index >= label.endIndex) score += 0.08;
+      if (label && token.endIndex <= label.index) score -= 0.18;
+      if (tokens.length > 1 && labelStrength === "weak") score -= 0.08;
+    } else {
+      const distance = Math.abs(lineIndex - anchorLineIndex);
+      score += 0.14 - Math.min(distance, 10) * 0.02;
+      if (lineIndex > anchorLineIndex) score += 0.06;
+      if (isCompactAmountLine(line.text)) score += 0.08;
+      if (tokens.length > 1 && Math.abs(token.value) === localMaximum) score += 0.06;
+      const nearbyLargerAmount = hasNearbyLargerTotalAmount(context, anchorLineIndex, token.value);
+      if (nearbyLargerAmount) score -= 0.28;
+      else score += 0.03;
+    }
+
+    if (TOTAL_CURRENT_INVOICE_PATTERN.test(normalizedLine)) score += 0.12;
+    if (token.hasCurrency) score += 0.06;
+    if (token.hasDecimal) score += 0.04;
+    else score -= 0.05;
+    if (token.value === 0) score -= 0.16;
+    if (isSuspiciousBareGroupedAmount(token)) score -= 0.48;
+    if (
+      SECONDARY_CURRENCY_CONTEXT_PATTERN.test(line.text) &&
+      hasNearbyDomesticCurrency(context, lineIndex)
+    ) {
+      score -= 0.36;
+    }
+    if (TOTAL_BALANCE_CONTEXT_PATTERN.test(normalizedLine)) score -= 0.26;
+    if (TOTAL_TAX_OR_NET_CONTEXT_PATTERN.test(normalizedLine)) score -= 0.32;
+    if (
+      TOTAL_LINE_ITEM_CONTEXT_PATTERN.test(normalizedLine) &&
+      !TOTAL_WEAK_LABEL_PATTERN.test(normalizedLine)
+    ) {
+      score -= 0.2;
+    }
+
+    const taxPair = findVatLikeAmountPair(tokens);
+    if (taxPair) {
+      const absoluteValue = Math.abs(token.value);
+      const componentPenaltyMultiplier =
+        labelStrength === "weak" ? 1 : relation === "adjacent" ? 0.86 : 0.68;
+      if (Math.abs(absoluteValue - taxPair.tax) <= 0.01) {
+        score -= 0.42 * componentPenaltyMultiplier;
+      }
+      if (Math.abs(absoluteValue - taxPair.net) <= 0.01) {
+        score -= 0.32 * componentPenaltyMultiplier;
+      }
+      if (Math.abs(absoluteValue - taxPair.total) <= 0.01) score += 0.05;
+    }
+
+    addCandidate(candidates, {
+      field: "totalAmount",
+      value: roundAmount(token.value),
+      normalizedValue: roundAmount(token.value),
+      sourceText: line.text,
+      lineIndex,
+      score,
+      method: line.bbox ? "Layout heuristic" : "Regex",
+      reasons: [
+        relation === "adjacent"
+          ? "Valoare monetară pe o linie apropiată unui total explicit"
+          : "Valoare monetară lângă eticheta de total",
+      ],
+    });
+  });
+}
+
+function addArithmeticTotalCandidates(
+  candidates: FieldCandidate[],
+  context: CandidateContext,
+  line: CandidateLine,
+  lineIndex: number,
+  tokens: MonetaryToken[],
+  labelStrength: "strong" | "current" | "weak" | null,
+) {
+  if (tokens.length < 2) return;
+  const pair = findVatLikeAmountPair(tokens);
+  if (!pair) return;
+
+  const normalizedLine = normalizeText(line.text);
+  const nearbyStrongLabel = hasNearbyStrongTotalLabel(context, lineIndex);
+  const hasTotalLabel = Boolean(labelStrength);
+  const hasTaxTableContext = hasNearbyTaxTableContext(context, lineIndex);
+  if (!hasTotalLabel && TOTAL_LINE_ITEM_CONTEXT_PATTERN.test(normalizedLine)) return;
+  if (!hasTotalLabel && !isCompactAmountLine(normalizedLine)) return;
+  const canSynthesize = hasTotalLabel || nearbyStrongLabel;
+
+  if (!canSynthesize) return;
+
+  let score =
+    0.68 + lowerRegionBonus(lineIndex, context.lines.length, 0.08) + lineConfidenceBonus(line);
+
+  if (labelStrength === "current") score += 0.14;
+  else if (labelStrength === "strong") score += 0.12;
+  else if (labelStrength === "weak") score += 0.16;
+  if (nearbyStrongLabel) score += 0.08;
+  if (hasTaxTableContext) score += 0.04;
+  if (!hasTotalLabel && hasRepeatedAmountToken(tokens)) score += 0.26;
+  if (TOTAL_TAX_OR_NET_CONTEXT_PATTERN.test(normalizedLine)) score -= 0.08;
+  if (TOTAL_LINE_ITEM_CONTEXT_PATTERN.test(normalizedLine) && !hasTotalLabel) score -= 0.12;
+
+  addCandidate(candidates, {
+    field: "totalAmount",
+    value: pair.total,
+    normalizedValue: pair.total,
+    sourceText: line.text,
+    lineIndex,
+    score,
+    method: line.bbox ? "Layout heuristic" : "Regex",
+    reasons: ["Total reconstruit din valoare netă + TVA"],
+  });
 }
 
 export function extractDateCandidates(context: CandidateContext) {
@@ -456,17 +872,41 @@ export function extractCurrencyCandidates(context: CandidateContext) {
   return rankCandidates(candidates, context);
 }
 
+// Lines mentioning one of these are essentially never stating the grand
+// total, even when a total-ish label and a monetary-shaped number also
+// appear on them -- a discount line, a unit price, a previous balance
+// carried forward, an exchange rate, a reference/order number, a CUI, a
+// bank account, a phone number. Guards totalAmount specifically (subtotal
+// and vatAmount already have their own narrower exclusions).
+const NON_TOTAL_CONTEXT_PATTERN =
+  /\b(discount|reducere|pret\s*unitar|unit\s*price|cantitate|qty|quantity|achitat|incasat|plat[aă]\s+efectuat[aă]|paid\s+amount|sold\s+anterior|sold\s+precedent|previous\s+balance|old\s+balance|curs\s+valutar|curs\s+de\s+schimb|exchange\s+rate|termen\s+de\s+plat[aă]|modalitate(?:a)?\s+de\s+plat[aă]|comand[aă]|comenzii|contract|aviz|referin[tţ][aă]|cui|cif|cod\s+fiscal|iban|cont(?:ul)?\s*bancar|telefon|tel\.?|fax)\b/i;
+
+const TOTAL_STRONG_LABEL_PATTERN =
+  /\b(?:amount[\s_]*due|payable\s+amount|invoice\s+total|current\s+invoice\s+total|total\s+due|balance\s+due|grand\s+total|total\s+general|total\s+payment|total\s+plata|total\s+de\s+plata|tal\s+de\s+plata|de\s+plata|total\s+factur\w*\s+curen\w*)\b/i;
+const TOTAL_CURRENT_INVOICE_PATTERN =
+  /\b(?:total\s+factur\w*\s+curen\w*|factur\w*\s+curen\w*\s+(?:cu\s+)?tva|cod\s+de\s+bare\s+pentru\s+factur\w*\s+curen\w*|pentru\s+factur\w*\s+curen\w*)\b/i;
+const TOTAL_WEAK_LABEL_PATTERN = /\btotal\b/i;
+const TOTAL_BALANCE_CONTEXT_PATTERN =
+  /\b(?:sold\s+total|soldul?\s+(?:in\s+)?valoare|sold\s+precedent|sold\s+anterior|facturi\s+neachitate|plati\s+in\s+avans|rest\s+plata|old\s+balance|previous\s+balance)\b/i;
+const TOTAL_NON_MONETARY_CONTEXT_PATTERN =
+  /\b(?:puncte|points|curs(?:ul)?\b|exchange\s+rate|rata\s+\d|unicredit\s*\+|termen\s+de\s+plata|modalitate(?:a)?\s+de\s+plata|plata\s+se\s+va\s+efectua|data\s+scadenta|scadenta|cod\s+client|cod\s+de\s+bare\s+pentru\s+sold|capital\s+social|operator\s+de\s+date|cui|cif|cod\s+fiscal|cod\s+tva|iban|cont(?:ul)?\s*bancar|banca|telefon|tel\.?|fax|buletinul|cartea\s+de\s+identitate|b\.?\s*i\.?\s*\/?\s*c\.?\s*i\.?|seria|serie\s+motor|serie|motor|vin|inmatriculare|referinta|recapitulatie|eliberat|spclep|art\.?|alin\.?|legea|codul\s+fiscal|contract\s+nr|nr\.?\s+contract)\b/i;
+const TOTAL_TAX_OR_NET_CONTEXT_PATTERN =
+  /\b(?:sub[\s_]*total|total\s+fara|fara\s+tva|tax\s+exclusive|net\s+amount|baza\s+(?:de\s+calcul\s+)?tva|baza\s+de\s+impozitare|total\s+tva|total\s+tax|vat\s+amount|tax\s+amount|valoare\s+tva|valoarea\s+tva|cota\s+tva|tva\s*\(?cota)\b/i;
+const TOTAL_LINE_ITEM_CONTEXT_PATTERN =
+  /\b(?:pret\s*unitar|unit\s*price|cantitate|qty|quantity|discount|reducere|achitat|incasat|platit|paid\s+amount|produse\s+si\s+servicii|denumirea\s+produselor|serviciu|servicii|produs|produse|description|consultanta|manopera|piese|buc|penalizari|taxa)\b/i;
+const SECONDARY_CURRENCY_CONTEXT_PATTERN = /\b(?:HUF|BGN|PLN|CZK|CHF|TRY|UAH|SEK|NOK|DKK)\b/i;
+
 export function extractAmountCandidates(
   context: CandidateContext,
   field: "subtotal" | "vatAmount" | "totalAmount",
 ) {
+  if (field === "totalAmount") return extractTotalAmountCandidates(context);
+
   const candidates: FieldCandidate[] = [];
   const labels = {
     subtotal:
       /\b(sub[\s_]*total|net\s+amount|tax\s+exclusive|valoare\s+f[aă]r[aă]\s+tva|baza\s+f[aă]r[aă]\s+tva)\b/i,
     vatAmount: /\b(vat\s+amount|tax\s+amount|gst|vat|tva|tax)\b/i,
-    totalAmount:
-      /\b(amount[\s_]*due|total\s+due|balance\s+due|grand\s+total|total\s+de\s+plat[aă]|total)\b/i,
   };
 
   context.lines.forEach((line, index) => {
@@ -478,10 +918,6 @@ export function extractAmountCandidates(
     ) {
       return;
     }
-    if (field === "totalAmount" && /\b(sub[\s_]*total|vat|gst|tax|tva)\b/i.test(normalizedLine)) {
-      return;
-    }
-
     let amounts = extractMonetaryTokens(line.text);
     let sourceLineIndex = index;
     let sourceLineText = line.text;
@@ -519,14 +955,6 @@ export function extractAmountCandidates(
 
     amounts.forEach((amount, amountIndex) => {
       let score = 0.68 + lowerRegionBonus(index, context.lines.length, 0.1);
-      if (
-        field === "totalAmount" &&
-        /\b(amount[\s_]*due|grand\s+total|total\s+due|balance\s+due|total\s+de\s+plat[aă])\b/i.test(
-          normalizedLine,
-        )
-      ) {
-        score += 0.2;
-      }
       if (
         field === "subtotal" &&
         /\b(sub[\s_]*total|net\s+amount|tax\s+exclusive)\b/i.test(normalizedLine)
@@ -699,6 +1127,11 @@ export function normalizeTaxIdentifier(value: string): string {
 
   if (prefix) {
     tail = tail.replace(/O/g, "0");
+
+    // Romanian fiscal identifiers are numeric values and should not carry
+    // padding zeroes after the RO prefix. OCR occasionally produces
+    // RO06724860 for RO6724860.
+    tail = tail.replace(/^0+(?=\d)/, "");
   }
 
   if (!/^\d+$/.test(tail)) return "";
@@ -943,39 +1376,139 @@ function extractTaxIdentifierCandidates(
   field: "supplierCui" | "customerCui",
 ) {
   const found: FieldCandidate[] = [];
+
+  const supplierContextPattern =
+    /\b(?:supplier|seller|vendor|furnizor|emitent|prestator|societate|sediul\s+central|capital\s+social|nr\.?\s*reg\.?\s*com|registrul\s+comertului)\b/i;
+
+  const customerContextPattern =
+    /\b(?:customer|client|buyer|bill[\s_-]*to|cumparator|cumpărător|beneficiar|date\s+client|datele\s+clientului|destinatar)\b/i;
+
+  const hardNoisePattern =
+    /\b(?:iban|swift|bic|cont(?:ul)?|telefon|phone|fax|cod\s+bare|barcode|contract|comanda|order)\b/i;
+
+  const addTaxCandidate = (
+    rawValue: string,
+    sourceText: string,
+    lineIndex: number,
+    baseScore: number,
+    method: "Regex" | "Layout heuristic",
+  ) => {
+    const value = normalizeTaxIdentifier(rawValue);
+    if (!value) return;
+
+    const contextText = sourceText.toLowerCase();
+    const supplierCue = supplierContextPattern.test(contextText);
+    const customerCue = customerContextPattern.test(contextText);
+    const noisy = hardNoisePattern.test(contextText);
+
+    let roleBonus = 0;
+
+    if (field === "supplierCui") {
+      if (supplierCue) roleBonus += 0.16;
+      if (customerCue) roleBonus -= 0.13;
+    } else {
+      if (customerCue) roleBonus += 0.16;
+      if (supplierCue) roleBonus -= 0.13;
+    }
+
+    // Explicit RO evidence is more informative than the same bare digits.
+    // We do NOT invent RO when it was never seen.
+    const prefixBonus = value.startsWith("RO") ? 0.11 : 0;
+
+    // Fiscal identifiers near an explicit fiscal label remain strong even
+    // when their company-role wording is absent.
+    const fiscalContextBonus =
+      /\b(?:cui|cif|c\.?\s*[ui1l]+\.?\s*f?|cod\s+(?:unic|fiscal|de\s+inregistrare)|tva|vat)\b/i.test(
+        contextText,
+      )
+        ? 0.06
+        : 0;
+
+    addCandidate(found, {
+      field,
+      value,
+      // Same underlying Romanian fiscal number should dedupe with/without RO,
+      // while candidate.value preserves the richer representation.
+      normalizedValue: value.replace(/^RO(?=\d)/, ""),
+      sourceText,
+      lineIndex,
+      score:
+        baseScore +
+        roleBonus +
+        prefixBonus +
+        fiscalContextBonus -
+        (noisy ? 0.08 : 0) +
+        (field === "supplierCui" ? topRegionBonus(lineIndex, context.lines.length, 0.025) : 0),
+      method,
+      reasons: [
+        value.startsWith("RO")
+          ? "Identificator fiscal cu prefix RO observat explicit"
+          : "Identificator fiscal numeric",
+        supplierCue
+          ? "Context semantic de furnizor"
+          : customerCue
+            ? "Context semantic de client"
+            : "Context fiscal general",
+      ],
+    });
+  };
+
   context.lines.forEach((line, index) => {
-    // Value charset tolerates embedded spaces/dots/dashes (not just a
-    // leading "RO ") so OCR word-splitting mid tax-ID (e.g. "24041 105"
-    // from two separate OCR boxes) isn't truncated at the space before
-    // normalizeTaxIdentifier gets a chance to compact it back together.
-    //
-    // CUI/CIF/CLF each get \.? between every letter because real scanned
-    // Romanian invoices routinely OCR the abbreviation with a period after
-    // each letter ("C.I.F.", "C.U.I.", "C.LF." when I is misread as L) --
-    // without this, the label never matches at all and extraction silently
-    // falls back to whatever (often RO-prefix-less) proposal the model
-    // produced instead. Confirmed against real OCR output, not a guess:
-    // e.g. "C.LF.: RO 14600820" was previously invisible to this regex.
+    const method = line.bbox ? "Layout heuristic" : "Regex";
+
+    // Explicit labels. Tolerates common OCR substitutions:
+    // CIF -> C1F / CLF, CUI -> CUL / CULL etc.
     for (const match of line.text.matchAll(
-      /\b(?:GSTIN|C\.?\s*U\.?\s*I\.?|C\.?\s*I\.?\s*F\.?|C\.?\s*L\.?\s*F\.?|COD\s+FISCAL|COD\s+TVA|VAT\s*(?:ID|CODE|NO\.?|NUMBER)|TAX\s*(?:ID|NO\.?|NUMBER))\s*[:#;.-]?\s*([A-Z0-9][A-Z0-9 .:/_-]{4,30})/gi,
+      /\b(?:GSTIN|C\.?\s*U\.?\s*(?:I|1|L|LL)\.?|C\.?\s*(?:I|1|L)\.?\s*F\.?|COD\s+(?:UNIC\s+DE\s+INREG(?:ISTRARE)?|FISCAL|TVA)|COD\s+DE\s+INREGISTRARE\s+IN\s+SCOPURI\s+(?:DE\s+)?TVA|VAT\s*(?:ID|CODE|NO\.?|NUMBER)|TAX\s*(?:ID|NO\.?|NUMBER))\s*[:#;.=|-]?\s*([A-Z0-9][A-Z0-9 .:/_-]{4,30})/gi,
     )) {
-      const value = normalizeTaxIdentifier(match[1]);
-      if (!value) continue;
-      addCandidate(found, {
-        field,
-        value,
-        normalizedValue: value.replace(/^RO(?=\d)/, ""),
-        sourceText: line.text,
-        lineIndex: index,
-        score:
-          0.78 + (field === "supplierCui" ? topRegionBonus(index, context.lines.length, 0.08) : 0),
-        method: line.bbox ? "Layout heuristic" : "Regex",
-      });
+      addTaxCandidate(match[1], line.text, index, 0.8, method);
+    }
+
+    // OCR sometimes destroys the label but preserves a highly distinctive
+    // Romanian RO fiscal identifier. Capture it as document evidence.
+    // normalizeTaxIdentifier rejects non-numeric tails, so IBANs do not pass.
+    for (const match of line.text.matchAll(/\bR(?:O|0)\s*[0-9O](?:[\s._-]*[0-9O]){4,11}\b/gi)) {
+      addTaxCandidate(match[0], line.text, index, 0.68, method);
+    }
+
+    // Compact OCR labels such as C1FRO6724860 / CULLRO11071295.
+    const compact = line.text.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    for (const match of compact.matchAll(
+      /(?:C1F|CIF|CLF|CUI|CUL|CULL|CODFISCAL|CODTVA)(RO\d{5,12}|\d{5,12})/g,
+    )) {
+      addTaxCandidate(match[1], line.text, index, 0.76, method);
     }
   });
+
   const ranked = rankCandidates(found, context);
-  if (field === "customerCui" && ranked.length > 1) return ranked.slice(1);
-  return field === "customerCui" ? [] : ranked;
+
+  // Preserve distinct fiscal entities. Do not allow the same digits in
+  // RO-prefixed/unprefixed form to consume multiple ranking slots.
+  const distinct: FieldCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const item of ranked) {
+    const key = normalizeTaxIdentifier(String(item.value)).replace(/^RO(?=\d)/, "");
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    distinct.push(item);
+  }
+
+  if (!distinct.length) return [];
+
+  if (field === "supplierCui") {
+    return distinct;
+  }
+
+  // Customer selection should not blindly be "the second regex hit".
+  // Role-aware scores above normally decide it. If scores are effectively
+  // tied, keeping the alternate entity first still provides a useful
+  // independent signal for the hybrid joint reconciliation.
+  if (distinct.length >= 2 && Math.abs(distinct[0].score - distinct[1].score) < 0.08) {
+    return [distinct[1], distinct[0], ...distinct.slice(2)];
+  }
+
+  return distinct;
 }
 
 function improveAmountConsistency(
@@ -1002,6 +1535,8 @@ function improveAmountConsistency(
     }
   }
   if (!best) return;
+  const strongestTotalScore = Math.max(...totals.map((total) => total.score));
+  if (best.total.score < strongestTotalScore - 0.02) return;
   fields.subtotal = resultFromCandidate(best.subtotal, candidates.subtotal, context);
   fields.vatAmount = resultFromCandidate(best.tax, candidates.vatAmount, context);
   fields.totalAmount = resultFromCandidate(best.total, candidates.totalAmount, context);
@@ -1042,18 +1577,238 @@ function resultFromCandidate(
   };
 }
 
+function totalLabelStrength(line: string): "strong" | "current" | "weak" | null {
+  if (TOTAL_CURRENT_INVOICE_PATTERN.test(line)) return "current";
+  if (TOTAL_STRONG_LABEL_PATTERN.test(line)) return "strong";
+  if (TOTAL_WEAK_LABEL_PATTERN.test(line)) return "weak";
+  return null;
+}
+
+function shouldConsiderArithmeticTotalLine(
+  context: CandidateContext,
+  index: number,
+  tokens: MonetaryToken[],
+) {
+  if (tokens.length < 2) return false;
+  const line = normalizeText(context.lines[index]?.text ?? "");
+  if (isHardNonTotalAmountLine(line)) return false;
+  return (
+    hasNearbyStrongTotalLabel(context, index) &&
+    (TOTAL_WEAK_LABEL_PATTERN.test(line) || isCompactAmountLine(line))
+  );
+}
+
+function isHardNonTotalAmountLine(line: string) {
+  if (!line) return false;
+  if (TOTAL_CURRENT_INVOICE_PATTERN.test(line) && !/\bfara\s+tva\b/i.test(line)) return false;
+  return (
+    TOTAL_NON_MONETARY_CONTEXT_PATTERN.test(line) ||
+    TOTAL_BALANCE_CONTEXT_PATTERN.test(line) ||
+    TOTAL_TAX_OR_NET_CONTEXT_PATTERN.test(line)
+  );
+}
+
+function isPotentialAdjacentTotalValueLine(line: string) {
+  if (!line) return false;
+  if (isHardNonTotalAmountLine(line)) return false;
+  if (TOTAL_LINE_ITEM_CONTEXT_PATTERN.test(line) && !TOTAL_CURRENT_INVOICE_PATTERN.test(line)) {
+    return false;
+  }
+  const wordCount = line.match(/[a-z0-9]+/gi)?.length ?? 0;
+  return (
+    isCompactAmountLine(line) ||
+    /\b(?:semnatur|expedierea|primire)\b/i.test(line) ||
+    (/\b(?:lei|ron|eur|usd|gbp)\b/i.test(line) && wordCount <= 10)
+  );
+}
+
+function findTotalLabelPosition(text: string) {
+  const match =
+    text.match(
+      /\b(?:amount[\s_]*due|payable\s+amount|invoice\s+total|current\s+invoice\s+total|total\s+due|balance\s+due|grand\s+total|total\s+general|total\s+payment|total\s+plata|total\s+de\s+plat[aă]|tal\s+de\s+plat[aă]|de\s+plat[aă]|total\s+factur[aă]\w*\s+curen\w*|total)\b/i,
+    ) ?? text.match(/\bfactur[aă]\w*\s+curen\w*/i);
+  if (!match || match.index === undefined) return null;
+  return { index: match.index, endIndex: match.index + match[0].length };
+}
+
+function isUsableTotalAmountToken(token: MonetaryToken, sourceText: string) {
+  if (!Number.isFinite(token.value)) return false;
+  if (Math.abs(token.value) >= 1_000_000_000) return false;
+  if (isSuspiciousBareGroupedAmount(token)) return false;
+  const around = sourceText.slice(Math.max(0, token.index - 20), token.endIndex + 20);
+  if (/\d{1,2}[./-]\d{1,2}[./-]\d{2,4}/.test(around)) return false;
+  if (/\d{1,2}:\d{2}(?::\d{2})?/.test(around)) return false;
+  if (/\b(?:art\.?|alin\.?|legea|codul\s+fiscal|nr\.?\s+contract|cod\s+client)\b/i.test(around)) {
+    return false;
+  }
+  if (!token.hasDecimal && !token.hasCurrency && Math.abs(token.value) < 2) return false;
+  return true;
+}
+
+function isCompactAmountLine(text: string) {
+  const withoutAmounts = text
+    .replace(AMOUNT_PATTERN, "")
+    .replace(/\b(?:RON|LEI|LEU|EUR|USD|GBP)\b/gi, "")
+    .replace(/[|:;,.()\-[\]{}_/\\\s]/g, "");
+  return withoutAmounts.length <= 18;
+}
+
+function isSuspiciousBareGroupedAmount(token: MonetaryToken) {
+  return (
+    token.hasThousandsSeparator &&
+    !token.hasDecimal &&
+    !token.hasCurrency &&
+    Math.abs(token.value) >= 50_000
+  );
+}
+
+function findVatLikeAmountPair(tokens: MonetaryToken[]) {
+  const values = Array.from(
+    new Set(
+      tokens
+        .filter((token) => token.hasDecimal || token.value === 0)
+        .map((token) => roundAmount(Math.abs(token.value)))
+        .filter((value) => Number.isFinite(value) && value >= 0),
+    ),
+  ).sort((left, right) => right - left);
+
+  for (let leftIndex = 0; leftIndex < values.length; leftIndex += 1) {
+    for (let rightIndex = leftIndex + 1; rightIndex < values.length; rightIndex += 1) {
+      const larger = values[leftIndex];
+      const smaller = values[rightIndex];
+      if (larger <= 0) continue;
+      const ratio = smaller / larger;
+      if (smaller !== 0 && (ratio < 0.01 || ratio > 0.3)) continue;
+      const observedTotal = values.find(
+        (value) => Math.abs(value - roundAmount(larger + smaller)) <= 0.01,
+      );
+      if (observedTotal !== undefined) return { net: larger, tax: smaller, total: observedTotal };
+    }
+  }
+
+  for (let leftIndex = 0; leftIndex < values.length; leftIndex += 1) {
+    for (let rightIndex = leftIndex + 1; rightIndex < values.length; rightIndex += 1) {
+      const net = values[leftIndex];
+      const tax = values[rightIndex];
+      if (net <= 0) continue;
+      const ratio = tax / net;
+      const looksLikeTax = tax === 0 || (ratio >= 0.01 && ratio <= 0.3);
+      if (!looksLikeTax) continue;
+      return { net, tax, total: roundAmount(net + tax) };
+    }
+  }
+  return null;
+}
+
+function hasNearbyStrongTotalLabel(context: CandidateContext, index: number) {
+  const start = Math.max(0, index - 8);
+  const end = Math.min(context.lines.length - 1, index + 14);
+  for (let cursor = start; cursor <= end; cursor += 1) {
+    const line = normalizeText(context.lines[cursor]?.text ?? "");
+    if (TOTAL_CURRENT_INVOICE_PATTERN.test(line) || TOTAL_STRONG_LABEL_PATTERN.test(line)) {
+      if (!isHardNonTotalAmountLine(line)) return true;
+    }
+  }
+  return false;
+}
+
+function hasNearbyLargerTotalAmount(
+  context: CandidateContext,
+  anchorIndex: number,
+  currentValue: number,
+) {
+  const value = Math.abs(currentValue);
+  if (value <= 0) return false;
+  const start = Math.max(0, anchorIndex - 8);
+  const end = Math.min(context.lines.length - 1, anchorIndex + 14);
+  for (let cursor = start; cursor <= end; cursor += 1) {
+    const line = context.lines[cursor];
+    if (!line) continue;
+    const normalizedLine = normalizeText(line.text);
+    if (isHardNonTotalAmountLine(normalizedLine)) continue;
+    const larger = extractMonetaryTokenDetails(line.text).some(
+      (token) =>
+        !isSuspiciousBareGroupedAmount(token) &&
+        Math.abs(token.value) > value * 1.18 &&
+        Math.abs(token.value) > value + 5,
+    );
+    if (larger) return true;
+  }
+  return false;
+}
+
+function hasNearbyDomesticCurrency(context: CandidateContext, index: number) {
+  const start = Math.max(0, index - 4);
+  const end = Math.min(context.lines.length - 1, index + 4);
+  for (let cursor = start; cursor <= end; cursor += 1) {
+    if (/\b(?:LEI|RON)\b/i.test(context.lines[cursor]?.text ?? "")) return true;
+  }
+  return false;
+}
+
+function hasRepeatedAmountToken(tokens: MonetaryToken[]) {
+  const counts = new Map<number, number>();
+  tokens.forEach((token) => {
+    const value = roundAmount(Math.abs(token.value));
+    counts.set(value, (counts.get(value) ?? 0) + 1);
+  });
+  return Array.from(counts.values()).some((count) => count >= 2);
+}
+
+function hasNearbyTaxTableContext(context: CandidateContext, index: number) {
+  const start = Math.max(0, index - 6);
+  const end = Math.min(context.lines.length - 1, index + 3);
+  for (let cursor = start; cursor <= end; cursor += 1) {
+    const line = normalizeText(context.lines[cursor]?.text ?? "");
+    if (
+      /\b(?:tva|vat|tax|valoarea|valoare\s+tva|fara\s+tva|pret\s+unitar|cantitate)\b/i.test(line)
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function roundAmount(value: number) {
+  return Math.round(value * 100) / 100;
+}
+
 function extractMonetaryTokens(text: string) {
+  return extractMonetaryTokenDetails(text).map((token) => token.value);
+}
+
+function extractMonetaryTokenDetails(text: string): MonetaryToken[] {
   return Array.from(text.matchAll(AMOUNT_PATTERN))
     .filter((match) => {
       const raw = match[0];
-      const tail = text.slice((match.index ?? 0) + raw.length, (match.index ?? 0) + raw.length + 2);
+      const index = match.index ?? 0;
+      const endIndex = index + raw.length;
+      const before = text[index - 1] ?? "";
+      const after = text[endIndex] ?? "";
+      if (/[A-Za-z0-9.,:/-]/.test(before) || /[A-Za-z0-9.,:/-]/.test(after)) return false;
+      const tail = text.slice(endIndex, endIndex + 2);
       if (tail.includes("%")) return false;
       if (/^\d{4}$/.test(raw.trim())) return false;
       if (/\d{1,2}[./-]\d{1,2}[./-]\d{2,4}/.test(raw)) return false;
       return true;
     })
-    .map((match) => normalizeAmount(match[0]))
-    .filter((value): value is number => value !== null && Math.abs(value) < 1_000_000_000);
+    .map((match) => {
+      const raw = match[0];
+      const value = normalizeAmount(raw);
+      if (value === null || Math.abs(value) >= 1_000_000_000) return null;
+      const currencyless = raw.replace(/\b(RON|LEI|LEU|EUR|USD|GBP)\b/gi, "").replace(/[$€£]/g, "");
+      const numeric = currencyless.replace(/[\s'’]/g, "");
+      return {
+        raw,
+        value: roundAmount(value),
+        index: match.index ?? 0,
+        endIndex: (match.index ?? 0) + raw.length,
+        hasCurrency: /[$€£]|\b(?:RON|LEI|LEU|EUR|USD|GBP)\b/i.test(raw),
+        hasDecimal: /[,.]\d{1,2}\s*$/i.test(numeric),
+        hasThousandsSeparator: /\d{1,3}(?:[\s.,']\d{3})+/.test(currencyless),
+      };
+    })
+    .filter((token): token is MonetaryToken => token !== null);
 }
 
 function addCandidate(candidates: FieldCandidate[], candidate: Omit<FieldCandidate, "confidence">) {
@@ -1070,7 +1825,7 @@ function addCandidate(candidates: FieldCandidate[], candidate: Omit<FieldCandida
 function rankCandidates(candidates: FieldCandidate[], context: CandidateContext) {
   return candidates
     .map((candidate) => ({ ...candidate, confidence: scoreCandidate(candidate, context) }))
-    .sort((left, right) => right.confidence - left.confidence);
+    .sort((left, right) => right.confidence - left.confidence || right.score - left.score);
 }
 
 function isCandidateSemanticallyValid(field: CandidateFieldKey, candidate: FieldCandidate) {

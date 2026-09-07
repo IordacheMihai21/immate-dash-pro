@@ -887,13 +887,68 @@ def extract_fields_from_text(
         "baza fara tva",
     ]
     vat_labels = ["tax amount", "vat amount", "gst", "vat", "tva", "tax"]
-    total_labels = [
+    # Ordered strongest-first: extract_amount_by_labels tries labels in
+    # order and stops at the first one that finds an amount, so a bare,
+    # unqualified "total" (a table header, a column footer -- much weaker
+    # evidence than an explicit "total de plata"/"grand total") is only
+    # ever used as a last resort.
+    total_labels_strong = [
         "total de plata",
         "total de plată",
         "grand total",
         "total due",
         "amount due",
-        "total",
+        "balance due",
+        "total general",
+        "de plata",
+        "de plată",
+    ]
+    total_labels = total_labels_strong + ["total"]
+    # A line mentioning one of these is essentially never the grand total,
+    # even if a total-ish label and a monetary-shaped number both appear on
+    # it: a discount, a unit price, a previous balance carried forward, an
+    # exchange rate, a reference/order number, a CUI, a bank account, a
+    # phone number. Mirrors src/lib/invoiceCandidateEngine.ts's
+    # NON_TOTAL_CONTEXT_PATTERN -- keep the two in sync.
+    non_total_context_terms = [
+        "discount",
+        "reducere",
+        "pret unitar",
+        "unit price",
+        "cantitate",
+        "qty",
+        "quantity",
+        "achitat",
+        "incasat",
+        "plata efectuata",
+        "plată efectuată",
+        "paid amount",
+        "sold anterior",
+        "sold precedent",
+        "previous balance",
+        "old balance",
+        "curs valutar",
+        "curs de schimb",
+        "exchange rate",
+        "termen de plata",
+        "termen de plată",
+        "modalitate de plata",
+        "modalitate de plată",
+        "comanda",
+        "comandă",
+        "comenzii",
+        "contract",
+        "aviz",
+        "referinta",
+        "referință",
+        "cui",
+        "cif",
+        "cod fiscal",
+        "iban",
+        "cont bancar",
+        "telefon",
+        "tel.",
+        "fax",
     ]
     fields["subtotal"] = extract_amount_by_labels(
         lines,
@@ -911,9 +966,9 @@ def extract_fields_from_text(
     fields["totalAmount"] = extract_amount_by_labels(
         lines,
         total_labels,
-        excluded=["subtotal", "sub_total", "tax", "vat", "gst", "tva"],
+        excluded=["subtotal", "sub_total", "tax", "vat", "gst", "tva"] + non_total_context_terms,
         prefer_last=True,
-        stop_labels=subtotal_labels + vat_labels,
+        stop_labels=subtotal_labels + vat_labels + non_total_context_terms,
     )
     fields["currency"] = extract_currency(searchable_text)
     repair_lost_amount_separators(fields)
@@ -1100,6 +1155,11 @@ def normalize_tax_identifier(value: str) -> str:
     if prefix:
         tail = tail.replace("O", "0")
 
+        # Romanian fiscal identifiers are numeric values and should not carry
+        # padding zeroes after the RO prefix. OCR occasionally produces
+        # RO06724860 for RO6724860.
+        tail = tail.lstrip("0") or "0"
+
     if not tail.isdigit():
         return ""
 
@@ -1117,8 +1177,12 @@ def normalize_tax_identifier(value: str) -> str:
 # output (e.g. "C.LF.: RO 14600820" was invisible to the old pattern), not
 # a guess. Mirrored in src/lib/invoiceCandidateEngine.ts -- keep in sync.
 TAX_ID_LABEL_PATTERN = (
-    r"(?:gstin|c\.?\s*u\.?\s*i\.?|c\.?\s*i\.?\s*f\.?|c\.?\s*l\.?\s*f\.?|"
-    r"cod\s+fiscal|cod\s+tva|vat\s+(?:code|id)|tax\s+id)"
+    r"(?:gstin|"
+    r"c\.?\s*u\.?\s*(?:i|1|l|ll)\.?|"
+    r"c\.?\s*(?:i|1|l)\.?\s*f\.?|"
+    r"cod\s+fiscal|cod\s+tva|"
+    r"cod\s+de\s+inregistrare\s+in\s+scopuri\s+(?:de\s+)?tva|"
+    r"vat\s+(?:code|id)|tax\s+id)"
     r"\s*[:#;.-]?\s*([A-Z0-9 .:/_-]{5,40})"
 )
 

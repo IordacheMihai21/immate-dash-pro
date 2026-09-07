@@ -92,3 +92,54 @@ describe("mergeLayoutXlmWithCandidateEngine - invoice number merge", () => {
     expect(result.fields.invoiceNumber).toBe("MH2639747");
   });
 });
+
+describe("mergeLayoutXlmWithCandidateEngine - totalAmount merge", () => {
+  it("boosts confidence when the candidate engine and LayoutXLM agree on the total", () => {
+    const result = mergeLayoutXlmWithCandidateEngine({
+      candidateFields: { totalAmount: "1780.02" },
+      candidateConfidences: { totalAmount: 0.5 },
+      layoutFields: { totalAmount: "1780.02" },
+      layoutConfidences: { totalAmount: 0.5 },
+      layoutMethods: { totalAmount: "fine-tuned layoutxlm" },
+    });
+
+    expect(result.fields.totalAmount).toBe("1780.02");
+    expect(result.confidences.totalAmount).toBeGreaterThanOrEqual(0.82);
+  });
+
+  it("prefers the confident candidate engine value when the model disagrees and looks suspicious", () => {
+    const result = mergeLayoutXlmWithCandidateEngine({
+      candidateFields: { totalAmount: "1780.02" },
+      candidateConfidences: { totalAmount: 0.75 },
+      // A layout proposal missing decimal cents is treated as suspicious.
+      layoutFields: { totalAmount: "6" },
+      layoutConfidences: { totalAmount: 0.6 },
+      layoutMethods: { totalAmount: "fine-tuned layoutxlm" },
+    });
+
+    expect(result.fields.totalAmount).toBe("1780.02");
+    expect(result.sources.totalAmount).toBe("candidate_engine");
+  });
+
+  it("falls back to a highly confident model proposal when the candidate engine has nothing", () => {
+    const result = mergeLayoutXlmWithCandidateEngine({
+      candidateFields: { totalAmount: "" },
+      layoutFields: { totalAmount: "1780.02" },
+      layoutConfidences: { totalAmount: 0.8 },
+      layoutMethods: { totalAmount: "fine-tuned layoutxlm" },
+    });
+
+    expect(result.fields.totalAmount).toBe("1780.02");
+    expect(result.sources.totalAmount).toBe("layoutxlm");
+  });
+
+  it("preserves a negative total instead of silently dropping the sign", () => {
+    const result = mergeLayoutXlmWithCandidateEngine({
+      candidateFields: { totalAmount: "-41.04" },
+      candidateConfidences: { totalAmount: 0.75 },
+      layoutFields: { totalAmount: "" },
+    });
+
+    expect(result.fields.totalAmount).toBe("-41.04");
+  });
+});
