@@ -143,3 +143,51 @@ describe("mergeLayoutXlmWithCandidateEngine - totalAmount merge", () => {
     expect(result.fields.totalAmount).toBe("-41.04");
   });
 });
+
+describe("mergeLayoutXlmWithCandidateEngine - supplier/customer name reconciliation", () => {
+  it("swaps supplier/customer names when both extractors agree the roles were reversed", () => {
+    // Same joint role-assignment technique as the CUI pair: the candidate
+    // engine tagged "Client SRL" as the supplier and "ACME Distributie SA" as the
+    // customer, but LayoutXLM independently agrees "ACME Distributie SA" is really
+    // the supplier -- two sources agreeing on the correct pairing outweighs
+    // one side's initial (swapped) guess.
+    const result = mergeLayoutXlmWithCandidateEngine({
+      candidateFields: { supplierName: "Client SRL", customerName: "ACME Distributie SA" },
+      candidateConfidences: { supplierName: 0.6, customerName: 0.6 },
+      layoutFields: { supplierName: "ACME Distributie SA", customerName: "Client SRL" },
+      layoutConfidences: { supplierName: 0.75, customerName: 0.75 },
+      layoutMethods: { supplierName: "fine-tuned layoutxlm", customerName: "fine-tuned layoutxlm" },
+    });
+
+    expect(result.fields.supplierName).toBe("ACME Distributie SA");
+    expect(result.fields.customerName).toBe("Client SRL");
+  });
+
+  it("does not touch names when there is no repeated exact-key agreement to resolve", () => {
+    // Free-text names legitimately differ in formatting between two
+    // extractors far more often than CUI digits do -- this must stay
+    // conservative and leave the original selection alone rather than
+    // guessing from a single, unconfirmed observation.
+    const result = mergeLayoutXlmWithCandidateEngine({
+      candidateFields: { supplierName: "RMB Casa Auto Timisoara SRL", customerName: "MLS SRL" },
+      candidateConfidences: { supplierName: 0.8, customerName: 0.8 },
+      layoutFields: { supplierName: "", customerName: "" },
+    });
+
+    expect(result.fields.supplierName).toBe("RMB Casa Auto Timisoara SRL");
+    expect(result.fields.customerName).toBe("MLS SRL");
+  });
+
+  it("leaves already-correct names unchanged when both sources already agree on the roles", () => {
+    const result = mergeLayoutXlmWithCandidateEngine({
+      candidateFields: { supplierName: "ACME Distributie SA", customerName: "Client SRL" },
+      candidateConfidences: { supplierName: 0.8, customerName: 0.8 },
+      layoutFields: { supplierName: "ACME Distributie SA", customerName: "Client SRL" },
+      layoutConfidences: { supplierName: 0.8, customerName: 0.8 },
+      layoutMethods: { supplierName: "fine-tuned layoutxlm", customerName: "fine-tuned layoutxlm" },
+    });
+
+    expect(result.fields.supplierName).toBe("ACME Distributie SA");
+    expect(result.fields.customerName).toBe("Client SRL");
+  });
+});

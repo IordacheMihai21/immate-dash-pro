@@ -82,7 +82,71 @@ export function mergeLayoutXlmWithCandidateEngine({
     layoutConfidences,
   });
 
+  reconcilePartyNamePair({
+    fields,
+    sources,
+    confidences,
+    candidateFields,
+    candidateConfidences,
+    layoutFields,
+    layoutConfidences,
+  });
+
   return { fields, sources, confidences };
+}
+
+type RoleKey = "supplier" | "customer";
+type EvidenceSource = "candidate_engine" | "layoutxlm";
+
+type RoleEvidence = {
+  key: string;
+  role: RoleKey;
+  source: EvidenceSource;
+  confidence: number;
+};
+
+// Reusable core of the joint role-assignment technique first built for the
+// supplier/customer CUI pair: instead of picking each role independently
+// (which lets two otherwise-correct values get assigned to the wrong role,
+// or the same value to both), score every possible (supplier, customer)
+// pairing across all observed evidence at once and keep the highest-scoring
+// joint assignment. Works on any comparison key -- CUI digits, a normalized
+// party name, or anything else with a two-role structure.
+function resolveRolePair(evidence: RoleEvidence[]) {
+  const keys = [...new Set(evidence.map((item) => item.key))];
+  if (!keys.length) return null;
+
+  const roleScore = (key: string, role: RoleKey) => {
+    let score = 0;
+    for (const item of evidence) {
+      if (item.key !== key) continue;
+      const sameRole = item.role === role;
+      // LayoutXLM is particularly useful for semantic role assignment,
+      // while the candidate engine contributes independent textual evidence.
+      const sourceWeight = item.source === "layoutxlm" ? 1.06 : 0.94;
+      score += (sameRole ? 1 : -0.34) * sourceWeight * Math.max(0.35, item.confidence);
+    }
+    return score;
+  };
+
+  let bestSupplier = "";
+  let bestCustomer = "";
+  let bestScore = -Infinity;
+
+  for (const supplierKey of keys) {
+    const customerOptions = keys.length > 1 ? keys.filter((key) => key !== supplierKey) : [""];
+    for (const customerKey of customerOptions) {
+      const score =
+        roleScore(supplierKey, "supplier") + (customerKey ? roleScore(customerKey, "customer") : 0);
+      if (score > bestScore) {
+        bestScore = score;
+        bestSupplier = supplierKey;
+        bestCustomer = customerKey;
+      }
+    }
+  }
+
+  return { supplierKey: bestSupplier, customerKey: bestCustomer, score: bestScore };
 }
 
 function reconcileTaxIdPair({
@@ -102,20 +166,14 @@ function reconcileTaxIdPair({
   layoutFields: Partial<Record<DocumentAiFieldKey, unknown>>;
   layoutConfidences: Partial<Record<DocumentAiFieldKey, number>>;
 }) {
-  type Evidence = {
-    value: string;
-    digits: string;
-    role: "supplier" | "customer";
-    source: "candidate_engine" | "layoutxlm";
-    confidence: number;
-  };
+  type Evidence = RoleEvidence & { value: string };
 
   const evidence: Evidence[] = [];
 
   const pushEvidence = (
     raw: unknown,
-    role: "supplier" | "customer",
-    source: "candidate_engine" | "layoutxlm",
+    role: RoleKey,
+    source: EvidenceSource,
     confidence: number | undefined,
   ) => {
     const value = normalizeTaxIdentifier(stringify(raw));
@@ -123,7 +181,7 @@ function reconcileTaxIdPair({
 
     evidence.push({
       value,
-      digits: value.replace(/^RO(?=\d)/, ""),
+      key: value.replace(/^RO(?=\d)/, ""),
       role,
       source,
       confidence: clampConfidence(confidence, 0),
@@ -152,54 +210,15 @@ function reconcileTaxIdPair({
   // same digit sequence. Never fabricate RO when no evidence contains it.
   const canonical = new Map<string, string>();
   for (const item of evidence) {
-    const existing = canonical.get(item.digits);
+    const existing = canonical.get(item.key);
     if (!existing || (!existing.startsWith("RO") && item.value.startsWith("RO"))) {
-      canonical.set(item.digits, item.value);
+      canonical.set(item.key, item.value);
     }
   }
 
-  const roleScore = (digits: string, role: "supplier" | "customer") => {
-    let score = 0;
-
-    for (const item of evidence) {
-      if (item.digits !== digits) continue;
-
-      const sameRole = item.role === role;
-
-      // LayoutXLM is particularly useful for semantic role assignment,
-      // while the candidate engine contributes independent textual evidence.
-      const sourceWeight = item.source === "layoutxlm" ? 1.06 : 0.94;
-
-      score += (sameRole ? 1 : -0.34) * sourceWeight * Math.max(0.35, item.confidence);
-    }
-
-    return score;
-  };
-
-  const ids = [...canonical.keys()];
-  if (!ids.length) return;
-
-  let bestSupplier = "";
-  let bestCustomer = "";
-  let bestScore = -Infinity;
-
-  // Joint assignment prevents independent supplier/customer decisions from
-  // selecting the same entity or swapping two otherwise correctly detected IDs.
-  for (const supplierDigits of ids) {
-    const customerOptions = ids.length > 1 ? ids.filter((id) => id !== supplierDigits) : [""];
-
-    for (const customerDigits of customerOptions) {
-      const score =
-        roleScore(supplierDigits, "supplier") +
-        (customerDigits ? roleScore(customerDigits, "customer") : 0);
-
-      if (score > bestScore) {
-        bestScore = score;
-        bestSupplier = supplierDigits;
-        bestCustomer = customerDigits;
-      }
-    }
-  }
+  const resolution = resolveRolePair(evidence);
+  if (!resolution) return;
+  const { supplierKey: bestSupplier, customerKey: bestCustomer, score: bestScore } = resolution;
 
   const currentSupplier = normalizeTaxIdentifier(fields.supplierCui);
   const currentCustomer = normalizeTaxIdentifier(fields.customerCui);
@@ -218,7 +237,7 @@ function reconcileTaxIdPair({
     fields.supplierCui = supplierValue;
 
     const supporting = evidence
-      .filter((item) => item.digits === bestSupplier && item.role === "supplier")
+      .filter((item) => item.key === bestSupplier && item.role === "supplier")
       .sort((a, b) => b.confidence - a.confidence)[0];
 
     sources.supplierCui = supporting?.source ?? sources.supplierCui;
@@ -237,7 +256,7 @@ function reconcileTaxIdPair({
     fields.customerCui = customerValue;
 
     const supporting = evidence
-      .filter((item) => item.digits === bestCustomer && item.role === "customer")
+      .filter((item) => item.key === bestCustomer && item.role === "customer")
       .sort((a, b) => b.confidence - a.confidence)[0];
 
     sources.customerCui = supporting?.source ?? sources.customerCui;
@@ -256,6 +275,110 @@ function reconcileTaxIdPair({
     const digits = normalized.replace(/^RO(?=\d)/, "");
     const richer = canonical.get(digits);
     if (richer?.startsWith("RO")) fields[field] = richer;
+  }
+}
+
+// Same joint role-assignment technique as reconcileTaxIdPair, applied to
+// supplier/customer NAME instead of CUI -- the same swap risk exists (the
+// model or the candidate engine tagging the buyer's name as the seller's,
+// especially on templates where both blocks are visually similar). Kept
+// deliberately more conservative than the CUI version: free-text company
+// names rarely match exactly across two independent extractors the way
+// digit sequences do, so this only fires on genuine exact-key agreement,
+// never on partial/fuzzy similarity.
+function reconcilePartyNamePair({
+  fields,
+  sources,
+  confidences,
+  candidateFields,
+  candidateConfidences,
+  layoutFields,
+  layoutConfidences,
+}: {
+  fields: Record<DocumentAiFieldKey, string>;
+  sources: Record<DocumentAiFieldKey, HybridFieldSource>;
+  confidences: Record<DocumentAiFieldKey, number>;
+  candidateFields: Partial<Record<DocumentAiFieldKey, unknown>>;
+  candidateConfidences: Partial<Record<DocumentAiFieldKey, number>>;
+  layoutFields: Partial<Record<DocumentAiFieldKey, unknown>>;
+  layoutConfidences: Partial<Record<DocumentAiFieldKey, number>>;
+}) {
+  type Evidence = RoleEvidence & { value: string };
+
+  const evidence: Evidence[] = [];
+
+  const pushEvidence = (
+    raw: unknown,
+    role: RoleKey,
+    source: EvidenceSource,
+    confidence: number | undefined,
+  ) => {
+    const stringValue = stringify(raw);
+    if (!isCleanParty(stringValue)) return;
+    const key = normalizeText(stringValue);
+    if (!key) return;
+
+    evidence.push({
+      value: stringValue,
+      key,
+      role,
+      source,
+      confidence: clampConfidence(confidence, 0),
+    });
+  };
+
+  pushEvidence(
+    candidateFields.supplierName,
+    "supplier",
+    "candidate_engine",
+    candidateConfidences.supplierName,
+  );
+  pushEvidence(
+    candidateFields.customerName,
+    "customer",
+    "candidate_engine",
+    candidateConfidences.customerName,
+  );
+  pushEvidence(layoutFields.supplierName, "supplier", "layoutxlm", layoutConfidences.supplierName);
+  pushEvidence(layoutFields.customerName, "customer", "layoutxlm", layoutConfidences.customerName);
+
+  // Only meaningful once the same name (exact key) has been independently
+  // observed at least twice -- otherwise there is nothing to jointly
+  // resolve, and forcing an assignment from a single observation would just
+  // reintroduce the guessing this is meant to avoid.
+  const keyCounts = new Map<string, number>();
+  for (const item of evidence) keyCounts.set(item.key, (keyCounts.get(item.key) ?? 0) + 1);
+  if (![...keyCounts.values()].some((count) => count >= 2)) return;
+
+  const resolution = resolveRolePair(evidence);
+  if (!resolution || resolution.score < 0.9) return;
+  const { supplierKey: bestSupplier, customerKey: bestCustomer } = resolution;
+
+  const valueForKey = (key: string) => evidence.find((item) => item.key === key)?.value ?? "";
+
+  const currentSupplierKey = normalizeText(fields.supplierName);
+  const currentCustomerKey = normalizeText(fields.customerName);
+
+  if (bestSupplier && bestSupplier !== currentSupplierKey) {
+    const supporting = evidence
+      .filter((item) => item.key === bestSupplier && item.role === "supplier")
+      .sort((a, b) => b.confidence - a.confidence)[0];
+    if (supporting) {
+      fields.supplierName = valueForKey(bestSupplier);
+      sources.supplierName = supporting.source;
+      confidences.supplierName = Math.max(confidences.supplierName ?? 0, supporting.confidence);
+    }
+  }
+
+  if (bestCustomer && bestCustomer !== currentCustomerKey) {
+    const supporting = evidence
+      .filter((item) => item.key === bestCustomer && item.role === "customer")
+      .sort((a, b) => b.confidence - a.confidence)[0];
+    if (supporting) {
+      fields.customerName = valueForKey(bestCustomer);
+      sources.customerName = supporting.source;
+      confidences.customerName = Math.max(confidences.customerName ?? 0, supporting.confidence);
+    }
   }
 }
 
