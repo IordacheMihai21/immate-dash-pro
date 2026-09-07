@@ -1,5 +1,6 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
+import { ThemeContext } from "@/components/theme-context";
 import {
   applyThemeClass,
   getStoredTheme,
@@ -7,14 +8,6 @@ import {
   setStoredTheme,
   type ThemePreference,
 } from "@/lib/theme";
-
-type ThemeContextValue = {
-  theme: ThemePreference;
-  isDark: boolean;
-  setTheme: (theme: ThemePreference) => void;
-};
-
-const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   // Deliberately NOT initialized from localStorage here, even though the
@@ -67,14 +60,4 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const value = useMemo(() => ({ theme, isDark, setTheme }), [theme, isDark, setTheme]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
-}
-
-export function useTheme(): ThemeContextValue {
-  const context = useContext(ThemeContext);
-
-  if (!context) {
-    throw new Error("useTheme trebuie folosit in interiorul unui ThemeProvider.");
-  }
-
-  return context;
 }

@@ -6,14 +6,6 @@ import type { StatCardHoverState } from "./stat-card-chart";
 
 export type { StatCardHoverState } from "./stat-card-chart";
 
-export function formatStatCardMonth(date: Date) {
-  return date.toLocaleDateString("en-US", { month: "short" });
-}
-
-export function formatStatCardWeekday(date: Date) {
-  return date.toLocaleDateString("en-US", { weekday: "long" });
-}
-
 function parsePointDate(raw: unknown): Date | null {
   if (raw instanceof Date) {
     return raw;

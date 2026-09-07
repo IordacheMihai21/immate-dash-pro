@@ -29,14 +29,7 @@ interface BentoItem {
   icons?: boolean;
   href?: string;
   feature?:
-    | "chart"
-    | "counter"
-    | "code"
-    | "timeline"
-    | "spotlight"
-    | "icons"
-    | "typing"
-    | "metrics";
+    "chart" | "counter" | "code" | "timeline" | "spotlight" | "icons" | "typing" | "metrics";
   spotlightItems?: string[];
   timeline?: Array<{ year: string; event: string }>;
   code?: string;

@@ -248,7 +248,7 @@ function RevenueReportPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
                   <YAxis stroke="#64748b" fontSize={12} />
-                  <Tooltip formatter={(value: number) => formatRON(Number(value))} />
+                  <Tooltip formatter={(value) => formatRON(Number(value))} />
                   <Line
                     type="monotone"
                     dataKey="venituri"
@@ -284,7 +284,7 @@ function RevenueReportPage() {
                     fontSize={12}
                     width={120}
                   />
-                  <Tooltip formatter={(value: number) => formatRON(Number(value))} />
+                  <Tooltip formatter={(value) => formatRON(Number(value))} />
                   <Bar dataKey="total" name="Venit" fill="#10b981" radius={[0, 8, 8, 0]} />
                 </BarChart>
               </ResponsiveContainer>

@@ -5,11 +5,11 @@ import { clipRevealTransition } from "./animation";
 import { defaultScatterColors, useChartHover, useChartStable, useYScale } from "./chart-context";
 import { useChartLegendHover } from "./chart-legend-hover";
 import {
-  getSeriesMarkerVisualExtent,
   SeriesPointMarker,
   type SeriesPointMarkerStyle,
   StaticSeriesPointMarker,
 } from "./series-point-marker";
+import { getSeriesMarkerVisualExtent } from "./series-point-marker-utils";
 
 export interface SeriesMarkersProps extends SeriesPointMarkerStyle {
   dataKey: string;

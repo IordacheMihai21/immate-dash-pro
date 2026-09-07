@@ -251,7 +251,7 @@ function ExpensesReportPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
                   <YAxis stroke="#64748b" fontSize={12} />
-                  <Tooltip formatter={(value: number) => formatRON(Number(value))} />
+                  <Tooltip formatter={(value) => formatRON(Number(value))} />
                   <Area
                     type="monotone"
                     dataKey="cheltuieli"
@@ -280,7 +280,7 @@ function ExpensesReportPage() {
                     fontSize={12}
                     width={120}
                   />
-                  <Tooltip formatter={(value: number) => formatRON(Number(value))} />
+                  <Tooltip formatter={(value) => formatRON(Number(value))} />
                   <Bar dataKey="total" name="Cost" fill="#ef4444" radius={[0, 8, 8, 0]} />
                 </BarChart>
               </ResponsiveContainer>

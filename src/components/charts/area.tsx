@@ -9,11 +9,8 @@ import { AreaGradientDefs } from "./area-gradient-defs";
 import { chartCssVars, useChartStable, useYScale } from "./chart-context";
 import type { ChartPhase, LoadingStyle } from "./chart-phase";
 import { type FadeEdges, resolveFadeSides } from "./fade-edges";
-import {
-  type LineLoadingPulseMode,
-  LineLoadingPulseStroke,
-  resolveLineLoadingPulseMode,
-} from "./line-loading-pulse";
+import { LineLoadingPulseStroke } from "./line-loading-pulse";
+import { resolveLineLoadingPulseMode, type LineLoadingPulseMode } from "./line-loading-pulse-mode";
 import { LINE_LOADING_LOOP_PAUSE_MS } from "./line-loading-timing";
 import { LineLoadingSweep } from "./loading-sweep";
 import { resolveDashTailBounds, usePathStrokeMetrics } from "./path-stroke-utils";

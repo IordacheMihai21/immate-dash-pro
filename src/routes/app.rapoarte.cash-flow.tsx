@@ -284,7 +284,7 @@ function CashFlowReportPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                   <XAxis dataKey="month" stroke="#64748b" fontSize={12} tickLine={false} />
                   <YAxis stroke="#64748b" fontSize={12} tickLine={false} />
-                  <Tooltip formatter={(value: number) => formatRON(Number(value))} />
+                  <Tooltip formatter={(value) => formatRON(Number(value))} />
                   <Legend iconType="circle" wrapperStyle={{ fontSize: 12, paddingTop: 16 }} />
                   <Bar
                     dataKey="cashIn"
@@ -376,7 +376,7 @@ function CashFlowReportPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis dataKey="period" stroke="#64748b" fontSize={12} />
                   <YAxis stroke="#64748b" fontSize={12} />
-                  <Tooltip formatter={(value: number) => formatRON(Number(value))} />
+                  <Tooltip formatter={(value) => formatRON(Number(value))} />
                   <Bar
                     dataKey="value"
                     name="Cash-flow estimat"

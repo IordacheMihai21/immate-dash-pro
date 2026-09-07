@@ -133,8 +133,6 @@ export function useChartInteraction({
       event: React.MouseEvent<SVGGElement> | React.TouchEvent<SVGGElement>,
       touchIndex = 0,
     ): number | null => {
-      let point: { x: number; y: number } | null = null;
-
       if ("touches" in event) {
         const touch = event.touches[touchIndex];
         if (!touch) {
@@ -144,15 +142,12 @@ export function useChartInteraction({
         if (!svg) {
           return null;
         }
-        point = localPoint(svg, touch as unknown as MouseEvent);
-      } else {
-        point = localPoint(event);
+        const point = localPoint(svg, touch as unknown as MouseEvent);
+        return point ? point.x - margin.left : null;
       }
 
-      if (!point) {
-        return null;
-      }
-      return point.x - margin.left;
+      const point = localPoint(event);
+      return point ? point.x - margin.left : null;
     },
     [margin.left],
   );

@@ -5,12 +5,10 @@ import { curveCardinal } from "@visx/curve";
 import { useState } from "react";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { revenueSeries, revenueStats } from "../data/revenue-series";
-import { StatCardChart, statCardLabelClassName, statCardValueClassName } from "./stat-card-chart";
-import {
-  formatStatCardMonth,
-  StatCardHoverBridge,
-  type StatCardHoverState,
-} from "./stat-card-hover-bridge";
+import { statCardLabelClassName, statCardValueClassName } from "./stat-card-chart-config";
+import { StatCardChart } from "./stat-card-chart";
+import { formatStatCardMonth } from "./stat-card-formatters";
+import { StatCardHoverBridge, type StatCardHoverState } from "./stat-card-hover-bridge";
 import { TrendBadge } from "./trend-badge";
 
 export function StatCardArea() {

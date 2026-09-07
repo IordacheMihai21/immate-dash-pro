@@ -27,7 +27,8 @@ import {
   renderKeyedChartLayers,
   resolveChartChildElement,
 } from "./chart-child-passthrough";
-import { ChartProvider, type LineConfig, type Margin, type TooltipData } from "./chart-context";
+import type { LineConfig, Margin, TooltipData } from "./chart-context";
+import { ChartProvider } from "./chart-provider";
 import { isGradientDefComponent, isPatternDefComponent } from "./chart-defs";
 import { shortDateFmt } from "./chart-formatters";
 import {
@@ -370,7 +371,7 @@ const ChartCore = memo(function ChartCore({
       setIsLoaded(true);
     }, animationDuration + staggerMs);
     return () => clearTimeout(timer);
-  }, [animationDuration, revealSignature, status]);
+  }, [animationDuration, data.length, revealSignature, status]);
 
   useEffect(() => {
     onPhaseChange?.(isLoaded ? "ready" : "revealing");

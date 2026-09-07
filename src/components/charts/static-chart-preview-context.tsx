@@ -1,15 +1,8 @@
 "use client";
 
-import { createContext, type ReactNode, useContext } from "react";
+import { createContext, useContext } from "react";
 
-const StaticChartPreviewContext = createContext(false);
-
-/** Disables cartesian reveal clip-path for static docs previews. */
-export function StaticChartPreviewProvider({ children }: { children: ReactNode }) {
-  return (
-    <StaticChartPreviewContext.Provider value={true}>{children}</StaticChartPreviewContext.Provider>
-  );
-}
+export const StaticChartPreviewContext = createContext(false);
 
 export function useStaticChartPreview() {
   return useContext(StaticChartPreviewContext);

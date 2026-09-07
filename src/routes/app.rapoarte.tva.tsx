@@ -325,7 +325,7 @@ function VatReportPage() {
                   <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
                   <YAxis stroke="#64748b" fontSize={12} />
                   <Legend iconType="circle" wrapperStyle={{ fontSize: 12, paddingTop: 16 }} />
-                  <Tooltip formatter={(value: number) => formatRON(Number(value))} />
+                  <Tooltip formatter={(value) => formatRON(Number(value))} />
                   <Bar
                     dataKey="colectata"
                     name="TVA colectata"
@@ -370,7 +370,7 @@ function VatReportPage() {
                       <Cell key={entry.name} fill={fiscalColors[index % fiscalColors.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value: number) => formatRON(Number(value))} />
+                  <Tooltip formatter={(value) => formatRON(Number(value))} />
                   <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
                 </PieChart>
               </ResponsiveContainer>

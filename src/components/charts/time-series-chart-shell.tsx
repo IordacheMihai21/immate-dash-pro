@@ -22,7 +22,8 @@ import {
   isUnderlayComponent,
   resolveChartChildElement,
 } from "./chart-child-passthrough";
-import { ChartProvider, type LineConfig, type Margin } from "./chart-context";
+import type { LineConfig, Margin } from "./chart-context";
+import { ChartProvider } from "./chart-provider";
 import { isGradientDefComponent, isPatternDefComponent } from "./chart-defs";
 import { shortDateFmt } from "./chart-formatters";
 import {

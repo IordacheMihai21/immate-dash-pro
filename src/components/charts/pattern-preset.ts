@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { createElement, type ReactNode } from "react";
 import { PatternCircles, PatternLines } from "./visx-pattern";
 
 export const PATTERN_PRESET_IDS = [
@@ -78,30 +78,25 @@ function renderPatternCircles(
 
   if (isDotGrid) {
     const dotFill = dotFillEnabled ? options.fill || color : undefined;
-    return (
-      <PatternCircles
-        {...common}
-        complement={options.complement}
-        fill={dotFill}
-        radius={radius}
-        stroke={dotFillEnabled && options.fill ? undefined : color}
-        strokeWidth={
-          dotFillEnabled && !options.fill ? (options.strokeWidth ?? 0) : (options.strokeWidth ?? 1)
-        }
-      />
-    );
+    return createElement(PatternCircles, {
+      ...common,
+      complement: options.complement,
+      fill: dotFill,
+      radius,
+      stroke: dotFillEnabled && options.fill ? undefined : color,
+      strokeWidth:
+        dotFillEnabled && !options.fill ? (options.strokeWidth ?? 0) : (options.strokeWidth ?? 1),
+    });
   }
 
-  return (
-    <PatternCircles
-      {...common}
-      complement={options.complement}
-      fill={options.fill || undefined}
-      radius={radius}
-      stroke={color}
-      strokeWidth={options.strokeWidth ?? common.strokeWidth}
-    />
-  );
+  return createElement(PatternCircles, {
+    ...common,
+    complement: options.complement,
+    fill: options.fill || undefined,
+    radius,
+    stroke: color,
+    strokeWidth: options.strokeWidth ?? common.strokeWidth,
+  });
 }
 
 /** Renders a @visx/pattern definition node for the given preset. */
@@ -133,50 +128,40 @@ export function renderPatternPreset(
 
   switch (preset) {
     case "diagonal":
-      return (
-        <PatternLines
-          {...common}
-          orientation={["diagonal"]}
-          stroke={color}
-          strokeWidth={strokeWidth}
-        />
-      );
+      return createElement(PatternLines, {
+        ...common,
+        orientation: ["diagonal"],
+        stroke: color,
+        strokeWidth,
+      });
     case "horizontal":
-      return (
-        <PatternLines
-          {...common}
-          orientation={["horizontal"]}
-          stroke={color}
-          strokeWidth={strokeWidth}
-        />
-      );
+      return createElement(PatternLines, {
+        ...common,
+        orientation: ["horizontal"],
+        stroke: color,
+        strokeWidth,
+      });
     case "vertical":
-      return (
-        <PatternLines
-          {...common}
-          orientation={["vertical"]}
-          stroke={color}
-          strokeWidth={strokeWidth}
-        />
-      );
+      return createElement(PatternLines, {
+        ...common,
+        orientation: ["vertical"],
+        stroke: color,
+        strokeWidth,
+      });
     case "cross":
-      return (
-        <PatternLines
-          {...common}
-          orientation={["diagonal", "diagonalRightToLeft"]}
-          stroke={color}
-          strokeWidth={strokeWidth}
-        />
-      );
+      return createElement(PatternLines, {
+        ...common,
+        orientation: ["diagonal", "diagonalRightToLeft"],
+        stroke: color,
+        strokeWidth,
+      });
     case "accent":
-      return (
-        <PatternLines
-          {...common}
-          orientation={["diagonal"]}
-          stroke="#e879f9"
-          strokeWidth={strokeWidth}
-        />
-      );
+      return createElement(PatternLines, {
+        ...common,
+        orientation: ["diagonal"],
+        stroke: "#e879f9",
+        strokeWidth,
+      });
     default:
       return null;
   }
