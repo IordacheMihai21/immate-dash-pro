@@ -8,7 +8,6 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
-import * as Sentry from "@sentry/tanstackstart-react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -42,7 +41,14 @@ function ErrorComponent({ error, reset }: { error: unknown; reset: () => void })
   const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
-    Sentry.captureException(error);
+    // import.meta.env.SSR is a build-time constant, so Vite dead-code-
+    // eliminates this whole branch from the server bundle -- see router.tsx
+    // for why that (not just useEffect never running during SSR) matters.
+    if (!import.meta.env.SSR) {
+      void import("@sentry/tanstackstart-react").then((Sentry) => {
+        Sentry.captureException(error);
+      });
+    }
   }, [error]);
 
   return (

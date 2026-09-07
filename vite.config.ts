@@ -78,4 +78,12 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // Frontend and the Document AI Python backend deploy together as two
+  // containers on one host (see Dockerfile / docker-compose.yml), not to
+  // Cloudflare Workers -- Workers can't run torch/detectron2 anyway. This
+  // overrides the Lovable config's Cloudflare default with a plain Node
+  // server output.
+  nitro: {
+    preset: "node-server",
+  },
 });

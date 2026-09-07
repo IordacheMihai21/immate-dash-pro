@@ -1,0 +1,47 @@
+# Production stack: both the frontend and the Document AI backend start
+# together with one `docker compose up -d`, and come back on their own
+# after any host reboot (`restart: unless-stopped` + Docker's own daemon
+# enabled at boot -- see DEPLOY.md). No manual "start backend, then start
+# frontend" step.
+#
+# Copy .env.example to .env and fill it in before running this. Docker
+# Compose reads .env automatically, both for the ${VAR} substitutions
+# below and via each service's env_file.
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+        VITE_DOCUMENT_AI_BACKEND_URL: ${VITE_DOCUMENT_AI_BACKEND_URL}
+        VITE_SENTRY_DSN: ${VITE_SENTRY_DSN}
+    ports:
+      - "8082:3000"
+    env_file:
+      - .env
+    depends_on:
+      - document-ai-backend
+    restart: unless-stopped
+
+  document-ai-backend:
+    build:
+      context: ./document-ai-backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      LAYOUTXLM_MODEL_ID: ${LAYOUTXLM_MODEL_ID:-microsoft/layoutxlm-base}
+      LAYOUTXLM_DEVICE: cpu
+      LAYOUTXLM_LOCAL_FILES_ONLY: "false"
+      HF_HOME: /opt/huggingface
+    env_file:
+      - .env
+    volumes:
+      - layout_ai_huggingface:/opt/huggingface
+    restart: unless-stopped
+
+volumes:
+  layout_ai_huggingface:
