@@ -27,7 +27,7 @@ interface AnafResponse {
 }
 
 export const verifyCuiWithAnaf = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ cui: z.string().min(1) }))
+  .validator(z.object({ cui: z.string().min(1) }))
   .handler(async ({ data }) => {
     const numericCui = normalizeCui(data.cui);
 

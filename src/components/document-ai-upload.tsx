@@ -25,9 +25,13 @@ import {
   isSupportedDocumentAiFile,
   type DocumentAiAnalysis,
   type DocumentAiExtractionMethod,
-  type DocumentAiExtractedFields,
   type DocumentAiFieldKey,
 } from "@/lib/documentAiService";
+import {
+  DOCUMENT_AI_FIELD_KEYS,
+  toDocumentAiEditableFields,
+  type DocumentAiEditableFields,
+} from "@/lib/documentAiEditableFields";
 import { saveDocumentAiInvoice } from "@/lib/invoiceService";
 import { recordDocumentAiCorrection } from "@/lib/documentAiCorrectionService";
 import {
@@ -39,7 +43,6 @@ import { classifyInvoiceByCui, type InvoiceClassification } from "@/lib/cuiUtils
 import { validateDocumentAiFile } from "@/lib/uploadValidation";
 import { cn } from "@/lib/utils";
 
-export type DocumentAiEditableFields = Record<DocumentAiFieldKey, string>;
 type PipelineStatus = "finalizat" | "necesită verificare" | "incomplet";
 
 const fieldLabels: Record<DocumentAiFieldKey, string> = {
@@ -55,18 +58,7 @@ const fieldLabels: Record<DocumentAiFieldKey, string> = {
   currency: "Moneda",
 };
 
-const fieldOrder: DocumentAiFieldKey[] = [
-  "invoiceNumber",
-  "invoiceDate",
-  "supplierName",
-  "supplierCui",
-  "customerName",
-  "customerCui",
-  "subtotal",
-  "vatAmount",
-  "totalAmount",
-  "currency",
-];
+const fieldOrder = DOCUMENT_AI_FIELD_KEYS;
 
 const genericMainFieldOrder: DocumentAiFieldKey[] = [
   "invoiceNumber",
@@ -340,9 +332,9 @@ export function DocumentAiUpload({
               <BrainCircuit className="h-3.5 w-3.5" />
               Document AI activ
             </div>
-            <h2 className="text-2xl font-normal tracking-tight sm:text-3xl">
+            <h1 className="text-2xl font-normal tracking-tight sm:text-3xl">
               Extragere inteligentă din documente financiare
-            </h2>
+            </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-sidebar-foreground/80 sm:text-base">
               IMMapp transformă facturile PDF, JPG sau PNG în date structurate folosind OCR,
               preprocesare imagine și extracție de entități.
@@ -1233,23 +1225,6 @@ function RelationshipNode({ label, value }: { label: string; value: string }) {
       <p className="mt-1 text-sm font-semibold text-foreground">{value}</p>
     </div>
   );
-}
-
-export function toDocumentAiEditableFields(
-  fields: DocumentAiExtractedFields,
-): DocumentAiEditableFields {
-  return fieldOrder.reduce((acc, key) => {
-    const value = fields[key];
-
-    acc[key] =
-      typeof value === "number"
-        ? value.toFixed(2).replace(".", ",")
-        : typeof value === "string"
-          ? value
-          : "";
-
-    return acc;
-  }, {} as DocumentAiEditableFields);
 }
 
 function toEntityConfidenceMap(

@@ -187,6 +187,26 @@ export function extractInvoiceNumberCandidates(context: CandidateContext) {
         reasons: ["Identificator INV independent"],
       });
     }
+
+    const standaloneNumberYearLineIsNoisy =
+      /\b(?:data|date|due|scaden[tț][aă]?|total|subtotal|tva|vat|amount|sum[aă])\b/i.test(
+        line.text,
+      );
+
+    if (!standaloneNumberYearLineIsNoisy) {
+      for (const standalone of line.text.matchAll(/(?<!\d\/)\b(\d{2,8}\/(?:19|20)\d{2})\b/g)) {
+        addCandidate(candidates, {
+          field: "invoiceNumber",
+          value: normalizeInvoiceNumber(standalone[1], false),
+          normalizedValue: normalizeInvoiceNumber(standalone[1]),
+          sourceText: line.text,
+          lineIndex: index,
+          score: 0.74 + topRegionBonus(index, context.lines.length, 0.1),
+          method: line.bbox ? "Layout heuristic" : "Regex",
+          reasons: ["Număr de factură independent în format număr/an"],
+        });
+      }
+    }
   });
 
   return rankCandidates(candidates, context);

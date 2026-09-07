@@ -5,12 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 export type Plan = "start" | "business" | "companie";
 export type BillingCycle = "monthly" | "annual" | null;
 export type SubscriptionStatus =
-  | "active"
-  | "trialing"
-  | "past_due"
-  | "canceled"
-  | "incomplete"
-  | "unpaid";
+  "active" | "trialing" | "past_due" | "canceled" | "incomplete" | "unpaid";
 
 export type Subscription = {
   plan: Plan;

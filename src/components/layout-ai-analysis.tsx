@@ -357,9 +357,9 @@ export function LayoutAiAnalysis({
               <Sparkles className="h-3.5 w-3.5" />
               Analiză layout activă
             </div>
-            <h2 className="text-2xl font-normal tracking-tight sm:text-3xl">
+            <h1 className="text-2xl font-normal tracking-tight sm:text-3xl">
               Analiză inteligentă a structurii documentului
-            </h2>
+            </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-sidebar-foreground/80 sm:text-base">
               IMMapp folosește OCR și analiză layout-aware pentru a identifica, valida și confirma
               câmpurile importante din factură.

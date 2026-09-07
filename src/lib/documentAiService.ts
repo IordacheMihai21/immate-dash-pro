@@ -21,11 +21,7 @@ export type DocumentAiFieldKey =
 export type DocumentAiFieldValue = string | number | null;
 
 export type DocumentAiExtractionMethod =
-  | "OCR"
-  | "Regex"
-  | "Layout heuristic"
-  | "Hybrid LayoutXLM + candidate engine"
-  | "User verified";
+  "OCR" | "Regex" | "Layout heuristic" | "Hybrid LayoutXLM + candidate engine" | "User verified";
 
 export type DocumentAiExtractedFields = Record<DocumentAiFieldKey, DocumentAiFieldValue>;
 

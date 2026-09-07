@@ -36,10 +36,7 @@ const monthNames: Record<string, number> = {
 
 export type LayoutAiStatus = "ok" | "success" | "fallback" | "unavailable";
 export type LayoutAiRuntimeMode =
-  | "full_layoutxlm"
-  | "layoutxlm_backbone"
-  | "fallback_layout_aware"
-  | "unavailable";
+  "full_layoutxlm" | "layoutxlm_backbone" | "fallback_layout_aware" | "unavailable";
 
 export type LayoutAiFields = Record<DocumentAiFieldKey, string>;
 export type LayoutAiComparisonStatus = "confirmed" | "proposal" | "review" | "missing";

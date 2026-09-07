@@ -581,13 +581,11 @@ export function buildAiFinancialForecast(
   const expensesForecast = Math.max(expensesModel.prediction, 0);
   const vatForecast = Math.max(vatModel.prediction, 0);
 
-  let profitForecast = revenueForecast - expensesForecast;
-
-  if (revenueValues.some((value) => value > 0) && expenseValues.some((value) => value > 0)) {
-    profitForecast = revenueForecast - expensesForecast;
-  } else {
-    profitForecast = profitValues[profitValues.length - 1] ?? profitModel.prediction;
-  }
+  const hasRevenueAndExpenses =
+    revenueValues.some((value) => value > 0) && expenseValues.some((value) => value > 0);
+  const profitForecast = hasRevenueAndExpenses
+    ? revenueForecast - expensesForecast
+    : (profitValues[profitValues.length - 1] ?? profitModel.prediction);
 
   const cashFlowForecast = profitForecast - vatForecast;
 

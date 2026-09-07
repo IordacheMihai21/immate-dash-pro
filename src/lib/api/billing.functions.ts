@@ -36,7 +36,7 @@ async function getBillingMembership(accessToken: string) {
 }
 
 export const createCheckoutSession = createServerFn({ method: "POST" })
-  .inputValidator(
+  .validator(
     z.object({
       accessToken: z.string().min(1),
       plan: z.enum(["business", "companie"]),
@@ -90,7 +90,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
   });
 
 export const createBillingPortalSession = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ accessToken: z.string().min(1) }))
+  .validator(z.object({ accessToken: z.string().min(1) }))
   .handler(async ({ data }) => {
     const { scoped, companyId } = await getBillingMembership(data.accessToken);
 

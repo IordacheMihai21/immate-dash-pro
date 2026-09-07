@@ -275,7 +275,7 @@ export function AiForecastPage() {
                     <XAxis dataKey="period" stroke="#64748b" fontSize={12} />
                     <YAxis stroke="#64748b" fontSize={12} />
                     <Tooltip
-                      formatter={(value: number) => formatRON(Number(value))}
+                      formatter={(value) => formatRON(Number(value))}
                       contentStyle={tooltipStyle}
                     />
                     <Bar
@@ -334,10 +334,7 @@ function RevenueComparisonChart({ data }: { data: RevenueComparisonPoint[] }) {
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="period" stroke="#64748b" fontSize={12} />
             <YAxis stroke="#64748b" fontSize={12} />
-            <Tooltip
-              formatter={(value: number) => formatRON(Number(value))}
-              contentStyle={tooltipStyle}
-            />
+            <Tooltip formatter={(value) => formatRON(Number(value))} contentStyle={tooltipStyle} />
             <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
             <Line
               type="monotone"
@@ -685,7 +682,7 @@ function ForecastEvaluationCard({ prediction }: { prediction: AiFinancialForecas
                 <XAxis dataKey="period" stroke="#64748b" fontSize={12} />
                 <YAxis stroke="#64748b" fontSize={12} />
                 <Tooltip
-                  formatter={(value: number) => formatRON(Number(value))}
+                  formatter={(value) => formatRON(Number(value))}
                   contentStyle={tooltipStyle}
                 />
                 <Line

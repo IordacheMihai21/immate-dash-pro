@@ -84,7 +84,7 @@ function chooseFieldValue(
     return chooseAmount(candidate, candidateConfidence, layout, layoutConfidence);
   }
   if (PARTY_FIELDS.has(field)) {
-    return chooseParty(candidate, candidateConfidence, layout, layoutConfidence);
+    return chooseParty(field, candidate, candidateConfidence, layout, layoutConfidence);
   }
   if (field === "invoiceNumber") {
     return chooseInvoiceNumber(candidate, candidateConfidence, layout, layoutConfidence);
@@ -138,18 +138,65 @@ function chooseAmount(
 }
 
 function chooseParty(
+  field: DocumentAiFieldKey,
   candidate: string,
   candidateConfidence: number,
   layout: string,
   layoutConfidence: number,
 ) {
+  const candidateParties = splitLegalEntities(candidate);
+
+  if (candidateParties.length >= 2) {
+    const selectedParty =
+      field === "supplierName"
+        ? candidateParties[0]
+        : candidateParties[candidateParties.length - 1];
+
+    return selected(selectedParty, "candidate_engine", candidateConfidence);
+  }
+
   const candidateValid = isCleanParty(candidate);
   const layoutValid = isCleanParty(layout);
-  if (candidateValid) return selected(candidate, "candidate_engine", candidateConfidence);
+
+  if (candidateValid) {
+    return selected(candidate, "candidate_engine", candidateConfidence);
+  }
+
   if (layoutValid && layoutConfidence >= 0.76) {
     return selected(layout, "layoutxlm", layoutConfidence);
   }
+
   return candidate ? selected(candidate, "candidate_engine", candidateConfidence) : missing();
+}
+
+function splitLegalEntities(value: string): string[] {
+  if (!value) return [];
+
+  const suffixPattern =
+    /\b(?:S\.?R\.?L\.?|S\.?A\.?|PFA|SNC|SCS|SRL-D|LLC|LTD\.?|LIMITED|INC\.?|CORP\.?|GMBH|PLC)\b/gi;
+
+  const matches = [...value.matchAll(suffixPattern)];
+
+  if (matches.length < 2) return [value.trim()];
+
+  const parts: string[] = [];
+  let start = 0;
+
+  for (const match of matches) {
+    const matchStart = match.index ?? 0;
+    const end = matchStart + match[0].length;
+
+    const part = value
+      .slice(start, end)
+      .trim()
+      .replace(/^[\s:;,#-]+|[\s:;,#-]+$/g, "");
+
+    if (part) parts.push(part);
+
+    start = end;
+  }
+
+  return parts;
 }
 
 function chooseInvoiceNumber(

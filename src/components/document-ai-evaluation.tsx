@@ -149,9 +149,9 @@ export function DocumentAiEvaluation({
               <Sparkles className="h-3.5 w-3.5" />
               Evaluare AI activă
             </div>
-            <h2 className="text-2xl font-normal tracking-tight sm:text-3xl">
+            <h1 className="text-2xl font-normal tracking-tight sm:text-3xl">
               Validare automată pe dataset FATURA
-            </h2>
+            </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-sidebar-foreground/80 sm:text-base">
               Compară datele extrase de IMMapp cu adnotările de referință și calculează metrici
               precum Precizie, Reamintire, Scor F1 și Acuratețe pe câmpuri.

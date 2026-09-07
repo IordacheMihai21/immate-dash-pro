@@ -149,7 +149,7 @@ const tools: Groq.Chat.Completions.ChatCompletionTool[] = [
 ];
 
 export const askAssistant = createServerFn({ method: "POST" })
-  .inputValidator(
+  .validator(
     z.object({
       accessToken: z.string().min(1),
       question: z.string().min(1).max(2000),
@@ -357,8 +357,7 @@ REGULI STRICTE:
       });
 
       for (const call of message.tool_calls) {
-        let args: Record<string, unknown> = {};
-
+        let args: Record<string, unknown>;
         try {
           args = JSON.parse(call.function.arguments);
         } catch {

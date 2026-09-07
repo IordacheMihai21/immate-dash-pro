@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
+import type { DocumentAiAnalysis, DocumentAiFieldKey } from "@/lib/documentAiService";
 import {
+  createEmptyDocumentAiFields,
+  DOCUMENT_AI_FIELD_KEYS,
   toDocumentAiEditableFields,
   type DocumentAiEditableFields,
-} from "@/components/document-ai-upload";
-import type { DocumentAiAnalysis, DocumentAiFieldKey } from "@/lib/documentAiService";
+} from "@/lib/documentAiEditableFields";
 import {
   hasEvaluationFields,
   parseFaturaAnnotationToExpected,
@@ -21,19 +23,6 @@ const FATURA_ANNOTATION_KEY = "immapp:document-ai:last-fatura-annotation";
 const FATURA_EXPECTED_KEY = "immapp:document-ai:last-fatura-expected";
 const EVALUATION_KEY = "immapp:document-ai:last-evaluation";
 const DOCUMENT_AI_UI_PIPELINE_VERSION = 4;
-const DOCUMENT_AI_FIELD_KEYS: DocumentAiFieldKey[] = [
-  "invoiceNumber",
-  "invoiceDate",
-  "supplierName",
-  "supplierCui",
-  "customerName",
-  "customerCui",
-  "subtotal",
-  "vatAmount",
-  "totalAmount",
-  "currency",
-];
-
 export function useAiDocumentWorkspace() {
   const [analysis, setAnalysis] = useState<DocumentAiAnalysis | null>(null);
   const [fields, setFields] = useState<DocumentAiEditableFields | null>(null);
@@ -284,16 +273,6 @@ export function useAiDocumentWorkspace() {
     clearAnnotation,
     handleApplyLayoutFields,
   };
-}
-
-function createEmptyDocumentAiFields(): DocumentAiEditableFields {
-  return DOCUMENT_AI_FIELD_KEYS.reduce(
-    (acc, field) => ({
-      ...acc,
-      [field]: "",
-    }),
-    {} as DocumentAiEditableFields,
-  );
 }
 
 function readStoredText(key: string) {
