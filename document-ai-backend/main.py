@@ -941,16 +941,82 @@ def repair_lost_amount_separators(fields: Dict[str, str]) -> None:
             fields[field] = f"{repaired:.2f}"
 
 
+# Strong negative signals: a value shaped like one of these other
+# identifier types is almost never actually the invoice number, even if it
+# matched an invoice-number-looking label. Mirrors
+# src/lib/invoiceCandidateEngine.ts's looksLikeNonInvoiceIdentifier -- keep
+# the two in sync.
+def looks_like_non_invoice_identifier(value: str) -> bool:
+    normalized = re.sub(r"[^A-Z0-9]", "", value.upper())
+    if not normalized:
+        return False
+
+    if normalize_date_for_comparison(value):
+        return True
+
+    # CUI/CIF: "RO" + 5-10 digits and nothing else.
+    if re.fullmatch(r"RO\d{5,10}", normalized):
+        return True
+
+    # IBAN: 2 letters + 2 check digits + a long alphanumeric block.
+    if re.fullmatch(r"[A-Z]{2}\d{2}[A-Z0-9]{16,30}", normalized):
+        return True
+
+    # Romanian phone number: 10 bare digits starting with 0, or +40-prefixed.
+    if re.fullmatch(r"0\d{9}", normalized) or re.fullmatch(r"40\d{9}", normalized):
+        return True
+
+    return False
+
+
 def extract_invoice_number(text: str) -> str:
+    # factur\w{0,3} (not factur[aă]) tolerates "facturii" (double-i,
+    # extremely common in real OCR: "Numarul facturii"), "facturi", "factura".
     patterns = [
-        r"(?:invoice\s*(?:#|no\.?|number|id)|num[aă]r(?:ul)?\s+facturii|nr\.?\s*factur[aă]|factur[aă]\s*(?:nr\.?)?|seria\s+(?:si|și|şi)\s+num[aă]rul\s+facturii)\s*[:#-]?\s*([A-Z0-9][A-Z0-9/\-_.]{1,40})",
+        r"(?:invoice\s*(?:#|no\.?|number|id)|num[aă]r(?:ul)?\s+factur\w{0,3}|nr\.?\s*factur\w{0,3}|factur\w{0,3}\s*(?:nr\.?)?|seria\s+(?:si|și|şi)\s+num[aă]rul\s+factur\w{0,3})\s*[:#-]?\s*([A-Z0-9][A-Z0-9/\-_.]{1,40})",
         r"\b(INV(?=[A-Z0-9/\-_.]*\d)[A-Z0-9/\-_.]{3,40})\b",
     ]
 
     for pattern in patterns:
         match = re.search(pattern, text, flags=re.IGNORECASE)
         if match:
-            return clean_value(match.group(1))
+            value = match.group(1)
+            # OCR sometimes inserts a stray space mid-number (e.g.
+            # "MBSL.202 1232280" is really "MBSL.2021232280") -- join it
+            # back together when nothing but whitespace separates the
+            # capture from more bare digits.
+            tail = text[match.end(1) :]
+            continuation = re.match(r"\s+(\d{3,10})\b", tail)
+            if continuation:
+                value += continuation.group(1)
+            if not looks_like_non_invoice_identifier(value):
+                return clean_value(value)
+
+    # "Serie <CODE> Nr <digits>" (e.g. "SerieMH Nr 2639744") -- code sits
+    # between "Serie"/"Seria" and "Nr". \W (which includes newlines) between
+    # each piece means this also matches when OCR splits "Serie MH" and
+    # "Nr.2639747" across two separate lines -- confirmed against real OCR.
+    # The code may contain digits and a dash (e.g. "TM1-MLS"), not just
+    # bare letters -- also confirmed against real OCR.
+    serie_code_then_nr = re.search(
+        r"seri[ae]\W{0,3}([A-Z][A-Z0-9-]{1,9})[\W_]{0,6}nr\W{0,3}\.?\s*(\d{2,9})\b",
+        text,
+        flags=re.IGNORECASE,
+    )
+    if serie_code_then_nr:
+        return f"{serie_code_then_nr.group(1).upper()}{serie_code_then_nr.group(2)}"
+
+    # "Serie/Nr. <CODE> <digits>" (e.g. "Serie /Nr. DUM.TM 3655") -- a
+    # different, equally common shape where the code follows "Nr." instead,
+    # sometimes containing one internal dot. Not tied to any specific
+    # company -- matches the general "code, then digits" structure.
+    serie_nr_then_code = re.search(
+        r"seri[ae]\W{0,4}nr\W{0,3}\.?\s*([A-Z]{2,4}\.?[A-Z]{0,4})\s+(\d{2,9})\b",
+        text,
+        flags=re.IGNORECASE,
+    )
+    if serie_nr_then_code:
+        return f"{serie_nr_then_code.group(1).upper()}{serie_nr_then_code.group(2)}"
 
     return ""
 
@@ -1395,6 +1461,22 @@ def normalize_model_proposal(field: str, value: str) -> str:
         return extract_currency(cleaned) or normalize_currency_for_comparison(cleaned)
     if field in {"supplierCui", "customerCui"}:
         return normalize_tax_identifier(cleaned)
+    if field == "invoiceNumber":
+        # The model's own token-grouped entity span sometimes includes
+        # adjacent label text it wasn't cleanly separated from (e.g.
+        # "Nr.2639747" instead of "2639747") -- strip a leading label word
+        # before falling back to the generic trim. Confirmed against a real
+        # case where this happened.
+        stripped = re.sub(
+            r"^\s*(?:nr|numar|numarul|num[aă]r(?:ul)?|serie|seria)\.?\s*[:#-]?\s*",
+            "",
+            cleaned,
+            flags=re.IGNORECASE,
+        )
+        candidate = stripped if stripped else cleaned
+        if looks_like_non_invoice_identifier(candidate):
+            return ""
+        return re.sub(r"^[#:\s]+|[.,;:\s]+$", "", candidate)
     return re.sub(r"^[#:\s]+|[.,;:\s]+$", "", cleaned)
 
 
@@ -1880,11 +1962,11 @@ def is_semantically_valid_field(field: str, value: str) -> bool:
     if field in {"supplierName", "customerName"}:
         return is_valid_party_candidate(cleaned)
     if field == "invoiceNumber":
-        return bool(re.search(r"\d", cleaned)) and cleaned.lower() not in {
-            "invoice",
-            "commercial invoice",
-            "tax invoice",
-        }
+        return (
+            bool(re.search(r"\d", cleaned))
+            and cleaned.lower() not in {"invoice", "commercial invoice", "tax invoice"}
+            and not looks_like_non_invoice_identifier(cleaned)
+        )
     if field == "invoiceDate":
         return normalize_date_for_comparison(cleaned) is not None
     if field in {"subtotal", "vatAmount", "totalAmount"}:

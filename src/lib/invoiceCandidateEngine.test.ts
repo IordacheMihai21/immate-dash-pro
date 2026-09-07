@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { extractInvoiceCandidates, normalizeTaxIdentifier } from "./invoiceCandidateEngine";
+import {
+  extractInvoiceCandidates,
+  looksLikeNonInvoiceIdentifier,
+  normalizeTaxIdentifier,
+} from "./invoiceCandidateEngine";
 
 // These mirror document-ai-backend/main.py's normalize_tax_identifier test
 // cases exactly -- the two implementations must stay in sync, see the
@@ -56,6 +60,93 @@ describe("extractInvoiceCandidates - tax identifier extraction", () => {
     });
 
     expect(result.fields.supplierCui.value).toBe("RO24041105");
+  });
+});
+
+describe("extractInvoiceCandidates - invoice number extraction", () => {
+  it("extracts Serie+Nr with the code between Serie and Nr", () => {
+    const lines = [{ text: "SerieMH Nr 2639744" }];
+    const result = extractInvoiceCandidates({ text: lines[0].text, lines });
+    expect(result.fields.invoiceNumber.value).toBe("MH2639744");
+  });
+
+  it("extracts Serie+Nr with the code after Nr (e.g. company-specific series like DUM.TM)", () => {
+    const lines = [{ text: "; Serie /Nr. DUM.TM 3655" }];
+    const result = extractInvoiceCandidates({ text: lines[0].text, lines });
+    expect(result.fields.invoiceNumber.value).toBe("DUM.TM3655");
+  });
+
+  it("extracts Serie+Nr when OCR splits the label across two adjacent lines", () => {
+    // Real OCR output (roboflow_ro_valid_53): "Serie MH" and "Nr.2639747"
+    // land on separate lines/table cells.
+    const lines = [{ text: "Furnizor:RMB CASA AUTO TIMISOARA Serie MH" }, { text: "Nr.2639747" }];
+    const result = extractInvoiceCandidates({
+      text: lines.map((l) => l.text).join("\n"),
+      lines,
+    });
+    expect(result.fields.invoiceNumber.value).toBe("MH2639747");
+  });
+
+  it("captures a series code containing digits and a dash", () => {
+    // Real OCR output (roboflow_ro_valid_9): the series code itself is
+    // "TM1-MLS", not a bare letters-only code.
+    const lines = [{ text: "Seria TM1-MLS nr. 21913" }];
+    const result = extractInvoiceCandidates({ text: lines[0].text, lines });
+    expect(result.fields.invoiceNumber.value).toBe("TM1-MLS21913");
+  });
+
+  it("rejects a Romanian legal citation that coincidentally matches the NNN/YYYY shape", () => {
+    // Real OCR output (roboflow_ro_valid_9): "conform art. 319 alin. 29
+    // din legea 227/2015" is a Fiscal Code citation, not an invoice number.
+    const lines = [
+      { text: "Emisa in conformitate cu prevederile art. 319 alin. 29 din legea 227/2015" },
+    ];
+    const result = extractInvoiceCandidates({ text: lines[0].text, lines });
+    expect(result.fields.invoiceNumber.value).not.toBe("2272015");
+  });
+
+  it("joins an invoice number split by a stray OCR space mid-number", () => {
+    // Real OCR output (roboflow_ro_valid_0): "MBSL.202 1232280" is really
+    // one continuous number, "MBSL.2021232280".
+    const lines = [{ text: "Nr. factura: MBSL.202 1232280" }];
+    const result = extractInvoiceCandidates({ text: lines[0].text, lines });
+    expect(result.fields.invoiceNumber.value).toBe("MBSL.2021232280");
+  });
+
+  it("matches the 'facturii' (double-i) inflection, not just 'factura'", () => {
+    const lines = [{ text: "Numéar factura: 18644077" }];
+    const result = extractInvoiceCandidates({ text: lines[0].text, lines });
+    expect(result.fields.invoiceNumber.value).toBe("18644077");
+
+    const facturiiLines = [{ text: "Nr. facturii: 5031235" }];
+    const facturiiResult = extractInvoiceCandidates({
+      text: facturiiLines[0].text,
+      lines: facturiiLines,
+    });
+    expect(facturiiResult.fields.invoiceNumber.value).toBe("5031235");
+  });
+});
+
+describe("looksLikeNonInvoiceIdentifier", () => {
+  it("rejects date-shaped values", () => {
+    expect(looksLikeNonInvoiceIdentifier("26.11.2021")).toBe(true);
+  });
+
+  it("rejects CUI-shaped values", () => {
+    expect(looksLikeNonInvoiceIdentifier("RO6724860")).toBe(true);
+  });
+
+  it("rejects IBAN-shaped values", () => {
+    expect(looksLikeNonInvoiceIdentifier("RO49AAAA1234567890123456")).toBe(true);
+  });
+
+  it("rejects Romanian phone-number-shaped values", () => {
+    expect(looksLikeNonInvoiceIdentifier("0212007787")).toBe(true);
+  });
+
+  it("accepts a genuine series+number invoice identifier", () => {
+    expect(looksLikeNonInvoiceIdentifier("MH2639744")).toBe(false);
+    expect(looksLikeNonInvoiceIdentifier("TSR-CL/14134")).toBe(false);
   });
 });
 

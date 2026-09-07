@@ -1,6 +1,7 @@
 import type { DocumentAiFieldKey } from "./documentAiService.ts";
 import {
   isInvalidPartyCandidate,
+  looksLikeNonInvoiceIdentifier,
   normalizeInvoiceNumber,
   normalizeTaxIdentifier,
 } from "./invoiceCandidateEngine.ts";
@@ -81,6 +82,15 @@ function chooseFieldValue(
   layout: string,
   layoutConfidence: number,
 ) {
+  // Dispatched before the generic agreement shortcut below: that shortcut
+  // would otherwise let two sides that happen to agree on a CUI/date/
+  // phone/IBAN-shaped value through unchallenged (it has no concept of
+  // "this looks like the wrong kind of identifier"), whereas
+  // chooseInvoiceNumber's own agreement fast-path applies that guard too.
+  if (field === "invoiceNumber") {
+    return chooseInvoiceNumber(candidate, candidateConfidence, layout, layoutConfidence);
+  }
+
   if (valuesEquivalent(field, candidate, layout) && candidate) {
     return selected(candidate, "candidate_engine", Math.max(candidateConfidence, layoutConfidence));
   }
@@ -93,9 +103,6 @@ function chooseFieldValue(
   }
   if (TAX_ID_FIELDS.has(field)) {
     return chooseTaxId(candidate, candidateConfidence, layout, layoutConfidence);
-  }
-  if (field === "invoiceNumber") {
-    return chooseInvoiceNumber(candidate, candidateConfidence, layout, layoutConfidence);
   }
   if (field === "currency") {
     const candidateCurrency = normalizeCurrency(candidate);
@@ -247,6 +254,25 @@ function chooseInvoiceNumber(
   layout: string,
   layoutConfidence: number,
 ) {
+  // Strongest signal available: the candidate engine's regex extraction
+  // and LayoutXLM's independent token-classification agree on the exact
+  // same value. Neither side has to be individually confident for this to
+  // be trustworthy -- agreement between two independent methods is itself
+  // the evidence.
+  const normalizedCandidate = normalizeInvoiceNumber(candidate);
+  const normalizedLayout = normalizeInvoiceNumber(layout);
+  if (
+    normalizedCandidate &&
+    normalizedCandidate === normalizedLayout &&
+    !looksLikeNonInvoiceIdentifier(candidate)
+  ) {
+    return selected(
+      normalizeInvoiceNumber(candidate, false),
+      "candidate_engine",
+      Math.max(candidateConfidence, layoutConfidence, 0.8),
+    );
+  }
+
   const candidateScore = invoiceNumberScore(candidate);
   const layoutScore = invoiceNumberScore(layout);
   if (candidateScore >= 3 && (candidateScore >= layoutScore || candidateConfidence >= 0.55)) {
@@ -259,7 +285,9 @@ function chooseInvoiceNumber(
   if (layoutScore >= 4 && layoutScore >= candidateScore + 1 && layoutConfidence >= 0.72) {
     return selected(normalizeInvoiceNumber(layout, false), "layoutxlm", layoutConfidence);
   }
-  return candidate ? selected(candidate, "candidate_engine", candidateConfidence) : missing();
+  return candidate && !looksLikeNonInvoiceIdentifier(candidate)
+    ? selected(candidate, "candidate_engine", candidateConfidence)
+    : missing();
 }
 
 function isCleanParty(value: string) {
@@ -280,9 +308,17 @@ function invoiceNumberScore(value: string) {
   if (!normalized || !/\d/.test(normalized) || normalized.length < 3 || normalized.length > 40) {
     return 0;
   }
+  // Applies regardless of source (candidate engine or LayoutXLM): a value
+  // that's shaped like a date, CUI, IBAN, or phone number is essentially
+  // never actually the invoice number, even if it scored well on the
+  // generic checks below.
+  if (looksLikeNonInvoiceIdentifier(value)) return 0;
+
   let score = 1;
   if (/^[A-Z0-9][A-Z0-9./_-]+$/i.test(normalized)) score += 2;
-  if (/[A-Z]/i.test(normalized) && /\d/.test(normalized)) score += 1;
+  // Alphanumeric series+number structure (e.g. "MH2639744", "TSR-CL/14134")
+  // is the dominant real-world shape -- weight it more than a pure-digit run.
+  if (/[A-Z]/i.test(normalized) && /\d/.test(normalized)) score += 2;
   if (/^(?:INV|FACT|FCT)/i.test(normalized)) score += 1;
   if (/^(?:INVOICE|NUMBER|NO)$/i.test(normalized) || /^\d{1,2}$/.test(normalized)) score -= 3;
   return score;

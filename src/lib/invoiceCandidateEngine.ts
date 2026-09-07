@@ -163,23 +163,111 @@ export function extractInvoiceCandidates({
   return validateExtractedInvoiceFields(selected, context);
 }
 
+// A candidate line that mentions one of these almost certainly isn't
+// stating the invoice number, even if a number-shaped token also appears
+// on it -- guards the broad/unlabeled patterns below (the tightly-labeled
+// ones don't need this, their label is already strong enough evidence).
+// The legea/art./alin./omfp/hg/ordin group specifically guards against
+// Romanian legal citations like "conform art. 319 alin. 29 din legea
+// 227/2015" (a real, extremely common invoice-footer reference to the
+// Fiscal Code) -- "227/2015" matches the bare NNN/YYYY shape below by pure
+// coincidence, confirmed against real OCR output where it repeated
+// identically across many unrelated documents.
+const NON_INVOICE_NUMBER_CONTEXT_PATTERN =
+  /\b(?:data|date|due|scaden[tț][aă]?|total|subtotal|tva|vat|amount|sum[aă]|comand[aă]|comenzii|contract|aviz|referin[tţ][aă]|order\s*(?:no\.?|number|#)?|po\s*number|purchase\s*order|tracking|awb|iban|cont(?:ul)?\s*bancar|telefon|tel\.?|fax|mobil|lege[aă]?|art\.?|alin\.?|omfp|ordin|h\.?g\.?)\b/i;
+
+// OCR sometimes inserts a stray space mid-number (e.g. "MBSL.202 1232280"
+// is really "MBSL.2021232280") -- if the label match is immediately
+// followed by whitespace then more bare digits with nothing else between,
+// treat it as one continuous value rather than truncating at the space.
+function extendAcrossOcrSpace(line: string, matchEnd: number, captured: string): string {
+  const tail = line.slice(matchEnd);
+  const continuation = tail.match(/^\s+(\d{3,10})\b/);
+  return continuation ? captured + continuation[1] : captured;
+}
+
+// "Serie <CODE> Nr <digits>" (e.g. "SerieMH Nr 2639744") -- code sits
+// between "Serie"/"Seria" and "Nr". The code itself may contain digits and
+// a dash (e.g. "TM1-MLS"), not just bare letters -- confirmed against real
+// OCR where a letters-only charset let the code fall through unmatched
+// entirely, leaving only the (wrong, layout-side) fallback to win.
+const SERIE_CODE_THEN_NR_PATTERN =
+  /seri[ae]\W{0,3}([A-Z][A-Z0-9-]{1,9})[\W_]{0,6}nr\W{0,3}\.?\s*(\d{2,9})\b/i;
+// "Serie/Nr. <CODE> <digits>" (e.g. "Serie /Nr. DUM.TM 3655") -- a
+// different, equally common shape where the code follows "Nr." instead,
+// sometimes containing one internal dot (company-specific series prefixes
+// like "DUM.TM" are common, but this pattern isn't tied to any specific
+// company -- it matches the general "code, then digits" structure).
+const SERIE_NR_THEN_CODE_PATTERN =
+  /seri[ae]\W{0,4}nr\W{0,3}\.?\s*([A-Z]{2,4}\.?[A-Z]{0,4})\s+(\d{2,9})\b/i;
+
+function matchSeriePlusNr(text: string): { value: string } | null {
+  const codeThenNr = text.match(SERIE_CODE_THEN_NR_PATTERN);
+  if (codeThenNr) return { value: `${codeThenNr[1].toUpperCase()}${codeThenNr[2]}` };
+  const nrThenCode = text.match(SERIE_NR_THEN_CODE_PATTERN);
+  if (nrThenCode) return { value: `${nrThenCode[1].toUpperCase()}${nrThenCode[2]}` };
+  return null;
+}
+
 export function extractInvoiceNumberCandidates(context: CandidateContext) {
   const candidates: FieldCandidate[] = [];
+  // factur\w{0,3} (not factur[aă]) tolerates "facturii" (double-i,
+  // extremely common in real OCR: "Numărul facturii"), "facturi", "factură".
   const labeledPattern =
-    /(?:invoice\s*(?:number|no\.?|#|id)|nr\.?\s*(?:factur[aă]|factura)|num[aă]r(?:ul)?\s+facturii|factur[aă]\s*(?:nr\.?|num[aă]r)?|seria\s+(?:si|și|şi)\s+num[aă]rul\s+facturii)\s*[:#-]?\s*([A-Z0-9][A-Z0-9./_-]{1,40})/i;
+    /(?:invoice\s*(?:number|no\.?|#|id)|nr\.?\s*factur\w{0,3}|num[aă]r(?:ul)?\s+factur\w{0,3}|factur\w{0,3}\s*(?:nr\.?|num[aă]r(?:ul)?)?|seria\s+(?:si|și|şi)\s+num[aă]rul\s+factur\w{0,3})\s*[:#-]?\s*([A-Z0-9][A-Z0-9./_-]{1,40})/i;
 
   context.lines.forEach((line, index) => {
     const match = line.text.match(labeledPattern);
-    if (match?.[1]) {
+    if (match?.[1] && typeof match.index === "number") {
+      const value = extendAcrossOcrSpace(line.text, match.index + match[0].length, match[1]);
+      if (!looksLikeNonInvoiceIdentifier(value)) {
+        addCandidate(candidates, {
+          field: "invoiceNumber",
+          value: normalizeInvoiceNumber(value, false),
+          normalizedValue: normalizeInvoiceNumber(value),
+          sourceText: line.text,
+          lineIndex: index,
+          score:
+            0.9 + lineConfidenceBonus(line) + topRegionBonus(index, context.lines.length, 0.06),
+          method: line.bbox ? "Layout heuristic" : "Regex",
+          reasons: ["Etichetă explicită pentru numărul facturii"],
+        });
+      }
+    }
+
+    let serieMatch = matchSeriePlusNr(line.text);
+    let serieSourceText = line.text;
+    let serieAdjacentLineUsed = false;
+    // OCR frequently splits "Serie <CODE>" and "Nr. <digits>" across two
+    // separate lines/table cells (confirmed against real OCR: "Serie MH"
+    // on one line, "Nr.2639747" on the next). Retry the same two shapes
+    // against the current line joined with up to 2 following lines before
+    // giving up.
+    if (!serieMatch) {
+      for (let offset = 1; offset <= 2 && index + offset < context.lines.length; offset += 1) {
+        const joined = `${line.text} ${context.lines[index + offset].text}`;
+        serieMatch = matchSeriePlusNr(joined);
+        if (serieMatch) {
+          serieSourceText = joined;
+          serieAdjacentLineUsed = true;
+          break;
+        }
+      }
+    }
+    if (serieMatch) {
       addCandidate(candidates, {
         field: "invoiceNumber",
-        value: normalizeInvoiceNumber(match[1], false),
-        normalizedValue: normalizeInvoiceNumber(match[1]),
-        sourceText: line.text,
+        value: serieMatch.value,
+        normalizedValue: normalizeInvoiceNumber(serieMatch.value),
+        sourceText: serieSourceText,
         lineIndex: index,
-        score: 0.9 + lineConfidenceBonus(line) + topRegionBonus(index, context.lines.length, 0.06),
+        score:
+          0.88 -
+          (serieAdjacentLineUsed ? 0.08 : 0) +
+          lineConfidenceBonus(line) +
+          topRegionBonus(index, context.lines.length, 0.06),
         method: line.bbox ? "Layout heuristic" : "Regex",
-        reasons: ["Etichetă explicită pentru numărul facturii"],
+        reasons: ["Format Serie + Numar de factură"],
       });
     }
 
@@ -198,27 +286,23 @@ export function extractInvoiceNumberCandidates(context: CandidateContext) {
       });
     }
 
-    for (const standalone of line.text.matchAll(
-      /\b(INV(?=[A-Z0-9./_-]*\d)[A-Z0-9./_-]{3,40})\b/gi,
-    )) {
-      addCandidate(candidates, {
-        field: "invoiceNumber",
-        value: normalizeInvoiceNumber(standalone[1], false),
-        normalizedValue: normalizeInvoiceNumber(standalone[1]),
-        sourceText: line.text,
-        lineIndex: index,
-        score: 0.72 + topRegionBonus(index, context.lines.length, 0.08),
-        method: line.bbox ? "Layout heuristic" : "Regex",
-        reasons: ["Identificator INV independent"],
-      });
-    }
+    if (!NON_INVOICE_NUMBER_CONTEXT_PATTERN.test(line.text)) {
+      for (const standalone of line.text.matchAll(
+        /\b(INV(?=[A-Z0-9./_-]*\d)[A-Z0-9./_-]{3,40})\b/gi,
+      )) {
+        if (looksLikeNonInvoiceIdentifier(standalone[1])) continue;
+        addCandidate(candidates, {
+          field: "invoiceNumber",
+          value: normalizeInvoiceNumber(standalone[1], false),
+          normalizedValue: normalizeInvoiceNumber(standalone[1]),
+          sourceText: line.text,
+          lineIndex: index,
+          score: 0.72 + topRegionBonus(index, context.lines.length, 0.08),
+          method: line.bbox ? "Layout heuristic" : "Regex",
+          reasons: ["Identificator INV independent"],
+        });
+      }
 
-    const standaloneNumberYearLineIsNoisy =
-      /\b(?:data|date|due|scaden[tț][aă]?|total|subtotal|tva|vat|amount|sum[aă])\b/i.test(
-        line.text,
-      );
-
-    if (!standaloneNumberYearLineIsNoisy) {
       for (const standalone of line.text.matchAll(/(?<!\d\/)\b(\d{2,8}\/(?:19|20)\d{2})\b/g)) {
         addCandidate(candidates, {
           field: "invoiceNumber",
@@ -559,6 +643,32 @@ export function isInvalidPartyCandidate(value: string) {
 export function normalizeInvoiceNumber(value: string, comparisonOnly = true) {
   const cleaned = value.replace(/^[#:\s]+|[.,;:\s]+$/g, "").slice(0, 50);
   return comparisonOnly ? cleaned.toUpperCase().replace(/[^A-Z0-9]/g, "") : cleaned;
+}
+
+// Strong negative signals: a candidate that actually matches one of these
+// other identifier shapes is almost always a mis-extraction, not a real
+// (if unusual) invoice number -- reject it regardless of which side
+// (candidate engine or LayoutXLM) produced it. Used both at extraction
+// time here and as a final defense in layoutAiHybridMerge.ts's
+// chooseInvoiceNumber/invoiceNumberScore.
+export function looksLikeNonInvoiceIdentifier(value: string): boolean {
+  const normalized = normalizeInvoiceNumber(value);
+  if (!normalized) return false;
+
+  // Date, e.g. "26.11.2021" or "2021-11-26".
+  if (normalizeDate(value)) return true;
+
+  // CUI/CIF: "RO" + 5-10 digits and nothing else.
+  if (/^RO\d{5,10}$/.test(normalized)) return true;
+
+  // IBAN: 2 letters + 2 check digits + a long alphanumeric block (a
+  // Romanian IBAN normalizes to 24 characters; allow a little slack).
+  if (/^[A-Z]{2}\d{2}[A-Z0-9]{16,30}$/.test(normalized)) return true;
+
+  // Romanian phone number: 10 bare digits starting with 0, or +40-prefixed.
+  if (/^0\d{9}$/.test(normalized) || /^40\d{9}$/.test(normalized)) return true;
+
+  return false;
 }
 
 // Mirrors document-ai-backend/main.py's normalize_tax_identifier exactly --

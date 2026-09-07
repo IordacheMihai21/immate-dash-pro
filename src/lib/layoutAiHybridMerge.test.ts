@@ -52,3 +52,43 @@ describe("mergeLayoutXlmWithCandidateEngine - tax identifier merge", () => {
     expect(result.sources.supplierCui).toBe("missing");
   });
 });
+
+describe("mergeLayoutXlmWithCandidateEngine - invoice number merge", () => {
+  it("trusts agreement between the candidate engine and LayoutXLM even when neither is individually confident", () => {
+    const result = mergeLayoutXlmWithCandidateEngine({
+      candidateFields: { invoiceNumber: "MH2639744" },
+      candidateConfidences: { invoiceNumber: 0.4 },
+      layoutFields: { invoiceNumber: "MH2639744" },
+      layoutConfidences: { invoiceNumber: 0.45 },
+      layoutMethods: { invoiceNumber: "fine-tuned layoutxlm" },
+    });
+
+    expect(result.fields.invoiceNumber).toBe("MH2639744");
+    expect(result.confidences.invoiceNumber).toBeGreaterThanOrEqual(0.8);
+  });
+
+  it("rejects a high-scoring candidate that is actually shaped like a CUI/date/phone/IBAN", () => {
+    const result = mergeLayoutXlmWithCandidateEngine({
+      candidateFields: { invoiceNumber: "RO6724860" },
+      candidateConfidences: { invoiceNumber: 0.9 },
+      layoutFields: { invoiceNumber: "" },
+    });
+
+    expect(result.sources.invoiceNumber).toBe("missing");
+  });
+
+  it("prefers a well-formed candidate over a noisy layout proposal that retained label text", () => {
+    // Real case: the model's own entity span sometimes includes adjacent
+    // label text it wasn't cleanly separated from ("Nr.2639747" instead of
+    // "2639747").
+    const result = mergeLayoutXlmWithCandidateEngine({
+      candidateFields: { invoiceNumber: "MH2639747" },
+      candidateConfidences: { invoiceNumber: 0.85 },
+      layoutFields: { invoiceNumber: "Nr.2639747" },
+      layoutConfidences: { invoiceNumber: 0.7 },
+      layoutMethods: { invoiceNumber: "fine-tuned layoutxlm" },
+    });
+
+    expect(result.fields.invoiceNumber).toBe("MH2639747");
+  });
+});
