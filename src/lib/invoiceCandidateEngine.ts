@@ -398,7 +398,41 @@ export function extractAmountCandidates(
       return;
     }
 
-    const amounts = extractMonetaryTokens(line.text);
+    let amounts = extractMonetaryTokens(line.text);
+    let sourceLineIndex = index;
+    let sourceLineText = line.text;
+    let adjacentLineUsed = false;
+
+    // OCR routinely splits a table's label cell and value cell into
+    // separate lines/rows (e.g. "Total de plati (col. 5 +col. 6):" on one
+    // line, "RON 1780.02" one or two lines below, sometimes with a blank
+    // line in between). When the label's own line carries no amount at
+    // all, look a couple of lines ahead before giving up -- but stop at
+    // the first line that itself looks like a different field's label, so
+    // this doesn't bleed into an adjacent subtotal/VAT row's value.
+    if (amounts.length === 0) {
+      const otherLabelFields = (Object.keys(labels) as Array<keyof typeof labels>).filter(
+        (key) => key !== field,
+      );
+      for (let offset = 1; offset <= 2 && index + offset < context.lines.length; offset += 1) {
+        const nextLine = context.lines[index + offset];
+        if (
+          labels[field].test(nextLine.text) ||
+          otherLabelFields.some((key) => labels[key].test(nextLine.text))
+        ) {
+          break;
+        }
+        const nextAmounts = extractMonetaryTokens(nextLine.text);
+        if (nextAmounts.length > 0) {
+          amounts = nextAmounts;
+          sourceLineIndex = index + offset;
+          sourceLineText = nextLine.text;
+          adjacentLineUsed = true;
+          break;
+        }
+      }
+    }
+
     amounts.forEach((amount, amountIndex) => {
       let score = 0.68 + lowerRegionBonus(index, context.lines.length, 0.1);
       if (
@@ -422,16 +456,21 @@ export function extractAmountCandidates(
         score += 0.14;
       }
       if (amountIndex === amounts.length - 1) score += 0.04;
+      if (adjacentLineUsed) score -= 0.08;
 
       addCandidate(candidates, {
         field,
         value: amount,
         normalizedValue: amount,
-        sourceText: line.text,
-        lineIndex: index,
+        sourceText: sourceLineText,
+        lineIndex: sourceLineIndex,
         score,
         method: line.bbox ? "Layout heuristic" : "Regex",
-        reasons: ["Valoare monetară lângă eticheta câmpului"],
+        reasons: [
+          adjacentLineUsed
+            ? "Valoare monetară pe o linie apropiată etichetei (celulă separată)"
+            : "Valoare monetară lângă eticheta câmpului",
+        ],
       });
     });
   });

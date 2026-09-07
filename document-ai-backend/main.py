@@ -877,37 +877,43 @@ def extract_fields_from_text(
     )
     fields["supplierName"] = extract_supplier_name(lines)
     fields["customerName"] = extract_customer_name(lines)
+    subtotal_labels = [
+        "sub_total",
+        "subtotal",
+        "sub total",
+        "valoare fara tva",
+        "valoare fără tva",
+        "net amount",
+        "baza fara tva",
+    ]
+    vat_labels = ["tax amount", "vat amount", "gst", "vat", "tva", "tax"]
+    total_labels = [
+        "total de plata",
+        "total de plată",
+        "grand total",
+        "total due",
+        "amount due",
+        "total",
+    ]
     fields["subtotal"] = extract_amount_by_labels(
         lines,
-        [
-            "sub_total",
-            "subtotal",
-            "sub total",
-            "valoare fara tva",
-            "valoare fără tva",
-            "net amount",
-            "baza fara tva",
-        ],
+        subtotal_labels,
         prefer_last=True,
+        stop_labels=vat_labels + total_labels,
     )
     fields["vatAmount"] = extract_amount_by_labels(
         lines,
-        ["tax amount", "vat amount", "gst", "vat", "tva", "tax"],
+        vat_labels,
         excluded=["gstin", "vat id", "tax id", "cui", "cif", "cod fiscal", "cod tva"],
         prefer_last=True,
+        stop_labels=subtotal_labels + total_labels,
     )
     fields["totalAmount"] = extract_amount_by_labels(
         lines,
-        [
-            "total de plata",
-            "total de plată",
-            "grand total",
-            "total due",
-            "amount due",
-            "total",
-        ],
+        total_labels,
         excluded=["subtotal", "sub_total", "tax", "vat", "gst", "tva"],
         prefer_last=True,
+        stop_labels=subtotal_labels + vat_labels,
     )
     fields["currency"] = extract_currency(searchable_text)
     repair_lost_amount_separators(fields)
@@ -1146,15 +1152,28 @@ def extract_labeled_party(lines: List[str], labels: List[str]) -> str:
     return ""
 
 
+def _amounts_on_line(line: str) -> List[str]:
+    found: List[str] = []
+    for match in re.finditer(r"(?<!\d)(\d{1,8}(?:[.,]\d{2}))(?!\d)", line):
+        trailing = line[match.end() : match.end() + 2]
+        if "%" in trailing:
+            continue
+        found.append(match.group(1))
+    return found
+
+
 def extract_amount_by_labels(
     lines: List[str],
     labels: List[str],
     excluded: Optional[List[str]] = None,
     prefer_last: bool = False,
+    stop_labels: Optional[List[str]] = None,
 ) -> str:
     excluded = excluded or []
+    stop_labels = stop_labels or []
+
     for label in labels:
-        for line in lines:
+        for index, line in enumerate(lines):
             normalized_line = line.lower()
             if not line_contains_label(normalized_line, label.lower()):
                 continue
@@ -1162,14 +1181,31 @@ def extract_amount_by_labels(
             if any(term in normalized_line for term in excluded):
                 continue
 
-            candidates: List[str] = []
-            for match in re.finditer(r"(?<!\d)(\d{1,8}(?:[.,]\d{2}))(?!\d)", line):
-                trailing = line[match.end() : match.end() + 2]
-                if "%" in trailing:
-                    continue
-                candidates.append(match.group(1))
+            candidates = _amounts_on_line(line)
             if candidates:
                 return candidates[-1 if prefer_last else 0]
+
+            # OCR routinely splits a table's label cell and value cell into
+            # separate lines/rows -- when the label's own line carries no
+            # amount, look a couple of lines ahead before giving up on this
+            # match, stopping at the first line that looks like a different
+            # field's own label so this can't bleed into a neighboring
+            # subtotal/VAT/total row's value. Mirrors
+            # src/lib/invoiceCandidateEngine.ts's extractAmountCandidates.
+            for offset in (1, 2):
+                next_index = index + offset
+                if next_index >= len(lines):
+                    break
+                next_line = lines[next_index]
+                next_normalized = next_line.lower()
+                if line_contains_label(next_normalized, label.lower()) or any(
+                    line_contains_label(next_normalized, stop_label.lower())
+                    for stop_label in stop_labels
+                ):
+                    break
+                next_candidates = _amounts_on_line(next_line)
+                if next_candidates:
+                    return next_candidates[-1 if prefer_last else 0]
 
     return ""
 
