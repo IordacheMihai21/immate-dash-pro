@@ -2,6 +2,13 @@ import { createStart, createMiddleware } from "@tanstack/react-start";
 
 import { getServerAuthSession } from "./lib/serverAuth.server";
 import { renderErrorPage } from "./lib/error-page";
+import { applySecurityHeaders } from "./lib/securityHeaders.server";
+
+const securityHeadersMiddleware = createMiddleware().server(async ({ next }) => {
+  const result = await next();
+  applySecurityHeaders(result.response.headers);
+  return result;
+});
 
 const authMiddleware = createMiddleware().server(async ({ request, next }) => {
   try {
@@ -35,5 +42,5 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
 });
 
 export const startInstance = createStart(() => ({
-  requestMiddleware: [authMiddleware, errorMiddleware],
+  requestMiddleware: [securityHeadersMiddleware, authMiddleware, errorMiddleware],
 }));
