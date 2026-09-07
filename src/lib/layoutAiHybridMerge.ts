@@ -1,5 +1,9 @@
 import type { DocumentAiFieldKey } from "./documentAiService.ts";
-import { isInvalidPartyCandidate, normalizeInvoiceNumber } from "./invoiceCandidateEngine.ts";
+import {
+  isInvalidPartyCandidate,
+  normalizeInvoiceNumber,
+  normalizeTaxIdentifier,
+} from "./invoiceCandidateEngine.ts";
 
 export type HybridFieldSource = "candidate_engine" | "layoutxlm" | "missing";
 
@@ -32,6 +36,7 @@ const FIELD_KEYS: DocumentAiFieldKey[] = [
 
 const AMOUNT_FIELDS = new Set<DocumentAiFieldKey>(["subtotal", "vatAmount", "totalAmount"]);
 const PARTY_FIELDS = new Set<DocumentAiFieldKey>(["supplierName", "customerName"]);
+const TAX_ID_FIELDS = new Set<DocumentAiFieldKey>(["supplierCui", "customerCui"]);
 const PARTY_NOISE_PATTERN =
   /\b(?:invoice(?:\s*(?:number|no\.?|#))?|po\s*number|bill[\s_-]*to|ship[\s_-]*to|subtotal|total|amount|description|quantity|contact\s+us|email|phone|address|bank|swift|iban)\b/i;
 
@@ -85,6 +90,9 @@ function chooseFieldValue(
   }
   if (PARTY_FIELDS.has(field)) {
     return chooseParty(field, candidate, candidateConfidence, layout, layoutConfidence);
+  }
+  if (TAX_ID_FIELDS.has(field)) {
+    return chooseTaxId(candidate, candidateConfidence, layout, layoutConfidence);
   }
   if (field === "invoiceNumber") {
     return chooseInvoiceNumber(candidate, candidateConfidence, layout, layoutConfidence);
@@ -167,6 +175,40 @@ function chooseParty(
   }
 
   return candidate ? selected(candidate, "candidate_engine", candidateConfidence) : missing();
+}
+
+// Both sides are normalized before comparison so the OCR-noisy raw candidate
+// (e.g. "R027916027", "C.I.LF.R0O6724860") never wins just because it looked
+// "plausible enough" -- the old isValidGeneralField check for these fields
+// only required 6-24 alnum chars with a digit, which almost anything passed.
+function chooseTaxId(
+  candidate: string,
+  candidateConfidence: number,
+  layout: string,
+  layoutConfidence: number,
+) {
+  const normalizedCandidate = normalizeTaxIdentifier(candidate);
+  const normalizedLayout = normalizeTaxIdentifier(layout);
+
+  if (normalizedCandidate && normalizedCandidate === normalizedLayout) {
+    return selected(
+      normalizedCandidate,
+      "candidate_engine",
+      Math.max(candidateConfidence, layoutConfidence),
+    );
+  }
+  if (normalizedCandidate && normalizedLayout) {
+    return candidateConfidence >= layoutConfidence
+      ? selected(normalizedCandidate, "candidate_engine", candidateConfidence)
+      : selected(normalizedLayout, "layoutxlm", layoutConfidence);
+  }
+  if (normalizedCandidate) {
+    return selected(normalizedCandidate, "candidate_engine", candidateConfidence);
+  }
+  if (normalizedLayout) {
+    return selected(normalizedLayout, "layoutxlm", layoutConfidence);
+  }
+  return missing();
 }
 
 function splitLegalEntities(value: string): string[] {
@@ -295,10 +337,8 @@ function isValidGeneralField(field: DocumentAiFieldKey, value: string) {
     const date = new Date(`${match[1]}-${match[2]}-${match[3]}T00:00:00Z`);
     return !Number.isNaN(date.getTime()) && date.toISOString().startsWith(match[0]);
   }
-  if (field === "supplierCui" || field === "customerCui") {
-    const normalized = value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-    return normalized.length >= 6 && normalized.length <= 24 && /\d/.test(normalized);
-  }
+  // supplierCui/customerCui never reach here -- chooseFieldValue routes them
+  // to chooseTaxId, which normalizes with normalizeTaxIdentifier instead.
   return true;
 }
 

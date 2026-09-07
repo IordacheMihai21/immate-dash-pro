@@ -68,7 +68,7 @@ const FIELD_KEYS: CandidateFieldKey[] = [
 ];
 
 const DATE_PATTERN =
-  /\b(\d{4}[./-]\d{1,2}[./-]\d{1,2}|\d{1,2}[./-]\d{1,2}[./-]\d{2,4}|\d{1,2}[-\s](?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*[-\s]\d{2,4})\b/gi;
+  /\b(\d{4}[./-]\d{1,2}[./-]\d{1,2}|\d{1,2}[./-]\d{1,2}[./-]\d{2,4}|\d{1,2}[-\s](?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec|ian|febr|mart|apr|mai|iun|iul|aug|sept|oct|noi|nov|dec)[a-zăâîșşțţ]*[-\s]\d{2,4})\b/giu;
 
 const PARTY_LABELS = {
   supplier: /\b(?:seller|supplier|vendor|furnizor|v[aâ]nz[aă]tor|emitent|from)\b/i,
@@ -114,8 +114,18 @@ const PARTY_INVALID_TERMS = [
   "invoice #",
 ];
 
+// The bare-integer branch requires >=2 digits (\d{2,}, not \d+): a lone
+// digit with no decimal, no thousands grouping, and no currency symbol is
+// essentially always table noise on a real invoice -- a column index like
+// "(6)" in a header such as "Total de plati (col. 5 +col. 6):", a quantity,
+// a page number -- never a genuine amount. Confirmed against real OCR
+// output: this exact pattern produced fabricated totals like "6.00",
+// "1.00", "2.00", "3.00" on documents whose real total was a completely
+// different, correctly-formatted number elsewhere on the page. Decimal
+// amounts (e.g. "9.50") are unaffected -- they match the middle branch,
+// which requires the decimal suffix rather than treating it as optional.
 const AMOUNT_PATTERN =
-  /(?:[$€£]\s*)?-?(?:\d{1,3}(?:[\s.,']\d{3})+|\d+)(?:[,.]\d{1,2})?(?:\s*(?:RON|LEI|EUR|USD|GBP))?/gi;
+  /(?:[$€£]\s*)?-?(?:\d{1,3}(?:[\s.,']\d{3})+(?:[,.]\d{1,2})?|\d+[,.]\d{1,2}|\d{2,})(?:\s*(?:RON|LEI|EUR|USD|GBP))?/gi;
 
 export function extractInvoiceCandidates({
   text,
@@ -173,6 +183,21 @@ export function extractInvoiceNumberCandidates(context: CandidateContext) {
       });
     }
 
+    const leadingNrMatch = line.text.match(/^\s*Nr\.?\s*[:#-]?\s*(\d{2,8}\/(?:19|20)\d{2})\b/i);
+
+    if (leadingNrMatch?.[1]) {
+      addCandidate(candidates, {
+        field: "invoiceNumber",
+        value: normalizeInvoiceNumber(leadingNrMatch[1], false),
+        normalizedValue: normalizeInvoiceNumber(leadingNrMatch[1]),
+        sourceText: line.text,
+        lineIndex: index,
+        score: 0.92 + lineConfidenceBonus(line) + topRegionBonus(index, context.lines.length, 0.06),
+        method: line.bbox ? "Layout heuristic" : "Regex",
+        reasons: ["Număr de factură prefixat cu Nr. la începutul liniei"],
+      });
+    }
+
     for (const standalone of line.text.matchAll(
       /\b(INV(?=[A-Z0-9./_-]*\d)[A-Z0-9./_-]{3,40})\b/gi,
     )) {
@@ -226,16 +251,20 @@ export function extractDateCandidates(context: CandidateContext) {
     const normalized = normalizeDate(raw);
     if (!normalized) return;
 
-    const normalizedLine = normalizeText(line.text);
+    const matchIndex = line.text.indexOf(raw);
+    const localStart = Math.max(0, matchIndex - 55);
+    const localContext = normalizeText(line.text.slice(localStart, matchIndex));
+
     const invoiceLabel = /\b(invoice\s+date|issue\s+date|data\s+facturii|data\s+emiterii)\b/i.test(
-      normalizedLine,
+      localContext,
     );
-    const genericLabel = /\b(date|data)\b/i.test(normalizedLine);
-    const dueDate = /\b(due\s+date|payment\s+due|data\s+scadent|scaden)/i.test(normalizedLine);
+    const genericLabel = /\b(date|data)\b/i.test(localContext);
+    const dueDate = /\b(due\s+date|payment\s+due|data\s+scadent|scaden)/i.test(localContext);
+
     let score = allDates.length === 1 ? 0.68 : 0.57;
-    if (invoiceLabel) score += 0.25;
-    else if (genericLabel) score += 0.1;
-    if (dueDate) score -= 0.35;
+    if (invoiceLabel) score += 0.3;
+    else if (genericLabel) score += 0.08;
+    if (dueDate) score -= 0.45;
     score += topRegionBonus(index, context.lines.length, 0.05);
 
     addCandidate(candidates, {
@@ -493,6 +522,42 @@ export function normalizeInvoiceNumber(value: string, comparisonOnly = true) {
   return comparisonOnly ? cleaned.toUpperCase().replace(/[^A-Z0-9]/g, "") : cleaned;
 }
 
+// Mirrors document-ai-backend/main.py's normalize_tax_identifier exactly --
+// keep the two in sync. Without this TS-side equivalent, the hybrid merge's
+// loose CUI validity check (any 6-24 char alnum string with a digit) let
+// unnormalized, OCR-noisy candidates like "C.I.LF.R0O6724860" or
+// "R027916027" win over the backend's already-clean "RO6724860" /
+// "RO27916027", even though the backend was doing the right thing.
+export function normalizeTaxIdentifier(value: string): string {
+  if (!value) return "";
+
+  const normalized = value.toUpperCase().trim();
+  let compact = normalized.replace(/[^A-Z0-9]/g, "");
+  compact = compact.replace(/^(?:CUI|CIF|CLF|CODFISCAL|CODTVA|VATID|VATCODE|TAXID)+/, "");
+
+  let prefix = "";
+  let tail = compact;
+  if (compact.startsWith("RO")) {
+    prefix = "RO";
+    tail = compact.slice(2);
+  } else if (compact.startsWith("R0O") || compact.startsWith("R00")) {
+    prefix = "RO";
+    tail = compact.slice(3);
+  } else if (compact.startsWith("R0") && /^\d+$/.test(compact.slice(2))) {
+    prefix = "RO";
+    tail = compact.slice(2);
+  }
+
+  if (prefix) {
+    tail = tail.replace(/O/g, "0");
+  }
+
+  if (!/^\d+$/.test(tail)) return "";
+  if (tail.length < 5 || tail.length > 12) return "";
+
+  return prefix + tail;
+}
+
 export function normalizeDate(value: string) {
   const cleaned = value.trim();
   let year: number;
@@ -514,20 +579,59 @@ export function normalizeDate(value: string) {
       if (!monthMatch) return "";
       const monthNames: Record<string, number> = {
         jan: 1,
+        january: 1,
+        ian: 1,
+        ianuarie: 1,
+
         feb: 2,
+        february: 2,
+        februarie: 2,
+
         mar: 3,
+        march: 3,
+        martie: 3,
+
         apr: 4,
+        april: 4,
+        aprilie: 4,
+
         may: 5,
+        mai: 5,
+
         jun: 6,
+        june: 6,
+        iun: 6,
+        iunie: 6,
+
         jul: 7,
+        july: 7,
+        iul: 7,
+        iulie: 7,
+
         aug: 8,
+        august: 8,
+
         sep: 9,
+        sept: 9,
+        september: 9,
+        septembrie: 9,
+
         oct: 10,
+        october: 10,
+        octombrie: 10,
+
         nov: 11,
+        november: 11,
+        noi: 11,
+        noiembrie: 11,
+
         dec: 12,
+        december: 12,
+        decembrie: 12,
       };
       day = Number(monthMatch[1]);
-      month = monthNames[monthMatch[2].slice(0, 3).toLowerCase()] ?? 0;
+      const monthToken = monthMatch[2].toLowerCase();
+      month = monthNames[monthToken] ?? monthNames[monthToken.slice(0, 3)] ?? 0;
       year = normalizeYear(Number(monthMatch[3]));
     }
   }
@@ -691,10 +795,23 @@ function extractTaxIdentifierCandidates(
 ) {
   const found: FieldCandidate[] = [];
   context.lines.forEach((line, index) => {
+    // Value charset tolerates embedded spaces/dots/dashes (not just a
+    // leading "RO ") so OCR word-splitting mid tax-ID (e.g. "24041 105"
+    // from two separate OCR boxes) isn't truncated at the space before
+    // normalizeTaxIdentifier gets a chance to compact it back together.
+    //
+    // CUI/CIF/CLF each get \.? between every letter because real scanned
+    // Romanian invoices routinely OCR the abbreviation with a period after
+    // each letter ("C.I.F.", "C.U.I.", "C.LF." when I is misread as L) --
+    // without this, the label never matches at all and extraction silently
+    // falls back to whatever (often RO-prefix-less) proposal the model
+    // produced instead. Confirmed against real OCR output, not a guess:
+    // e.g. "C.LF.: RO 14600820" was previously invisible to this regex.
     for (const match of line.text.matchAll(
-      /\b(?:GSTIN|CUI|CIF|VAT\s*(?:ID|CODE|NO\.?|NUMBER)|TAX\s*(?:ID|NO\.?|NUMBER))\s*[:#-]?\s*((?:RO\s*)?[A-Z0-9]{5,20})/gi,
+      /\b(?:GSTIN|C\.?\s*U\.?\s*I\.?|C\.?\s*I\.?\s*F\.?|C\.?\s*L\.?\s*F\.?|COD\s+FISCAL|COD\s+TVA|VAT\s*(?:ID|CODE|NO\.?|NUMBER)|TAX\s*(?:ID|NO\.?|NUMBER))\s*[:#;.-]?\s*([A-Z0-9][A-Z0-9 .:/_-]{4,30})/gi,
     )) {
-      const value = match[1].replace(/\s+/g, "").toUpperCase();
+      const value = normalizeTaxIdentifier(match[1]);
+      if (!value) continue;
       addCandidate(found, {
         field,
         value,

@@ -991,27 +991,86 @@ def extract_invoice_date(text: str) -> str:
     return ""
 
 
-def extract_tax_identifier(text: str) -> str:
-    match = re.search(
-        r"(?:gstin|cui|cif|cod\s+fiscal|cod\s+tva|vat\s+(?:code|id)|tax\s+id)\s*[:#-]?\s*([A-Z]{0,3}\d[A-Z0-9]{4,})",
-        text,
-        flags=re.IGNORECASE,
+def normalize_tax_identifier(value: str) -> str:
+    if not value:
+        return ""
+
+    normalized = value.upper().strip()
+
+    # Remove whitespace/punctuation so OCR variants such as
+    # "C.I.F.: RO123" become easier to interpret.
+    compact = re.sub(r"[^A-Z0-9]", "", normalized)
+
+    # Remove common fiscal-field labels from the beginning.
+    compact = re.sub(
+        r"^(?:CUI|CIF|CLF|CODFISCAL|CODTVA|VATID|VATCODE|TAXID)+",
+        "",
+        compact,
     )
 
-    return clean_value(match.group(1)) if match else ""
+    # Romanian RO prefix, including frequent OCR confusions:
+    # R0O123 -> RO123
+    # R0O... / R00... -> RO...
+    if compact.startswith("RO"):
+        tail = compact[2:]
+        prefix = "RO"
+    elif compact.startswith(("R0O", "R00")):
+        tail = compact[3:]
+        prefix = "RO"
+    elif compact.startswith("R0") and compact[2:].isdigit():
+        tail = compact[2:]
+        prefix = "RO"
+    else:
+        prefix = ""
+        tail = compact
+
+    # Once RO has been identified, the rest must be numeric.
+    if prefix:
+        tail = tail.replace("O", "0")
+
+    if not tail.isdigit():
+        return ""
+
+    # Romanian fiscal identifiers in this pipeline.
+    if not 5 <= len(tail) <= 12:
+        return ""
+
+    return prefix + tail
+
+# \.? between every letter of CUI/CIF/CLF: real scanned Romanian invoices
+# routinely OCR the abbreviation with a period after each letter ("C.I.F.",
+# "C.U.I.", "C.LF." when I is misread as L) -- without this the label never
+# matches and extraction silently falls back to whatever (often RO-prefix-
+# less) proposal the model produced instead. Confirmed against real OCR
+# output (e.g. "C.LF.: RO 14600820" was invisible to the old pattern), not
+# a guess. Mirrored in src/lib/invoiceCandidateEngine.ts -- keep in sync.
+TAX_ID_LABEL_PATTERN = (
+    r"(?:gstin|c\.?\s*u\.?\s*i\.?|c\.?\s*i\.?\s*f\.?|c\.?\s*l\.?\s*f\.?|"
+    r"cod\s+fiscal|cod\s+tva|vat\s+(?:code|id)|tax\s+id)"
+    r"\s*[:#;.-]?\s*([A-Z0-9 .:/_-]{5,40})"
+)
+
+
+def extract_tax_identifier(text: str) -> str:
+    matches = re.findall(TAX_ID_LABEL_PATTERN, text, flags=re.IGNORECASE)
+
+    for value in matches:
+        normalized = normalize_tax_identifier(value)
+        if normalized:
+            return normalized
+
+    return ""
 
 
 def extract_customer_tax_identifier(text: str, supplier_tax_id: str) -> str:
-    matches = re.findall(
-        r"(?:gstin|cui|cif|cod\s+fiscal|cod\s+tva|vat\s+(?:code|id)|tax\s+id)\s*[:#-]?\s*([A-Z]{0,3}\d[A-Z0-9]{4,})",
-        text,
-        flags=re.IGNORECASE,
-    )
+    matches = re.findall(TAX_ID_LABEL_PATTERN, text, flags=re.IGNORECASE)
+
+    supplier_normalized = normalize_tax_identifier(supplier_tax_id)
 
     for value in matches:
-        cleaned = clean_value(value)
-        if cleaned and cleaned != supplier_tax_id:
-            return cleaned
+        normalized = normalize_tax_identifier(value)
+        if normalized and normalized != supplier_normalized:
+            return normalized
 
     return ""
 
@@ -1299,7 +1358,7 @@ def normalize_model_proposal(field: str, value: str) -> str:
     if field == "currency":
         return extract_currency(cleaned) or normalize_currency_for_comparison(cleaned)
     if field in {"supplierCui", "customerCui"}:
-        return re.sub(r"\s+", "", cleaned).upper()
+        return normalize_tax_identifier(cleaned)
     return re.sub(r"^[#:\s]+|[.,;:\s]+$", "", cleaned)
 
 
