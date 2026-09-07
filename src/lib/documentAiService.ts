@@ -1,10 +1,13 @@
-import { classifyInvoiceByCui, type InvoiceClassification } from "./cuiUtils";
+import { classifyInvoiceByCui, type InvoiceClassification } from "./cuiUtils.ts";
 import { getActiveCompanyId, getCompanyProfileById } from "./companyService";
 import {
   calculateDocumentConfidence as calculateCandidateDocumentConfidence,
   extractInvoiceCandidates,
   type CandidateFieldResult,
 } from "./invoiceCandidateEngine";
+import { buildLayoutLines, type LayoutLine, type OcrWord } from "./layoutLines.ts";
+
+export { buildLayoutLines, type LayoutLine, type OcrWord };
 
 export type DocumentAiFieldKey =
   | "invoiceNumber"
@@ -45,17 +48,6 @@ export type DocumentAiFieldDetail = {
 };
 
 export type DocumentAiFieldDetails = Record<DocumentAiFieldKey, DocumentAiFieldDetail>;
-
-export type OcrWord = {
-  text: string;
-  confidence?: number;
-  bbox?: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
-};
 
 export type DocumentAiLayoutInfo = {
   wordCount: number;
@@ -115,18 +107,6 @@ export type DocumentAiAnalysis = {
 export type OcrProgress = {
   status: string;
   progress: number;
-};
-
-type LayoutLine = {
-  text: string;
-  words: OcrWord[];
-  confidence: number;
-  bbox?: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
 };
 
 type ExtractionCandidate = {
@@ -1937,68 +1917,6 @@ function withFieldWarning(
   }
 
   return candidate;
-}
-
-function buildLayoutLines(words: OcrWord[], fallbackText: string): LayoutLine[] {
-  const positionedWords = words.filter((word) => word.bbox);
-
-  if (positionedWords.length === 0) {
-    return fallbackText
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean)
-      .map((line) => ({
-        text: line,
-        words: [],
-        confidence: 0.55,
-      }));
-  }
-
-  const sortedWords = [...positionedWords].sort((a, b) => {
-    const yDiff = (a.bbox?.y ?? 0) - (b.bbox?.y ?? 0);
-
-    return Math.abs(yDiff) > 8 ? yDiff : (a.bbox?.x ?? 0) - (b.bbox?.x ?? 0);
-  });
-  const groups: OcrWord[][] = [];
-
-  sortedWords.forEach((word) => {
-    const wordY = word.bbox?.y ?? 0;
-    const lastGroup = groups[groups.length - 1];
-    const lastGroupY = average(lastGroup?.map((item) => item.bbox?.y ?? 0) ?? []);
-
-    if (!lastGroup || Math.abs(wordY - lastGroupY) > 12) {
-      groups.push([word]);
-      return;
-    }
-
-    lastGroup.push(word);
-  });
-
-  return groups.map((group) => {
-    const ordered = [...group].sort((a, b) => (a.bbox?.x ?? 0) - (b.bbox?.x ?? 0));
-    const xValues = ordered.flatMap((word) =>
-      word.bbox ? [word.bbox.x, word.bbox.x + word.bbox.width] : [],
-    );
-    const yValues = ordered.flatMap((word) =>
-      word.bbox ? [word.bbox.y, word.bbox.y + word.bbox.height] : [],
-    );
-    const minX = Math.min(...xValues);
-    const minY = Math.min(...yValues);
-    const maxX = Math.max(...xValues);
-    const maxY = Math.max(...yValues);
-
-    return {
-      text: ordered.map((word) => word.text).join(" "),
-      words: ordered,
-      confidence: average(ordered.map((word) => word.confidence ?? 0.55)),
-      bbox: {
-        x: minX,
-        y: minY,
-        width: maxX - minX,
-        height: maxY - minY,
-      },
-    };
-  });
 }
 
 function summarizeLayout(words: OcrWord[], lines: LayoutLine[]): DocumentAiLayoutInfo {

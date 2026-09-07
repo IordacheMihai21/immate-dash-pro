@@ -368,6 +368,17 @@ async function analyzeWithFineTunedBackend(
 }
 
 function extractWithCandidateEngine(ocr: CachedOcr): BenchmarkPrediction {
+  // Tried building real bbox-carrying lines here via buildLayoutLines (the
+  // same function production uses), to make this benchmark reflect the
+  // "Layout heuristic" path instead of leaving every candidate on the
+  // "no bbox" path. Reverted: on this benchmark's real, very-high-resolution
+  // scans (some 9000+ px wide), buildLayoutLines's fixed-pixel y/x
+  // clustering thresholds (8px/12px) fragment lines incorrectly, and
+  // measurably hurt accuracy (89.1% -> 85.7%, totalAmount 89.0% -> 76.8%)
+  // compared to Tesseract's own text output. See DEPLOY notes / handoff:
+  // buildLayoutLines likely needs resolution-relative thresholds before
+  // this is safe to lean on -- that's separate, real follow-up work, not
+  // done here to avoid regressing the verified checkpoint.
   const extraction = extractInvoiceCandidates({
     text: ocr.text,
     lines: ocr.text.split(/\r?\n/).map((text) => ({ text })),
