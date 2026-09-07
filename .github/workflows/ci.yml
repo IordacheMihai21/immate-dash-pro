@@ -19,11 +19,20 @@ jobs:
 
       - run: npm ci
 
+      - name: Audit
+        run: npm audit --audit-level=low
+
       - name: Lint
         run: npm run lint
 
       - name: Type check
         run: npx tsc --noEmit
 
+      - name: Tests
+        run: npm run test
+
       - name: Build
         run: npm run build
+
+      - name: Bundle budget
+        run: npm run budget:bundle
