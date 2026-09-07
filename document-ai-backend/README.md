@@ -49,6 +49,35 @@ npm run dev
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
+## Configurare backend
+
+Pentru dezvoltare locala, backendul porneste tolerant daca lipsesc cheile
+Supabase, ca sa poti testa extractorul fallback:
+
+```bash
+DOCUMENT_AI_ENV=development
+DOCUMENT_AI_REQUIRE_AUTH=false
+DOCUMENT_AI_ALLOWED_ORIGINS=http://localhost:8082,http://localhost:8083
+```
+
+In production/staging, pornirea trebuie sa fie stricta:
+
+```bash
+DOCUMENT_AI_ENV=production
+DOCUMENT_AI_REQUIRE_AUTH=true
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+DOCUMENT_AI_ALLOWED_ORIGINS=https://app.example.com
+```
+
+Setari utile:
+
+- `DOCUMENT_AI_RATE_LIMIT_ENABLED=true`
+- `DOCUMENT_AI_RATE_LIMIT_MAX_REQUESTS=20`
+- `DOCUMENT_AI_RATE_LIMIT_WINDOW_SECONDS=60`
+- `DOCUMENT_AI_MAX_UPLOAD_BYTES=20971520`
+- `DOCUMENT_AI_SENTRY_DSN=...`
+
 ## Diagnostic si smoke test
 
 ```bash
@@ -66,7 +95,7 @@ Pe un sistem cu Docker si Docker Compose, backendul Linux reproductibil poate fi
 npm run dev:backend:docker
 ```
 
-Imaginea foloseste Python 3.10, PyTorch CPU, torchvision si Detectron2 compilat din sursa oficiala. Portul expus ramane `8000`, iar cache-ul Hugging Face este pastrat intr-un volum Docker, fara a intra in Git.
+Imaginea foloseste Python 3.10, PyTorch CPU, torchvision si Detectron2 compilat din sursa oficiala la commitul setat prin `DETECTRON2_GIT_REF` (pinuit implicit in `Dockerfile`). Portul expus ramane `8000`, iar cache-ul Hugging Face este pastrat intr-un volum Docker, fara a intra in Git.
 
 Verificare:
 

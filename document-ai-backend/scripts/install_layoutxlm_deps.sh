@@ -4,6 +4,7 @@ set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 VENV_DIR="${BACKEND_DIR}/.venv"
+DETECTRON2_GIT_REF="${DETECTRON2_GIT_REF:-a2f4a8771ab77e8411c26b27f24f9489a28a2453}"
 
 if [[ -f "${VENV_DIR}/bin/activate" ]]; then
   # shellcheck disable=SC1091
@@ -47,8 +48,8 @@ else
     echo "If this step fails, use the Docker setup documented in document-ai-backend/README.md."
   fi
 
-  echo "Installing Detectron2 from the official source repository..."
-  if ! python -m pip install --no-build-isolation 'git+https://github.com/facebookresearch/detectron2.git'; then
+  echo "Installing Detectron2 from the official source repository at ${DETECTRON2_GIT_REF}..."
+  if ! python -m pip install --no-build-isolation "git+https://github.com/facebookresearch/detectron2.git@${DETECTRON2_GIT_REF}"; then
     echo "Detectron2 installation failed. No automatic retry will be attempted."
     echo "Run python scripts/check_layoutxlm_env.py for the exact environment status."
     echo "Use npm run dev:backend:docker on a machine with Docker for the reproducible Linux backend."

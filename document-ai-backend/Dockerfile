@@ -5,7 +5,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     LAYOUTXLM_DEVICE=cpu \
     LAYOUTXLM_MODEL_ID=microsoft/layoutxlm-base \
-    HF_HOME=/opt/huggingface
+    HF_HOME=/opt/huggingface \
+    DETECTRON2_GIT_REF=a2f4a8771ab77e8411c26b27f24f9489a28a2453
 
 WORKDIR /app
 
@@ -27,7 +28,7 @@ RUN python -m pip install --upgrade pip setuptools wheel \
         torchvision==0.20.1 \
     && python -m pip install -r requirements.txt \
     && python -m pip install ninja cython pycocotools \
-    && python -m pip install --no-build-isolation 'git+https://github.com/facebookresearch/detectron2.git'
+    && python -m pip install --no-build-isolation "git+https://github.com/facebookresearch/detectron2.git@${DETECTRON2_GIT_REF}"
 
 COPY . .
 

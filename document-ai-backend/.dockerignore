@@ -9,11 +9,14 @@ __pycache__/
 .cache/
 huggingface/
 .huggingface/
+datasets/
 models/
 *.bin
 *.safetensors
 *.pt
 *.pth
+*.bak*
 .env
 .env.local
+.git/
 .DS_Store

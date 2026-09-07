@@ -1,17 +1,20 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
 import re
+import threading
 import time
+from collections import deque
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
 from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Union
 
 import requests
-from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, UploadFile, status
+from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Request, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
@@ -137,47 +140,157 @@ logging.basicConfig(
 )
 logger = logging.getLogger("immapp.document_ai")
 
-app = FastAPI(title="IMMapp Document AI Backend", version="0.1.0")
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:8080",
-        "http://127.0.0.1:8080",
-        "http://192.168.0.113:8080",
-        "http://localhost:8081",
-        "http://127.0.0.1:8081",
-        "http://192.168.0.113:8081",
-        "http://localhost:8082",
-        "http://127.0.0.1:8082",
-        "http://192.168.0.113:8082",
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://192.168.0.113:5173",
-        "http://localhost:5174",
-        "http://127.0.0.1:5174",
-        "http://192.168.0.113:5174",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://192.168.0.113:3000",
-    ],
-    allow_origin_regex=r"^http://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+):(3000|5173|5174|8080|8081|8082)$",
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+LOCAL_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+    "http://localhost:8081",
+    "http://127.0.0.1:8081",
+    "http://localhost:8082",
+    "http://127.0.0.1:8082",
+    "http://localhost:8083",
+    "http://127.0.0.1:8083",
+]
+LOCAL_ALLOWED_ORIGIN_REGEX = (
+    r"^http://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+):"
+    r"(3000|5173|5174|8080|8081|8082|8083)$"
 )
+PROD_LIKE_ENVS = {"production", "prod", "staging"}
 
+
+def env_flag(name: str, default: bool) -> bool:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def env_int(name: str, default: int, minimum: int = 1) -> int:
+    raw = os.environ.get(name)
+    if not raw:
+        return default
+    try:
+        value = int(raw)
+    except ValueError:
+        logger.warning("%s trebuie sa fie numar intreg. Folosesc %s.", name, default)
+        return default
+    return max(value, minimum)
+
+
+def env_float(name: str, default: float, minimum: float = 0.0, maximum: float = 1.0) -> float:
+    raw = os.environ.get(name)
+    if not raw:
+        return default
+    try:
+        value = float(raw)
+    except ValueError:
+        logger.warning("%s trebuie sa fie numar. Folosesc %s.", name, default)
+        return default
+    return min(max(value, minimum), maximum)
+
+
+def csv_env(name: str) -> List[str]:
+    raw = os.environ.get(name, "")
+    return [part.strip() for part in raw.split(",") if part.strip()]
+
+
+RUNTIME_ENV = (
+    os.environ.get("DOCUMENT_AI_ENV")
+    or os.environ.get("APP_ENV")
+    or os.environ.get("NODE_ENV")
+    or "development"
+).strip().lower()
+IS_PROD_LIKE = RUNTIME_ENV in PROD_LIKE_ENVS
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL") or os.environ.get("VITE_SUPABASE_URL")
 SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY") or os.environ.get(
     "VITE_SUPABASE_ANON_KEY"
 )
 SUPABASE_AUTH_TIMEOUT_SECONDS = 5
+DOCUMENT_AI_REQUIRE_AUTH = env_flag("DOCUMENT_AI_REQUIRE_AUTH", IS_PROD_LIKE)
+DOCUMENT_AI_ALLOWED_ORIGINS = csv_env("DOCUMENT_AI_ALLOWED_ORIGINS")
+DOCUMENT_AI_ALLOWED_ORIGIN_REGEX = os.environ.get("DOCUMENT_AI_ALLOWED_ORIGIN_REGEX")
+DOCUMENT_AI_CORS_ORIGINS = (
+    DOCUMENT_AI_ALLOWED_ORIGINS
+    if DOCUMENT_AI_ALLOWED_ORIGINS
+    else ([] if IS_PROD_LIKE else LOCAL_ALLOWED_ORIGINS)
+)
+DOCUMENT_AI_CORS_ORIGIN_REGEX = (
+    DOCUMENT_AI_ALLOWED_ORIGIN_REGEX
+    if DOCUMENT_AI_ALLOWED_ORIGIN_REGEX
+    else (None if IS_PROD_LIKE else LOCAL_ALLOWED_ORIGIN_REGEX)
+)
+DOCUMENT_AI_RATE_LIMIT_ENABLED = env_flag("DOCUMENT_AI_RATE_LIMIT_ENABLED", True)
+DOCUMENT_AI_RATE_LIMIT_MAX_REQUESTS = env_int("DOCUMENT_AI_RATE_LIMIT_MAX_REQUESTS", 20)
+DOCUMENT_AI_RATE_LIMIT_WINDOW_SECONDS = env_int("DOCUMENT_AI_RATE_LIMIT_WINDOW_SECONDS", 60)
+DOCUMENT_AI_TRUST_PROXY_HEADERS = env_flag("DOCUMENT_AI_TRUST_PROXY_HEADERS", IS_PROD_LIKE)
+MAX_DOCUMENT_AI_UPLOAD_BYTES = env_int("DOCUMENT_AI_MAX_UPLOAD_BYTES", 20 * 1024 * 1024)
+MAX_OCR_TEXT_CHARS = env_int("DOCUMENT_AI_MAX_OCR_TEXT_CHARS", 200_000)
+MAX_OCR_WORDS_JSON_CHARS = env_int("DOCUMENT_AI_MAX_OCR_WORDS_JSON_CHARS", 1_500_000)
+MAX_FIELDS_JSON_CHARS = env_int("DOCUMENT_AI_MAX_FIELDS_JSON_CHARS", 100_000)
+SENTRY_DSN = os.environ.get("DOCUMENT_AI_SENTRY_DSN") or os.environ.get("SENTRY_DSN")
+SENTRY_TRACES_SAMPLE_RATE = env_float("DOCUMENT_AI_SENTRY_TRACES_SAMPLE_RATE", 0.1)
+_RATE_LIMIT_BUCKETS: Dict[str, deque[float]] = {}
+_RATE_LIMIT_LOCK = threading.Lock()
+
+
+if DOCUMENT_AI_REQUIRE_AUTH and (not SUPABASE_URL or not SUPABASE_ANON_KEY):
+    raise RuntimeError(
+        "DOCUMENT_AI_REQUIRE_AUTH=true cere SUPABASE_URL si SUPABASE_ANON_KEY."
+    )
+
+if IS_PROD_LIKE and not DOCUMENT_AI_REQUIRE_AUTH:
+    raise RuntimeError("DOCUMENT_AI_REQUIRE_AUTH nu poate fi false in production/staging.")
+
+if IS_PROD_LIKE and not DOCUMENT_AI_CORS_ORIGINS and not DOCUMENT_AI_CORS_ORIGIN_REGEX:
+    raise RuntimeError(
+        "In production/staging configureaza DOCUMENT_AI_ALLOWED_ORIGINS sau "
+        "DOCUMENT_AI_ALLOWED_ORIGIN_REGEX pentru backendul Document AI."
+    )
 
 if not SUPABASE_URL or not SUPABASE_ANON_KEY:
     logger.warning(
         "SUPABASE_URL/SUPABASE_ANON_KEY nu sunt configurate pentru backend. "
-        "/analyze-layout ruleaza fara verificare de autentificare -- nu folosi asa in productie."
+        "/analyze-layout ruleaza fara verificare de autentificare in dezvoltare."
     )
+
+
+def init_sentry() -> None:
+    if not SENTRY_DSN:
+        return
+
+    try:
+        import sentry_sdk
+        from sentry_sdk.integrations.fastapi import FastApiIntegration
+        from sentry_sdk.integrations.starlette import StarletteIntegration
+    except Exception as exc:  # pragma: no cover - optional observability dependency
+        logger.warning("Sentry DSN este setat, dar sentry-sdk nu poate fi incarcat: %s", exc)
+        return
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        environment=RUNTIME_ENV,
+        traces_sample_rate=SENTRY_TRACES_SAMPLE_RATE,
+        integrations=[FastApiIntegration(), StarletteIntegration()],
+    )
+
+
+init_sentry()
+
+app = FastAPI(title="IMMapp Document AI Backend", version="0.1.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=DOCUMENT_AI_CORS_ORIGINS,
+    allow_origin_regex=DOCUMENT_AI_CORS_ORIGIN_REGEX,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+)
 
 
 def require_authenticated_user(authorization: Optional[str] = Header(default=None)) -> None:
@@ -186,9 +299,13 @@ def require_authenticated_user(authorization: Optional[str] = Header(default=Non
     Endpointul ruleaza inferenta LayoutXLM, costisitoare ca timp de calcul;
     fara aceasta verificare, oricine poate apela direct backend-ul (CORS nu
     opreste cereri facute in afara unui browser) si rula inferenta gratuit.
-    Daca Supabase nu e configurat (ex. un checkout local fara .env complet),
-    verificarea e sarita ca sa nu blocheze dezvoltarea locala.
+    Daca Supabase nu e configurat in development, verificarea e sarita ca sa
+    nu blocheze un checkout local fara .env complet. In production/staging,
+    startup-ul esueaza inainte sa ajunga aici.
     """
+    if not DOCUMENT_AI_REQUIRE_AUTH:
+        return
+
     if not SUPABASE_URL or not SUPABASE_ANON_KEY:
         return
 
@@ -220,6 +337,62 @@ def require_authenticated_user(authorization: Optional[str] = Header(default=Non
         )
 
 
+def require_rate_limit(
+    request: Request,
+    authorization: Optional[str] = Header(default=None),
+) -> None:
+    if not DOCUMENT_AI_RATE_LIMIT_ENABLED:
+        return
+
+    now = time.monotonic()
+    key = rate_limit_key(request, authorization)
+
+    with _RATE_LIMIT_LOCK:
+        bucket = _RATE_LIMIT_BUCKETS.setdefault(key, deque())
+        while bucket and now - bucket[0] >= DOCUMENT_AI_RATE_LIMIT_WINDOW_SECONDS:
+            bucket.popleft()
+
+        if len(bucket) >= DOCUMENT_AI_RATE_LIMIT_MAX_REQUESTS:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Prea multe cereri catre Document AI. Incearca din nou mai tarziu.",
+            )
+
+        bucket.append(now)
+
+        if len(_RATE_LIMIT_BUCKETS) > 2000:
+            stale_keys = [
+                stale_key
+                for stale_key, stale_bucket in _RATE_LIMIT_BUCKETS.items()
+                if (
+                    not stale_bucket
+                    or now - stale_bucket[-1] >= DOCUMENT_AI_RATE_LIMIT_WINDOW_SECONDS
+                )
+            ]
+            for stale_key in stale_keys:
+                _RATE_LIMIT_BUCKETS.pop(stale_key, None)
+
+
+def rate_limit_key(request: Request, authorization: Optional[str]) -> str:
+    if authorization and authorization.lower().startswith("bearer "):
+        token = authorization.split(" ", 1)[1].strip()
+        digest = hashlib.sha256(token.encode("utf-8")).hexdigest()[:20]
+        return f"token:{digest}"
+
+    if DOCUMENT_AI_TRUST_PROXY_HEADERS:
+        forwarded_for = (
+            request.headers.get("x-forwarded-for") or ""
+        ).split(",", 1)[0].strip()
+        if forwarded_for:
+            return f"ip:{forwarded_for}"
+        real_ip = (request.headers.get("x-real-ip") or "").strip()
+        if real_ip:
+            return f"ip:{real_ip}"
+
+    client_host = request.client.host if request.client else "unknown"
+    return f"ip:{client_host}"
+
+
 @app.get("/health")
 def health() -> Dict[str, Any]:
     model_health = layoutxlm_model_manager.health()
@@ -227,6 +400,9 @@ def health() -> Dict[str, Any]:
         "status": "ok",
         "service": "IMMapp Document AI Backend",
         "model": "LayoutXLM",
+        "environment": RUNTIME_ENV,
+        "auth_required": DOCUMENT_AI_REQUIRE_AUTH,
+        "rate_limit_enabled": DOCUMENT_AI_RATE_LIMIT_ENABLED,
         **model_health,
     }
 
@@ -234,7 +410,7 @@ def health() -> Dict[str, Any]:
 @app.post(
     "/analyze-layout",
     response_model=AnalyzeLayoutResponse,
-    dependencies=[Depends(require_authenticated_user)],
+    dependencies=[Depends(require_rate_limit), Depends(require_authenticated_user)],
 )
 async def analyze_layout(
     file: Optional[UploadFile] = File(default=None),
@@ -244,6 +420,11 @@ async def analyze_layout(
     verified_fields: Optional[str] = Form(default=None),
 ) -> AnalyzeLayoutResponse:
     request_started_at = time.monotonic()
+    validate_text_payload("ocr_text", ocr_text, MAX_OCR_TEXT_CHARS)
+    validate_text_payload("ocr_words", ocr_words, MAX_OCR_WORDS_JSON_CHARS)
+    validate_text_payload("document_ai_fields", document_ai_fields, MAX_FIELDS_JSON_CHARS)
+    validate_text_payload("verified_fields", verified_fields, MAX_FIELDS_JSON_CHARS)
+
     notes: List[str] = []
     fields = empty_fields()
     parsed_document_fields = parse_document_ai_fields(document_ai_fields, notes)
@@ -260,6 +441,21 @@ async def analyze_layout(
     extracted_fields = empty_fields()
     if text:
         extracted_fields = extract_fields_from_text(text, extraction_lines)
+
+        # OCR/heuristic extraction can occasionally concatenate seller and
+        # buyer when they are adjacent in the document. Split clear legal
+        # entities before they enter the final field set.
+        for party_field in ("supplierName", "customerName"):
+            party_value = extracted_fields.get(party_field, "")
+            if party_value:
+                parties = split_concatenated_party_names(party_value)
+                if len(parties) > 1:
+                    extracted_fields[party_field] = (
+                        parties[0]
+                        if party_field == "supplierName"
+                        else parties[-1]
+                    )
+
         fields.update(
             {
                 key: value
@@ -399,12 +595,6 @@ async def read_uploaded_image(file: Optional[UploadFile]) -> Tuple[Any, str]:
     if file is None:
         return None, ""
 
-    if Image is None:
-        return (
-            None,
-            "Fisier primit. Pillow nu este disponibil pentru inspectia imaginii.",
-        )
-
     try:
         content = await file.read()
         await file.seek(0)
@@ -412,16 +602,48 @@ async def read_uploaded_image(file: Optional[UploadFile]) -> Tuple[Any, str]:
         if not content:
             return None, "Fisierul primit este gol."
 
+        if len(content) > MAX_DOCUMENT_AI_UPLOAD_BYTES:
+            raise HTTPException(
+                status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+                detail=(
+                    "Fisierul depaseste limita Document AI de "
+                    f"{format_size(MAX_DOCUMENT_AI_UPLOAD_BYTES)}."
+                ),
+            )
+
+        if Image is None:
+            return (
+                None,
+                "Fisier primit. Pillow nu este disponibil pentru inspectia imaginii.",
+            )
+
         image = Image.open(BytesIO(content)).convert("RGB")
         return (
             image,
             f"Fisier primit: {file.filename or 'document'}, dimensiune imagine {image.width}x{image.height}.",
         )
+    except HTTPException:
+        raise
     except Exception:
         return (
             None,
             f"Fisier primit: {file.filename or 'document'}. Continutul nu a putut fi inspectat ca imagine.",
         )
+
+
+def validate_text_payload(name: str, value: Optional[str], max_chars: int) -> None:
+    if value is None or len(value) <= max_chars:
+        return
+    raise HTTPException(
+        status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+        detail=f"{name} depaseste limita de {max_chars} caractere.",
+    )
+
+
+def format_size(bytes_count: int) -> str:
+    if bytes_count >= 1024 * 1024:
+        return f"{bytes_count / (1024 * 1024):.1f} MB"
+    return f"{round(bytes_count / 1024)} KB"
 
 
 def empty_fields() -> Dict[str, str]:
@@ -943,6 +1165,18 @@ def extract_currency(text: str) -> str:
 # document and its output was thrown away 100% of the time. Fixed
 # 2026-09-04.
 MODEL_LABEL_TO_FIELD = {
+    # IMMapp unified fine-grained schema
+    "INVOICE_NUMBER": "invoiceNumber",
+    "INVOICE_DATE": "invoiceDate",
+    "SELLER_NAME": "supplierName",
+    "SELLER_TAX_ID": "supplierCui",
+    "BUYER_NAME": "customerName",
+    "BUYER_TAX_ID": "customerCui",
+    "SUBTOTAL": "subtotal",
+    "VAT": "vatAmount",
+    "TOTAL": "totalAmount",
+
+    # Backward compatibility with older FATURA checkpoints
     "INVOICE_NUMBER_BLOCK": "invoiceNumber",
     "INVOICE_DATE_BLOCK": "invoiceDate",
     "SUPPLIER_NAME": "supplierName",
@@ -1008,10 +1242,55 @@ def extract_model_field_proposals(
     return proposals, scores, sources
 
 
+def split_concatenated_party_names(value: str) -> List[str]:
+    """
+    Split OCR/model output such as:
+      "Seller Company SRL Buyer Company SRL"
+    into:
+      ["Seller Company SRL", "Buyer Company SRL"]
+
+    Intentionally conservative: only split when multiple clear legal-entity
+    suffixes are present.
+    """
+    cleaned = cleanup_party_name(value)
+    if not cleaned:
+        return []
+
+    suffix_pattern = re.compile(
+        r"\b(?:S\.?R\.?L\.?|S\.?A\.?|PFA|SNC|SCS|SRL-D|"
+        r"LLC|LTD\.?|LIMITED|INC\.?|CORP\.?|GMBH|PLC)\b",
+        flags=re.IGNORECASE,
+    )
+
+    matches = list(suffix_pattern.finditer(cleaned))
+    if len(matches) < 2:
+        return [cleaned]
+
+    parts: List[str] = []
+    start = 0
+    for match in matches:
+        end = match.end()
+        part = cleaned[start:end].strip(" :#-;,")
+        if part and is_valid_party_candidate(part):
+            parts.append(part)
+        start = end
+
+    remainder = cleaned[start:].strip(" :#-;,")
+    if remainder and parts:
+        # Keep trailing text with the final entity only when it does not look
+        # like the beginning of another party.
+        parts[-1] = f"{parts[-1]} {remainder}".strip()
+
+    return parts or [cleaned]
+
+
 def normalize_model_proposal(field: str, value: str) -> str:
     cleaned = clean_value(value)
     if field in {"supplierName", "customerName"}:
-        return cleanup_party_name(cleaned)
+        parties = split_concatenated_party_names(cleaned)
+        if not parties:
+            return ""
+        return parties[0] if field == "supplierName" else parties[-1]
     if field == "invoiceDate":
         return normalize_date_for_comparison(cleaned) or ""
     if field in {"subtotal", "vatAmount", "totalAmount"}:
