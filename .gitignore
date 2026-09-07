@@ -20,6 +20,10 @@ dist-ssr
 .playwright-mcp/
 .impeccable/
 
+# Generated AI training data and scratch backups
+document-ai-backend/datasets/**
+*.bak*
+
 # Environment files
 .env
 .env.local

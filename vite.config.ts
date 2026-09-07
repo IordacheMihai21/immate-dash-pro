@@ -13,6 +13,60 @@ export default defineConfig({
         ignored: ["**/document-ai-backend/.venv/**"],
       },
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (!id.includes("node_modules")) {
+              return undefined;
+            }
+
+            if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) {
+              return "vendor-react";
+            }
+
+            if (id.includes("@tanstack")) {
+              return "vendor-tanstack";
+            }
+
+            if (
+              id.includes("@supabase") ||
+              id.includes("@postgrest") ||
+              id.includes("@gotrue") ||
+              id.includes("@realtime") ||
+              id.includes("@storage")
+            ) {
+              return "vendor-supabase";
+            }
+
+            if (
+              id.includes("recharts") ||
+              id.includes("d3-") ||
+              id.includes("victory-vendor") ||
+              id.includes("@visx")
+            ) {
+              return "vendor-charts";
+            }
+
+            if (
+              id.includes("@react-pdf") ||
+              id.includes("pdfkit") ||
+              id.includes("fontkit") ||
+              id.includes("linebreak") ||
+              id.includes("unicode-")
+            ) {
+              return "vendor-pdf";
+            }
+
+            if (id.includes("pdfjs-dist") || id.includes("tesseract.js")) {
+              return "vendor-document-ai";
+            }
+
+            return undefined;
+          },
+        },
+      },
+    },
     ssr: {
       // @visx packages (alpha prerelease) ship extensionless ESM relative imports,
       // which fail under Node's native ESM resolver during SSR unless Vite processes them.
