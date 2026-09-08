@@ -36,7 +36,11 @@ const monthNames: Record<string, number> = {
 
 export type LayoutAiStatus = "ok" | "success" | "fallback" | "unavailable";
 export type LayoutAiRuntimeMode =
-  "full_layoutxlm" | "layoutxlm_backbone" | "fallback_layout_aware" | "unavailable";
+  | "fine_tuned_layoutxlm"
+  | "full_layoutxlm"
+  | "layoutxlm_backbone"
+  | "fallback_layout_aware"
+  | "unavailable";
 
 export type LayoutAiFields = Record<DocumentAiFieldKey, string>;
 export type LayoutAiComparisonStatus = "confirmed" | "proposal" | "review" | "missing";
@@ -112,6 +116,8 @@ export type LayoutAiBackendResponse = {
     words_count: number;
     boxes_count: number;
     model_confidence?: number | null;
+    ocr_source?: string | null;
+    ocr_confidence?: number | null;
   };
 };
 
@@ -444,6 +450,7 @@ function clampConfidence(value: unknown) {
 function normalizeRuntimeMode(value: unknown): LayoutAiRuntimeMode {
   if (
     value === "full_layoutxlm" ||
+    value === "fine_tuned_layoutxlm" ||
     value === "layoutxlm_backbone" ||
     value === "fallback_layout_aware" ||
     value === "unavailable"
@@ -468,6 +475,8 @@ function normalizeTechnical(value: unknown): LayoutAiBackendResponse["technical"
     words_count: toFiniteNumber(source.words_count),
     boxes_count: toFiniteNumber(source.boxes_count),
     model_confidence: typeof source.model_confidence === "number" ? source.model_confidence : null,
+    ocr_source: stringifyField(source.ocr_source) || null,
+    ocr_confidence: typeof source.ocr_confidence === "number" ? source.ocr_confidence : null,
   };
 }
 

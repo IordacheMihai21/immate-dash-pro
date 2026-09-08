@@ -736,6 +736,9 @@ function chooseInvoiceNumber(
   if (layoutScore >= 4 && layoutScore >= candidateScore + 1 && layoutConfidence >= 0.72) {
     return selected(normalizeInvoiceNumber(layout, false), "layoutxlm", layoutConfidence);
   }
+  if (!candidate && layoutScore >= 3 && layoutConfidence >= 0.88) {
+    return selected(normalizeInvoiceNumber(layout, false), "layoutxlm", layoutConfidence);
+  }
   return candidate && !looksLikeNonInvoiceIdentifier(candidate)
     ? selected(candidate, "candidate_engine", candidateConfidence)
     : missing();

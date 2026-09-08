@@ -442,12 +442,16 @@ async def analyze_layout(
 
     text = normalize_text(ocr_text or "")
     parsed_ocr_words = parse_ocr_words(ocr_words, notes)
+    ocr_source = "frontend" if text or parsed_ocr_words else ""
+    ocr_confidence: Optional[float] = None
 
     if not text and image is not None:
         local_ocr = await run_in_threadpool(run_local_image_ocr, image)
         if local_ocr["text"]:
             text = normalize_text(local_ocr["text"])
             parsed_ocr_words = local_ocr["words"]
+            ocr_source = "backend_tesseract"
+            ocr_confidence = float(local_ocr["confidence"])
             notes.append(
                 "OCR local Tesseract a fost executat in backend deoarece frontend-ul nu a trimis text OCR."
             )
@@ -555,6 +559,8 @@ async def analyze_layout(
         "words_count": model_analysis["words_count"],
         "boxes_count": model_analysis["boxes_count"],
         "model_confidence": model_analysis.get("model_confidence"),
+        "ocr_source": ocr_source or None,
+        "ocr_confidence": ocr_confidence,
     }
     field_details = build_field_details(
         fields,

@@ -91,6 +91,18 @@ describe("mergeLayoutXlmWithCandidateEngine - invoice number merge", () => {
 
     expect(result.fields.invoiceNumber).toBe("MH2639747");
   });
+
+  it("uses a high-confidence numeric LayoutXLM invoice number when candidate extraction is empty", () => {
+    const result = mergeLayoutXlmWithCandidateEngine({
+      candidateFields: { invoiceNumber: "" },
+      layoutFields: { invoiceNumber: "2059243" },
+      layoutConfidences: { invoiceNumber: 0.94 },
+      layoutMethods: { invoiceNumber: "Fine-tuned LayoutXLM + candidate validation" },
+    });
+
+    expect(result.fields.invoiceNumber).toBe("2059243");
+    expect(result.sources.invoiceNumber).toBe("layoutxlm");
+  });
 });
 
 describe("mergeLayoutXlmWithCandidateEngine - totalAmount merge", () => {

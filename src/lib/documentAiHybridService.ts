@@ -3,8 +3,13 @@ import type {
   DocumentAiExtractedFields,
   DocumentAiFieldKey,
 } from "./documentAiService.ts";
+import { buildLayoutLines, type OcrWord } from "./layoutLines.ts";
 import { mergeLayoutXlmWithCandidateEngine } from "./layoutAiHybridMerge.ts";
-import { analyzeLayoutWithBackend, checkLayoutAiHealth } from "./layoutAiService.ts";
+import {
+  analyzeLayoutWithBackend,
+  checkLayoutAiHealth,
+  type LayoutAiBackendResponse,
+} from "./layoutAiService.ts";
 import { getManualReviewMessage, sanitizeUiSafePartyValue } from "./documentAiUiSafety.ts";
 import {
   calculateVisibleDocumentConfidence,
@@ -80,9 +85,10 @@ export async function finalizeDocumentAiWithHybrid(
       layoutConfidences,
       layoutMethods,
     });
+    const hydratedAnalysis = hydrateAnalysisFromBackendOcr(sanitizedCandidate, backendResult);
 
     return applyVisibleConfidence(
-      applyHybridResult(sanitizedCandidate, hybrid.fields, hybrid.confidences),
+      applyHybridResult(hydratedAnalysis, hybrid.fields, hybrid.confidences),
     );
   } catch (error) {
     if (!hasCandidateSignal) {
@@ -102,6 +108,89 @@ function hasUsableExtraction(analysis: DocumentAiAnalysis) {
     analysis.extractedText.trim().length > 0 ||
     Object.values(analysis.fields).some((value) => stringify(value).trim().length > 0)
   );
+}
+
+function hydrateAnalysisFromBackendOcr(
+  analysis: DocumentAiAnalysis,
+  backendResult: LayoutAiBackendResponse,
+): DocumentAiAnalysis {
+  if (analysis.extractedText.trim() || backendResult.technical.ocr_source !== "backend_tesseract") {
+    return analysis;
+  }
+
+  const words = backendResult.tokens.flatMap((token): OcrWord[] => {
+    const text = stringify(token.text);
+    if (!text) return [];
+    return [
+      {
+        text,
+        confidence:
+          typeof token.confidence === "number"
+            ? Math.max(0, Math.min(token.confidence, 1))
+            : undefined,
+        bbox: token.bbox ?? undefined,
+      },
+    ];
+  });
+  const layoutLines = buildLayoutLines(words, "");
+  const extractedText = layoutLines.length
+    ? layoutLines.map((line) => line.text).join("\n")
+    : words.map((word) => word.text).join(" ");
+  const ocrConfidence = Math.max(0, Math.min(backendResult.technical.ocr_confidence ?? 0, 1));
+  const usefulWordCount = countUsefulWords(extractedText);
+  const invoiceKeywordCount = countInvoiceKeywords(extractedText);
+  const wordCount = backendResult.technical.words_count || words.length;
+  const wordsWithPosition =
+    backendResult.technical.boxes_count || words.filter((word) => word.bbox).length;
+
+  return {
+    ...analysis,
+    extractedText,
+    ocrConfidence,
+    ocrWords: words,
+    layout: {
+      wordCount,
+      wordsWithPosition,
+      averageWordConfidence: ocrConfidence,
+      detectedLines: layoutLines.length,
+      hasLayoutData: wordsWithPosition > 0,
+    },
+    ocrDetails: {
+      selectedVariant: "backend-tesseract",
+      selectedLabel: "Backend Tesseract OCR",
+      confidence: ocrConfidence,
+      wordCount,
+      usefulWordCount,
+      invoiceKeywordCount,
+      score: Math.max(
+        0,
+        Math.min(
+          1,
+          ocrConfidence * 0.5 +
+            Math.min(usefulWordCount / 250, 1) * 0.25 +
+            Math.min(invoiceKeywordCount / 8, 1) * 0.25,
+        ),
+      ),
+      preprocessingApplied: true,
+      attempts: [
+        {
+          variant: "backend-tesseract",
+          label: "Backend Tesseract OCR",
+          confidence: ocrConfidence,
+          wordCount,
+          usefulWordCount,
+          invoiceKeywordCount,
+          score: Math.max(0, Math.min(ocrConfidence, 1)),
+          selected: true,
+        },
+        ...(analysis.ocrDetails?.attempts ?? []),
+      ],
+    },
+    warnings: unique([
+      ...analysis.warnings.filter((warning) => !/nu s-a putut extrage text/i.test(warning)),
+      "OCR-ul browser a eșuat; analiza a continuat cu OCR Tesseract în backend.",
+    ]),
+  };
 }
 
 function sanitizeAnalysis(
@@ -205,9 +294,33 @@ function applyHybridResult(
     fields,
     confidences,
     fieldDetails,
-    warnings: next.warnings,
+    warnings: next.warnings.filter((warning) => !isResolvedWarning(warning, fields, next.layout)),
     inferenceMode: "hybrid_layoutxlm_candidate_engine" as const,
   };
+}
+
+function isResolvedWarning(
+  warning: string,
+  fields: DocumentAiExtractedFields,
+  layout: DocumentAiAnalysis["layout"],
+) {
+  const normalized = removeDiacritics(warning).toLowerCase();
+  if (layout.hasLayoutData && /pozitiile cuvintelor nu sunt disponibile/.test(normalized)) {
+    return true;
+  }
+
+  const labels: Partial<Record<DocumentAiFieldKey, string[]>> = {
+    invoiceNumber: ["numar factura", "număr factura", "număr factură"],
+    invoiceDate: ["data factura", "data facturii"],
+    supplierName: ["furnizor"],
+    customerName: ["client"],
+    totalAmount: ["total de plata", "total de plată"],
+  };
+
+  return Object.entries(labels).some(([field, fieldLabels]) => {
+    if (!stringify(fields[field as DocumentAiFieldKey])) return false;
+    return fieldLabels.some((label) => normalized.startsWith(`${removeDiacritics(label)}:`));
+  });
 }
 
 function applyVisibleConfidence(analysis: DocumentAiAnalysis): DocumentAiAnalysis {
@@ -242,6 +355,24 @@ function fieldsToStrings(fields: DocumentAiExtractedFields) {
     },
     {} as Record<DocumentAiFieldKey, string>,
   );
+}
+
+function countUsefulWords(text: string) {
+  return text
+    .split(/\s+/)
+    .map((word) => word.replace(/[^\p{L}\p{N}]/gu, ""))
+    .filter((word) => word.length >= 2 && /[\p{L}\p{N}]/u.test(word)).length;
+}
+
+function countInvoiceKeywords(text: string) {
+  const normalizedText = removeDiacritics(text).toLowerCase();
+  return ["invoice", "factura", "total", "tax", "vat", "tva", "subtotal", "cui"].filter((keyword) =>
+    new RegExp(`\\b${keyword}\\b`, "i").test(normalizedText),
+  ).length;
+}
+
+function removeDiacritics(value: string) {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
 function stringify(value: unknown) {

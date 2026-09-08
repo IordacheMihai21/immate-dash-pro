@@ -29,6 +29,12 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+Pentru fallback-ul OCR din backend, instaleaza si Tesseract CLI cu limbile romana si engleza. In Docker acestea sunt incluse in imagine.
+
+```bash
+brew install tesseract tesseract-lang
+```
+
 Pentru dependintele native LayoutXLM/Detectron2 si verificarea inferentei:
 
 ```bash
@@ -76,6 +82,7 @@ Setari utile:
 - `DOCUMENT_AI_RATE_LIMIT_MAX_REQUESTS=20`
 - `DOCUMENT_AI_RATE_LIMIT_WINDOW_SECONDS=60`
 - `DOCUMENT_AI_MAX_UPLOAD_BYTES=20971520`
+- `DOCUMENT_AI_LOCAL_OCR_TIMEOUT_SECONDS=45`
 - `DOCUMENT_AI_SENTRY_DSN=...`
 
 ## Diagnostic si smoke test
@@ -95,7 +102,7 @@ Pe un sistem cu Docker si Docker Compose, backendul Linux reproductibil poate fi
 npm run dev:backend:docker
 ```
 
-Imaginea foloseste Python 3.10, PyTorch CPU, torchvision si Detectron2 compilat din sursa oficiala la commitul setat prin `DETECTRON2_GIT_REF` (pinuit implicit in `Dockerfile`). Portul expus ramane `8000`, iar cache-ul Hugging Face este pastrat intr-un volum Docker, fara a intra in Git.
+Imaginea foloseste Python 3.10, PyTorch CPU, torchvision, Tesseract OCR cu limbile romana/engleza si Detectron2 compilat din sursa oficiala la commitul setat prin `DETECTRON2_GIT_REF` (pinuit implicit in `Dockerfile`). Portul expus ramane `8000`, iar cache-ul Hugging Face este pastrat intr-un volum Docker, fara a intra in Git.
 
 Verificare:
 
