@@ -182,14 +182,19 @@ export function extractInvoiceCandidates({
 // stating the invoice number, even if a number-shaped token also appears
 // on it -- guards the broad/unlabeled patterns below (the tightly-labeled
 // ones don't need this, their label is already strong enough evidence).
-// The legea/art./alin./omfp/hg/ordin group specifically guards against
-// Romanian legal citations like "conform art. 319 alin. 29 din legea
-// 227/2015" (a real, extremely common invoice-footer reference to the
-// Fiscal Code) -- "227/2015" matches the bare NNN/YYYY shape below by pure
-// coincidence, confirmed against real OCR output where it repeated
-// identically across many unrelated documents.
+// The legea/ordonanta/art./alin./omfp/hg/ordin group specifically guards
+// against Romanian legal citations like "conform art. 319 alin. 29 din
+// legea 227/2015" (a real, extremely common invoice-footer reference to
+// the Fiscal Code) or "Ordonanta nr.17/2015" -- "227/2015"/"17/2015" match
+// the bare NNN/YYYY shape below by pure coincidence, confirmed against
+// real OCR output where citations like this repeated identically across
+// many unrelated documents. "ordonanta" (government ordinance) is a
+// distinct legal-document term from "ordin" (ministerial order), not
+// covered by it -- confirmed on a real document where "Ordonanta nr.17/
+// 2015" won as invoiceNumber specifically because "ordin" alone didn't
+// match "ordonanta".
 const NON_INVOICE_NUMBER_CONTEXT_PATTERN =
-  /\b(?:data|date|due|scaden[tț][aă]?|total|subtotal|tva|vat|amount|sum[aă]|comand[aă]|comenzii|contract|aviz|referin[tţ][aă]|order\s*(?:no\.?|number|#)?|po\s*number|purchase\s*order|tracking|awb|iban|cont(?:ul)?\s*bancar|telefon|tel\.?|fax|mobil|lege[aă]?|art\.?|alin\.?|omfp|ordin|h\.?g\.?)\b/i;
+  /\b(?:data|date|due|scaden[tț][aă]?|total|subtotal|tva|vat|amount|sum[aă]|comand[aă]|comenzii|contract|aviz|referin[tţ][aă]|order\s*(?:no\.?|number|#)?|po\s*number|purchase\s*order|tracking|awb|iban|cont(?:ul)?\s*bancar|telefon|tel\.?|fax|mobil|lege[aă]?|ordonan[tţ][aă]|art\.?|alin\.?|omfp|ordin|h\.?g\.?)\b/i;
 
 // OCR sometimes inserts a stray space mid-number (e.g. "MBSL.202 1232280"
 // is really "MBSL.2021232280") -- if the label match is immediately
