@@ -947,7 +947,7 @@ const TOTAL_CURRENT_INVOICE_PATTERN =
   /\b(?:total\s+factur\w*\s+curen\w*|factur\w*\s+curen\w*\s+(?:cu\s+)?tva|cod\s+de\s+bare\s+pentru\s+factur\w*\s+curen\w*|pentru\s+factur\w*\s+curen\w*)\b/i;
 const TOTAL_WEAK_LABEL_PATTERN = /\btotal\b/i;
 const TOTAL_BALANCE_CONTEXT_PATTERN =
-  /\b(?:sold\s+total|soldul?\s+(?:in\s+)?valoare|sold\s+precedent|sold\s+anterior|facturi\s+neachitate|plati\s+in\s+avans|rest\s+plata|old\s+balance|previous\s+balance)\b/i;
+  /\b(?:sold\s+total|soldul?\s+(?:in\s+)?valoare|sold\s+precedent|sold\s+anterior|sold\s+client|facturi\s+neachitate|plati\s+in\s+avans|rest\s+plata|old\s+balance|previous\s+balance|total\s+de\s+plat[aă]\s+la\s+data\s+de)\b/i;
 const TOTAL_NON_MONETARY_CONTEXT_PATTERN =
   /\b(?:puncte|points|curs(?:ul)?\b|exchange\s+rate|rata\s+\d|unicredit\s*\+|termen\s+de\s+plata|modalitate(?:a)?\s+de\s+plata|plata\s+se\s+va\s+efectua|data\s+scadenta|scadenta|cod\s+client|cod\s+de\s+bare\s+pentru\s+sold|capital\s+social|operator\s+de\s+date|cui|cif|cod\s+fiscal|cod\s+tva|iban|cont(?:ul)?\s*bancar|banca|telefon|tel\.?|fax|buletinul|cartea\s+de\s+identitate|b\.?\s*i\.?\s*\/?\s*c\.?\s*i\.?|seria|serie\s+motor|serie|motor|vin|inmatriculare|referinta|recapitulatie|eliberat|spclep|art\.?|alin\.?|legea|codul\s+fiscal|contract\s+nr|nr\.?\s+contract)\b/i;
 const TOTAL_TAX_OR_NET_CONTEXT_PATTERN =
@@ -1643,6 +1643,10 @@ function resultFromCandidate(
 
 function totalLabelStrength(line: string): "strong" | "current" | "weak" | null {
   if (TOTAL_CURRENT_INVOICE_PATTERN.test(line)) return "current";
+  // A "total de plata" / "sold" phrase qualified by "la data de <date>" is a
+  // balance-as-of-date snapshot (common on RO utility bills), not the
+  // current invoice's own total -- never treat it as a total-label anchor.
+  if (TOTAL_BALANCE_CONTEXT_PATTERN.test(line)) return null;
   if (TOTAL_STRONG_LABEL_PATTERN.test(line)) return "strong";
   if (TOTAL_WEAK_LABEL_PATTERN.test(line)) return "weak";
   return null;
