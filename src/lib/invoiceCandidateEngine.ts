@@ -758,6 +758,20 @@ export function extractDateCandidates(context: CandidateContext) {
   const allDates: Array<{ raw: string; line: CandidateLine; index: number }> = [];
 
   context.lines.forEach((line, index) => {
+    // A line like "Cod de bare pentru sold total la data de 28.01.2021:
+    // 220,78 Lei" carries an auxiliary payment-tracking/barcode date (and
+    // amount), not the invoice's own date -- confirmed on a real document
+    // where this exact line was the source of a wrong invoiceDate (the
+    // same line is already excluded from totalAmount for the same reason).
+    // Deliberately narrow: unlike totalAmount, dates routinely share a
+    // line with their due-date counterpart ("Data: X Scadenta: Y"), so a
+    // broader exclusion pattern would risk losing legitimate invoice dates
+    // that happen to co-occur with a due-date label on the same line --
+    // that disambiguation is already handled precisely, per-date, further
+    // below via localContext instead.
+    if (/\bcod\s+de\s+bare\b/i.test(line.text)) {
+      return;
+    }
     for (const match of line.text.matchAll(DATE_PATTERN)) {
       allDates.push({ raw: match[1], line, index });
     }
