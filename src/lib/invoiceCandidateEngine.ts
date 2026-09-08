@@ -772,6 +772,21 @@ export function extractDateCandidates(context: CandidateContext) {
     if (/\bcod\s+de\s+bare\b/i.test(line.text)) {
       return;
     }
+    // "Total de plata la data de X" / "Totalul facturilor neachitate ...
+    // la data de X" -- confirmed on three independent real documents (all
+    // Romanian utility bills, different templates/phrasings) as the source
+    // of a wrong invoiceDate: "la data de" ("as of the date") is a
+    // snapshot/reference framing for a balance figure, not the invoice's
+    // own issue date. Requires a balance-related word to co-occur with the
+    // phrase (whole line, not proximity-gated) specifically so a genuine
+    // issuance phrasing like "Factura emisa la data de X" -- which uses
+    // the same words but isn't about a balance -- is left untouched.
+    if (
+      /\bla\s+data\s+de\b/i.test(line.text) &&
+      /\b(?:total(?:ul)?|sold(?:ul)?|neachitate|facturilor)\b/i.test(line.text)
+    ) {
+      return;
+    }
     for (const match of line.text.matchAll(DATE_PATTERN)) {
       allDates.push({ raw: match[1], line, index });
     }
