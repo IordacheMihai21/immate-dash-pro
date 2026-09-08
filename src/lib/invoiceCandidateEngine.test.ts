@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  cleanPartyName,
   extractInvoiceCandidates,
   looksLikeNonInvoiceIdentifier,
   normalizeTaxIdentifier,
@@ -60,6 +61,52 @@ describe("extractInvoiceCandidates - tax identifier extraction", () => {
     });
 
     expect(result.fields.supplierCui.value).toBe("RO24041105");
+  });
+});
+
+describe("cleanPartyName", () => {
+  it("strips a bilingual role label with no company name on the line", () => {
+    // Real bug (bilingual RO/EN invoice): "Seller / Vânzător" is a header
+    // label, not a company name -- the old version only stripped the first
+    // label word ("Seller"), leaving "/ Vânzător" looking like a plausible
+    // (if odd) name, which then won as the extracted supplierName outright.
+    expect(cleanPartyName("Seller / Vânzător")).toBe("");
+    expect(cleanPartyName("Buyer / Cumpărător")).toBe("");
+    expect(cleanPartyName("Buyer | Cumpărător")).toBe("");
+  });
+
+  it("still extracts the real name past a single label", () => {
+    expect(cleanPartyName("Furnizor: Cubus Arts S.R.L.")).toBe("Cubus Arts S.R.L.");
+  });
+
+  it("extracts the real name past a bilingual label on the same line", () => {
+    expect(cleanPartyName("Seller / Vânzător: Cubus Arts S.R.L.")).toBe("Cubus Arts S.R.L.");
+  });
+});
+
+describe("extractInvoiceCandidates - party name extraction", () => {
+  // Regression: a real bilingual RO/EN invoice where IMMapp extracted
+  // "/ Vânzător" and "/ Cumpărător" as the supplier/customer company names
+  // instead of the real names one line below each label.
+  it("does not extract a bilingual role label as the company name", () => {
+    const lines = [
+      { text: "INVOICE / FACTURA" },
+      { text: "Nr. SRV-1610" },
+      { text: "Data: 08.09.2026" },
+      { text: "Seller / Vânzător" },
+      { text: "Cubus Arts S.R.L." },
+      { text: "CUI: RO13548146" },
+      { text: "Buyer / Cumpărător" },
+      { text: "S.C. DEMO IMPEX S.R.L." },
+      { text: "CUI: RO14468355" },
+    ];
+    const result = extractInvoiceCandidates({
+      text: lines.map((l) => l.text).join("\n"),
+      lines,
+    });
+
+    expect(result.fields.supplierName.value).toBe("Cubus Arts S.R.L.");
+    expect(result.fields.customerName.value).toBe("S.C. DEMO IMPEX S.R.L.");
   });
 });
 

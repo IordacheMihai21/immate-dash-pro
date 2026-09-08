@@ -1178,14 +1178,29 @@ export function selectBestCandidate(
   };
 }
 
+const PARTY_LABEL_TOKEN_PATTERN =
+  /^(?:seller|supplier|vendor|furnizor|v[aâ]nz[aă]tor|emitent|from|buyer|bill[\s_-]*to|sold[\s_-]*to|customer|client|cump[aă]r[aă]tor|beneficiar)\s*/i;
+
 export function cleanPartyName(value: string) {
-  let cleaned = value
-    .replace(
-      /^\s*(?:seller|supplier|vendor|furnizor|v[aâ]nz[aă]tor|emitent|from|buyer|bill[\s_-]*to|sold[\s_-]*to|customer|client|cump[aă]r[aă]tor|beneficiar)\s*[:#-]?\s*/i,
-      "",
-    )
-    .replace(/\s+/g, " ")
-    .trim();
+  let cleaned = value.trim();
+
+  // Bilingual/relabeled headers ("Seller / Vânzător", "Buyer | Cumpărător")
+  // repeat the SAME role in more than one language on a single line, with
+  // no company name at all on it -- confirmed on a real document where
+  // "Seller / Vânzător" survived as the extracted supplierName because the
+  // old single-strip version only removed "Seller", leaving "/ Vânzător"
+  // looking like a plausible (if odd) name. Strip every leading label
+  // token, not just the first, so what remains is either the real name (if
+  // it's genuinely on the same line) or nothing -- an empty result is
+  // rejected downstream (isInvalidPartyCandidate), letting the caller fall
+  // through to the next line the way it already does for unlabeled blocks.
+  for (let guard = 0; guard < 6; guard += 1) {
+    const withoutLabel = cleaned.replace(PARTY_LABEL_TOKEN_PATTERN, "");
+    if (withoutLabel.length === cleaned.length) break;
+    cleaned = withoutLabel.replace(/^[\s/|,:#-]+/, "").trim();
+  }
+
+  cleaned = cleaned.replace(/\s+/g, " ").trim();
   const stopMatch = cleaned.match(PARTY_STOP_PATTERN);
   if (stopMatch?.index && stopMatch.index > 1) {
     cleaned = cleaned.slice(0, stopMatch.index).trim();
