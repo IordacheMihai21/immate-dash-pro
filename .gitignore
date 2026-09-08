@@ -30,6 +30,7 @@ document-ai-backend/datasets/**
 .env.local
 .env.*.local
 !.env.example
+vercel-env.txt
 
 # Python virtual environments
 .venv/
