@@ -56,7 +56,13 @@ export function mergeLayoutXlmWithCandidateEngine({
     const candidate = stringify(candidateFields[field]);
     const layout = stringify(layoutFields[field]);
     const candidateConfidence = clampConfidence(candidateConfidences[field], candidate ? 0.72 : 0);
-    const layoutConfidence = gatedLayoutConfidence(field, layout, layoutConfidences, layoutMethods);
+    const layoutConfidence = gatedLayoutConfidence(
+      field,
+      layout,
+      layoutConfidences,
+      layoutMethods,
+      Boolean(candidate),
+    );
     const choice = chooseFieldValue(
       field,
       candidate,
@@ -95,11 +101,12 @@ export function mergeLayoutXlmWithCandidateEngine({
 }
 
 // The backend reports several methods under the "layoutxlm" umbrella --
-// only ones that actually name the fine-tuned model are trustworthy
+// only ones that actually name the fine-tuned model are primary
 // evidence; others (e.g. "LayoutXLM-assisted", a backend-internal regex
-// fallback dressed up with a similar-sounding label) are not the model's
-// own prediction and get zero confidence, same as "no layout value at
-// all". Shared by the main per-field merge AND reconcileTaxIdPair/
+// fallback dressed up with a similar-sounding label) are ignored when the
+// candidate engine already has its own value. When the candidate side is
+// empty, though, the assisted backend value is still better than showing a
+// false 0%/missing result. Shared by the main per-field merge AND reconcileTaxIdPair/
 // reconcilePartyNamePair -- confirmed as a real bug where the joint
 // resolvers read raw layoutConfidences directly, without this gate,
 // letting a value the primary merge had already correctly rejected (for
@@ -109,9 +116,14 @@ function gatedLayoutConfidence(
   layoutValue: string,
   layoutConfidences: Partial<Record<DocumentAiFieldKey, number>>,
   layoutMethods: Partial<Record<DocumentAiFieldKey, string>>,
+  hasCandidateSignal = true,
 ) {
-  const hasFineTunedSignal = /fine-tuned\s+layoutxlm/i.test(layoutMethods[field] ?? "");
-  return hasFineTunedSignal ? clampConfidence(layoutConfidences[field], layoutValue ? 0.6 : 0) : 0;
+  const method = layoutMethods[field] ?? "";
+  const hasFineTunedSignal = /fine-tuned\s+layoutxlm/i.test(method);
+  const hasAssistedLayoutSignal = !hasCandidateSignal && /\blayoutxlm-assisted\b/i.test(method);
+  return hasFineTunedSignal || hasAssistedLayoutSignal
+    ? clampConfidence(layoutConfidences[field], layoutValue ? 0.6 : 0)
+    : 0;
 }
 
 type RoleKey = "supplier" | "customer";

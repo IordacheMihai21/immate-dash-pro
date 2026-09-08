@@ -133,6 +133,18 @@ describe("mergeLayoutXlmWithCandidateEngine - totalAmount merge", () => {
     expect(result.sources.totalAmount).toBe("layoutxlm");
   });
 
+  it("uses a LayoutXLM-assisted total when OCR/candidate extraction is empty", () => {
+    const result = mergeLayoutXlmWithCandidateEngine({
+      candidateFields: { totalAmount: "" },
+      layoutFields: { totalAmount: "304,10" },
+      layoutConfidences: { totalAmount: 0.78 },
+      layoutMethods: { totalAmount: "LayoutXLM-assisted" },
+    });
+
+    expect(result.fields.totalAmount).toBe("304.10");
+    expect(result.sources.totalAmount).toBe("layoutxlm");
+  });
+
   it("preserves a negative total instead of silently dropping the sign", () => {
     const result = mergeLayoutXlmWithCandidateEngine({
       candidateFields: { totalAmount: "-41.04" },

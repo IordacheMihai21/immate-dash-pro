@@ -9,6 +9,13 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 export default defineConfig({
   vite: {
     server: {
+      proxy: {
+        "/document-ai-backend": {
+          target: "http://127.0.0.1:8000",
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/document-ai-backend/, ""),
+        },
+      },
       watch: {
         ignored: ["**/document-ai-backend/.venv/**"],
       },
