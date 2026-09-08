@@ -787,6 +787,16 @@ export function extractDateCandidates(context: CandidateContext) {
     ) {
       return;
     }
+    // "Nr contract: 61206 /28.06.2019" -- the contract's own reference
+    // date, not the invoice's. Confirmed on a real document where the
+    // invoice date was on a separate line entirely ("data (ziua, luna,
+    // anul): 20.09.2021") while this contract line's date won out.
+    // "contract" is already an established negative-context term for
+    // invoiceNumber and totalAmount in this file; consistent to exclude it
+    // here too.
+    if (/\bcontract\b/i.test(line.text)) {
+      return;
+    }
     for (const match of line.text.matchAll(DATE_PATTERN)) {
       allDates.push({ raw: match[1], line, index });
     }
