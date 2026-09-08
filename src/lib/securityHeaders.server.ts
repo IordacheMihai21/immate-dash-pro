@@ -60,6 +60,11 @@ function buildContentSecurityPolicy(): string {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
+    // Tesseract.js (client-side OCR) always spawns its worker from a blob:
+    // URL wrapping a same-origin importScripts() call, even when workerPath
+    // is self-hosted -- without this, that instantiation falls back to
+    // default-src 'self' and is silently blocked (OCR fails end-to-end).
+    "worker-src 'self' blob:",
     `connect-src ${buildConnectSrc()}`,
     "object-src 'none'",
     "base-uri 'self'",

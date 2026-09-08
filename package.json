@@ -8,6 +8,8 @@
     "dev:frontend": "vite --host 0.0.0.0 --port 8082",
     "dev:backend": "node scripts/dev-backend.mjs",
     "dev:backend:docker": "docker compose -f docker-compose.layoutai.yml up --build",
+    "setup:ocr-assets": "node scripts/setup-ocr-assets.mjs",
+    "postinstall": "node scripts/setup-ocr-assets.mjs",
     "document-ai:evaluate": "node --experimental-strip-types scripts/document-ai-evaluate.ts",
     "document-ai:inspect-fatura": "python document-ai-backend/training/inspect_fatura_dataset.py",
     "document-ai:prepare-layoutxlm": "python document-ai-backend/training/prepare_layoutxlm_dataset.py",

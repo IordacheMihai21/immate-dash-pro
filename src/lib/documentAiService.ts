@@ -188,6 +188,9 @@ type TesseractLike = {
     language: string,
     options?: {
       logger?: (message: { status?: string; progress?: number }) => void;
+      workerPath?: string;
+      corePath?: string;
+      langPath?: string;
     },
   ) => Promise<TesseractRecognizeResult>;
 };
@@ -464,13 +467,27 @@ async function extractText(
   };
 }
 
+// Self-hosted under public/tesseract/ (see scripts/setup-ocr-assets.mjs) so
+// OCR never depends on a third-party CDN at runtime -- the app's CSP
+// (script-src/connect-src 'self' + a small allowlist) blocks Tesseract.js's
+// jsdelivr.net defaults outright, which otherwise fails OCR silently
+// end-to-end (0% confidence, nothing extracted).
+const TESSERACT_ASSET_OPTIONS = {
+  workerPath: "/tesseract/worker.min.js",
+  corePath: "/tesseract/core",
+  langPath: "/tesseract/lang-data",
+};
+
 async function recognizeImageVariant(
   tesseract: TesseractLike,
   input: File | Blob,
   logger: (message: { status?: string; progress?: number }) => void,
 ): Promise<TextExtractionResult> {
   try {
-    const result = await tesseract.recognize(input, "ron+eng", { logger });
+    const result = await tesseract.recognize(input, "ron+eng", {
+      logger,
+      ...TESSERACT_ASSET_OPTIONS,
+    });
 
     return {
       text: result.data.text ?? "",
@@ -478,7 +495,7 @@ async function recognizeImageVariant(
       words: extractOcrWords(result.data),
     };
   } catch {
-    const result = await tesseract.recognize(input, "eng", { logger });
+    const result = await tesseract.recognize(input, "eng", { logger, ...TESSERACT_ASSET_OPTIONS });
 
     return {
       text: result.data.text ?? "",

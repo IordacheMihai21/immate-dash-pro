@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 .output
+.vercel
 .vinxi
 .tanstack/**
 .nitro
@@ -54,6 +55,10 @@ models/
 *.safetensors
 *.pt
 *.pth
+
+# Self-hosted Tesseract.js OCR assets (fetched by `npm run setup:ocr-assets`,
+# not source -- see scripts/setup-ocr-assets.mjs)
+public/tesseract/
 
 # Wrangler / Cloudflare
 .wrangler/
