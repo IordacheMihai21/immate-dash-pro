@@ -78,16 +78,6 @@ export const menuGroups: SidebarGroup[] = [
         icon: Network,
       },
       {
-        label: "Evaluare AI",
-        to: "/app/ai-center/evaluare-ai",
-        icon: BarChart3,
-      },
-      {
-        label: "Monitorizare AI",
-        to: "/app/ai-center/monitorizare-ai",
-        icon: ShieldCheck,
-      },
-      {
         label: "Forecast AI",
         to: "/app/ai-center/predictii-financiare",
         icon: TrendingUp,

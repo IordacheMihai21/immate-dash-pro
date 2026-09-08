@@ -19,9 +19,11 @@ import {
   getDocumentAiMonitoringSummary,
   type DocumentAiMonitoringSummary,
 } from "@/lib/documentAiMonitoringService";
+import { requireStaffAccess } from "@/lib/staffOnlyRouteGuard";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/ai-center/monitorizare-ai")({
+  beforeLoad: ({ serverContext }) => requireStaffAccess(serverContext),
   head: () => ({ meta: [{ title: "Monitorizare AI - IMMapp" }] }),
   component: MonitoringAiPage,
 });

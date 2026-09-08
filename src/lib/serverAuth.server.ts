@@ -1,6 +1,9 @@
+import { isStaffEmail } from "./staffAccess.server";
+
 export type ServerAuthUser = {
   id: string;
   email: string | null;
+  isStaff: boolean;
 };
 
 export type ServerAuthSession = {
@@ -124,7 +127,9 @@ async function verifyAccessToken(accessToken: string): Promise<ServerAuthUser | 
 
   const data = (await response.json()) as { id?: string; email?: string | null };
 
-  return data.id ? { id: data.id, email: data.email ?? null } : null;
+  return data.id
+    ? { id: data.id, email: data.email ?? null, isStaff: isStaffEmail(data.email) }
+    : null;
 }
 
 async function refreshAccessToken(refreshToken: string): Promise<{
@@ -167,7 +172,13 @@ async function refreshAccessToken(refreshToken: string): Promise<{
     accessToken: data.access_token,
     refreshToken: data.refresh_token,
     expiresIn: data.expires_in ?? DEFAULT_ACCESS_MAX_AGE_SECONDS,
-    user: data.user?.id ? { id: data.user.id, email: data.user.email ?? null } : null,
+    user: data.user?.id
+      ? {
+          id: data.user.id,
+          email: data.user.email ?? null,
+          isStaff: isStaffEmail(data.user.email),
+        }
+      : null,
   };
 }
 

@@ -4,6 +4,7 @@ import {
   getServerAuthCookies,
   type ServerAuthUser,
 } from "@/lib/serverAuth.server";
+import { isStaffEmail } from "@/lib/staffAccess.server";
 
 type AuthSessionPayload = {
   access_token?: string;
@@ -52,7 +53,9 @@ async function verifyAccessToken(accessToken: string): Promise<ServerAuthUser | 
 
   const data = (await response.json()) as { id?: string; email?: string | null };
 
-  return data.id ? { id: data.id, email: data.email ?? null } : null;
+  return data.id
+    ? { id: data.id, email: data.email ?? null, isStaff: isStaffEmail(data.email) }
+    : null;
 }
 
 export const Route = createFileRoute("/api/auth/session")({

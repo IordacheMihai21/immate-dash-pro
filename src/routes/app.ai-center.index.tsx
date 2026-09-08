@@ -1,5 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, BarChart3, BrainCircuit, Network, Sparkles, TrendingUp } from "lucide-react";
+import {
+  ArrowRight,
+  BrainCircuit,
+  MessageCircleQuestion,
+  Network,
+  Sparkles,
+  TrendingUp,
+} from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 
 export const Route = createFileRoute("/app/ai-center/")({
@@ -21,16 +28,16 @@ const aiModules = [
     icon: Network,
   },
   {
-    title: "Evaluare AI",
-    description: "Compară extracțiile cu adnotările FATURA și calculează metrici.",
-    to: "/app/ai-center/evaluare-ai" as const,
-    icon: BarChart3,
-  },
-  {
     title: "Predicții financiare",
     description: "Analizează evoluția financiară și generează estimări.",
     to: "/app/ai-center/predictii-financiare" as const,
     icon: TrendingUp,
+  },
+  {
+    title: "Asistent AI",
+    description: "Întreabă în limbaj natural despre veniturile, clienții sau riscurile companiei.",
+    to: "/app/ai-center/asistent" as const,
+    icon: MessageCircleQuestion,
   },
 ];
 
