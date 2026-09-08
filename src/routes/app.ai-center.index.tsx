@@ -3,7 +3,6 @@ import {
   ArrowRight,
   BrainCircuit,
   MessageCircleQuestion,
-  Network,
   Sparkles,
   TrendingUp,
 } from "lucide-react";
@@ -20,12 +19,6 @@ const aiModules = [
     description: "Extrage automat date din facturi PDF, JPG sau PNG.",
     to: "/app/ai-center/document-ai" as const,
     icon: BrainCircuit,
-  },
-  {
-    title: "Layout AI",
-    description: "Analizează structura documentului cu LayoutXLM și confirmă câmpurile importante.",
-    to: "/app/ai-center/layout-ai" as const,
-    icon: Network,
   },
   {
     title: "Predicții financiare",
@@ -46,7 +39,7 @@ function AiCenterPage() {
     <div className="space-y-6">
       <PageHeader
         title="AI Center"
-        description="Instrumentele IMMapp pentru procesarea inteligentă a documentelor, evaluare și predicții financiare."
+        description="Instrumentele IMMapp pentru procesarea inteligentă a documentelor și predicții financiare."
       />
 
       <section className="overflow-hidden rounded-3xl border border-sidebar-border bg-sidebar p-6 text-sidebar-foreground shadow-lg sm:p-8">

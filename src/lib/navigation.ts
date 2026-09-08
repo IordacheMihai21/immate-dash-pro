@@ -11,7 +11,6 @@ import {
   LayoutDashboard,
   LineChart,
   MessageCircleQuestion,
-  Network,
   ReceiptText,
   Repeat,
   ScanText,
@@ -71,11 +70,6 @@ export const menuGroups: SidebarGroup[] = [
         label: "Document AI",
         to: "/app/ai-center/document-ai",
         icon: ScanText,
-      },
-      {
-        label: "Layout AI",
-        to: "/app/ai-center/layout-ai",
-        icon: Network,
       },
       {
         label: "Forecast AI",
