@@ -390,6 +390,7 @@ function extractWithCandidateEngine(ocr: CachedOcr): BenchmarkPrediction {
     lines: layoutLines.map((line) => ({
       text: line.text,
       bbox: line.bbox,
+      words: line.words,
     })),
     ocrConfidence: ocr.confidence,
   });

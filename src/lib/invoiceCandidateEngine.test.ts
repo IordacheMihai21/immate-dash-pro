@@ -108,6 +108,68 @@ describe("extractInvoiceCandidates - party name extraction", () => {
     expect(result.fields.supplierName.value).toBe("Cubus Arts S.R.L.");
     expect(result.fields.customerName.value).toBe("S.C. DEMO IMPEX S.R.L.");
   });
+
+  // Regression: a real invoice with supplier/customer info in two visual
+  // columns side by side. OCR flattens each row into one line with no
+  // textual seam at all ("WAYSTAR ROYCO SRL KENDALL ROY"), which the old
+  // engine extracted whole as BOTH supplierName and customerName. Uses
+  // real word bboxes (not just text) since this is exactly the case a
+  // pure text/regex approach cannot solve -- the fix reads the genuine
+  // geometric column gap on the "Furnizor ... Client" header line above,
+  // then re-applies that same boundary to isolate each column below it.
+  it("splits a two-column party block into separate supplier/customer names", () => {
+    // Two clearly separated word clusters per row: left column x 10-220,
+    // right column x 400-530 -- a real ~180px gap, not adjacent text.
+    const word = (text: string, x: number, width: number, y: number) => ({
+      text,
+      bbox: { x, y, width, height: 20 },
+    });
+    const lines = [
+      {
+        text: "Furnizor Client",
+        words: [word("Furnizor", 10, 90, 100), word("Client", 400, 80, 100)],
+      },
+      {
+        text: "WAYSTAR ROYCO SRL KENDALL ROY",
+        words: [
+          word("WAYSTAR", 10, 90, 130),
+          word("ROYCO", 105, 75, 130),
+          word("SRL", 185, 35, 130),
+          word("KENDALL", 400, 90, 130),
+          word("ROY", 495, 40, 130),
+        ],
+      },
+    ];
+    const result = extractInvoiceCandidates({
+      text: lines.map((l) => l.text).join("\n"),
+      lines,
+    });
+
+    expect(result.fields.supplierName.value).toBe("WAYSTAR ROYCO SRL");
+    expect(result.fields.customerName.value).toBe("KENDALL ROY");
+  });
+
+  it("does not split a single-column line that merely has a wide gap near one edge", () => {
+    // No dual-role header above it -- the column-split path never
+    // activates at all here, regardless of word spacing.
+    const lines = [
+      { text: "Furnizor:" },
+      {
+        text: "Cubus Arts S.R.L.",
+        words: [
+          { text: "Cubus", bbox: { x: 10, y: 100, width: 60, height: 20 } },
+          { text: "Arts", bbox: { x: 75, y: 100, width: 50, height: 20 } },
+          { text: "S.R.L.", bbox: { x: 400, y: 100, width: 70, height: 20 } },
+        ],
+      },
+    ];
+    const result = extractInvoiceCandidates({
+      text: lines.map((l) => l.text).join("\n"),
+      lines,
+    });
+
+    expect(result.fields.supplierName.value).toBe("Cubus Arts S.R.L.");
+  });
 });
 
 describe("extractInvoiceCandidates - invoice number extraction", () => {

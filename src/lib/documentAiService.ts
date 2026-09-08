@@ -958,10 +958,14 @@ function extractInvoiceFieldDetails(
     // attachBboxToTextLines for why (confirmed to reproduce the exact same
     // regression as re-deriving line boundaries, for an entirely different
     // reason: it feeds lineConfidenceBonus, which every line in the
-    // originally-tuned baseline implicitly left at 0).
+    // originally-tuned baseline implicitly left at 0). `words` IS forwarded:
+    // unlike confidence/line-boundaries, nothing reads it by default, so
+    // forwarding it is inert until a specific heuristic opts in (see
+    // splitLineByColumnGap in invoiceCandidateEngine.ts).
     lines: layoutLines.map((line) => ({
       text: line.text,
       bbox: line.bbox,
+      words: line.words,
     })),
     ocrConfidence,
   });

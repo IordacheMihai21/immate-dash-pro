@@ -1502,24 +1502,120 @@ function createContext(text: string, lines: CandidateLine[] | undefined, ocrConf
   return { text, lines: normalizedLines, ocrConfidence: clamp(ocrConfidence, 0, 1) };
 }
 
+// A page layout with supplier/customer info side by side (two visual
+// columns) OCRs as ONE flattened line per row -- "FURNIZOR CLIENT",
+// "Waystar Royco SRL Kendall Roy" -- with no textual seam between the two
+// halves at all. cleanPartyName has nothing to split on there; the whole
+// line reads as a single (wrong) name. This finds a genuine geometric
+// column gap from real word positions -- never guesses a split point from
+// text content -- so it only ever fires on an actual two-column layout.
+function findColumnBoundary(line: CandidateLine): number | null {
+  const words = (line.words ?? []).filter((word) => word.bbox);
+  if (words.length < 2) return null;
+
+  const sorted = [...words].sort((a, b) => a.bbox!.x - b.bbox!.x);
+  const widths = sorted.map((word) => word.bbox!.width).sort((a, b) => a - b);
+  const medianWidth = widths[Math.floor(widths.length / 2)] || 20;
+
+  let biggestGap = -Infinity;
+  let biggestGapIndex = -1;
+  for (let i = 1; i < sorted.length; i += 1) {
+    const gap = sorted[i].bbox!.x - (sorted[i - 1].bbox!.x + sorted[i - 1].bbox!.width);
+    if (gap > biggestGap) {
+      biggestGap = gap;
+      biggestGapIndex = i;
+    }
+  }
+  if (biggestGapIndex < 0) return null;
+
+  // A real column gap is dramatically wider than a normal inter-word
+  // space (itself roughly proportional to word/font size), and sits
+  // roughly in the middle of the line -- not just a wide space after a
+  // short leading label or before a trailing one.
+  if (biggestGap < medianWidth * 2.5) return null;
+
+  const lineStart = sorted[0].bbox!.x;
+  const lineEnd = sorted[sorted.length - 1].bbox!.x + sorted[sorted.length - 1].bbox!.width;
+  const gapCenter =
+    (sorted[biggestGapIndex - 1].bbox!.x +
+      sorted[biggestGapIndex - 1].bbox!.width +
+      sorted[biggestGapIndex].bbox!.x) /
+    2;
+  const gapPosition = (gapCenter - lineStart) / Math.max(lineEnd - lineStart, 1);
+  if (gapPosition < 0.25 || gapPosition > 0.85) return null;
+
+  return gapCenter;
+}
+
+// Splits a line's words at a previously-found column boundary (typically
+// discovered on the header row above -- "Furnizor ... Client" -- and
+// re-applied to every row of the same block, since a lower row's own
+// content may be too short/uneven to reliably reveal the gap itself).
+function splitLineAtBoundary(
+  line: CandidateLine,
+  boundaryX: number,
+): { left: string; right: string } | null {
+  const words = (line.words ?? []).filter((word) => word.bbox);
+  if (words.length < 2) return null;
+
+  const left = words.filter((word) => word.bbox!.x + word.bbox!.width / 2 < boundaryX);
+  const right = words.filter((word) => word.bbox!.x + word.bbox!.width / 2 >= boundaryX);
+  if (!left.length || !right.length) return null;
+
+  return {
+    left: left.map((word) => word.text).join(" "),
+    right: right.map((word) => word.text).join(" "),
+  };
+}
+
 function addLabeledPartyCandidates(
   candidates: FieldCandidate[],
   context: CandidateContext,
   field: "supplierName" | "customerName",
   labelPattern: RegExp,
 ) {
+  const otherLabelPattern =
+    field === "supplierName" ? PARTY_LABELS.customer : PARTY_LABELS.supplier;
+
   context.lines.forEach((line, index) => {
     if (!labelPattern.test(line.text)) return;
     const inline = cleanPartyName(line.text);
     const options = [
-      { value: inline, source: line.text, lineIndex: index, inline: true },
+      { value: inline, source: line.text, lineIndex: index, inline: true, columnSplit: false },
       ...context.lines.slice(index + 1, index + 4).map((next, offset) => ({
         value: cleanPartyName(next.text),
         source: next.text,
         lineIndex: index + offset + 1,
         inline: false,
+        columnSplit: false,
       })),
     ];
+
+    // Dual-role header on one line ("Furnizor ... Client") is the strong,
+    // unambiguous signal that the rows below are two side-by-side columns,
+    // not one. Only then do we look for a real geometric split -- on any
+    // other line this stays a no-op (findColumnBoundary is never called),
+    // so a normal single-column block behaves exactly as before.
+    if (otherLabelPattern.test(line.text)) {
+      const boundaryX = findColumnBoundary(line);
+      if (boundaryX !== null) {
+        context.lines.slice(index + 1, index + 4).forEach((next, offset) => {
+          const split = splitLineAtBoundary(next, boundaryX);
+          if (!split) return;
+          const half = field === "supplierName" ? split.left : split.right;
+          const cleanedHalf = cleanPartyName(half);
+          if (!cleanedHalf || cleanedHalf === cleanPartyName(next.text)) return;
+          options.push({
+            value: cleanedHalf,
+            source: next.text,
+            lineIndex: index + offset + 1,
+            inline: false,
+            columnSplit: true,
+          });
+        });
+      }
+    }
+
     options.forEach((option) => {
       if (isInvalidPartyCandidate(option.value)) return;
       addCandidate(candidates, {
@@ -1528,9 +1624,17 @@ function addLabeledPartyCandidates(
         normalizedValue: normalizePartyName(option.value),
         sourceText: option.source,
         lineIndex: option.lineIndex,
-        score: 0.82 + (option.inline ? 0.1 : 0.03) + (isCompanyLike(option.value) ? 0.04 : 0),
+        score:
+          0.82 +
+          (option.inline ? 0.1 : 0.03) +
+          (option.columnSplit ? 0.14 : 0) +
+          (isCompanyLike(option.value) ? 0.04 : 0),
         method: line.bbox ? "Layout heuristic" : "Regex",
-        reasons: ["Nume în bloc etichetat explicit"],
+        reasons: [
+          option.columnSplit
+            ? "Nume izolat dintr-un rând cu două coloane (furnizor/client)"
+            : "Nume în bloc etichetat explicit",
+        ],
       });
     });
   });
