@@ -91,6 +91,6 @@ export default defineConfig({
   // overrides the Lovable config's Cloudflare default with a plain Node
   // server output.
   nitro: {
-    preset: "node-server",
+    preset: process.env.VERCEL ? "vercel" : "node-server",
   },
 });
