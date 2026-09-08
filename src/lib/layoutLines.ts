@@ -38,6 +38,77 @@ function average(values: number[]) {
   return cleanValues.reduce((sum, value) => sum + value, 0) / cleanValues.length;
 }
 
+// Attaches a real bbox to each of Tesseract's own plain-text lines,
+// instead of re-deriving lines from word positions the way buildLayoutLines
+// does. This exists because every regex/heuristic in
+// invoiceCandidateEngine.ts was tuned against the exact line boundaries
+// Tesseract's plain .text output produces -- re-deriving lines from word
+// bboxes (even correctly) changes those boundaries just enough to
+// measurably hurt real-invoice accuracy (confirmed empirically: 89.1% ->
+// 86.2% even with resolution-aware, Tesseract-line-index-preserving
+// reconstruction). This keeps the exact same text and line count/order as
+// a plain text.split(/\r?\n/), and only adds bbox as metadata alongside it
+// -- so it cannot change which value gets extracted, only what geometric
+// data is available once it has been.
+//
+// Alignment strategy: words[] and the lines of `text` come from the same
+// single OCR pass, in the same reading order, with Tesseract's plain-text
+// renderer joining each recognized word with a single space and each line
+// with a newline -- so a line's word count (whitespace-split token count)
+// reliably tells us how many of the next not-yet-consumed words belong to
+// it. If that ever drifts (a word recognized differently between the two
+// representations), the affected line(s) simply get no bbox, exactly the
+// same as before this function existed -- never a wrong value, only
+// possibly missing metadata.
+//
+// IMPORTANT for callers: this also computes a real per-line `confidence`
+// (average word confidence) as part of LayoutLine's required shape, but
+// do NOT forward that into CandidateLine.confidence. Confirmed
+// empirically: doing so alone reproduces the exact same regression as the
+// line-boundary-changing attempts above (89.1% -> 86.2%), because every
+// line in the untouched baseline has confidence=undefined (contributing 0
+// to lineConfidenceBonus uniformly across the whole engine) -- suddenly
+// giving every line a real, varying confidence reshuffles close-call
+// rankings the existing heuristics were never tuned against. Use only
+// `.text` and `.bbox` from this function's output when building
+// CandidateLine[]; leave `confidence` off entirely.
+export function attachBboxToTextLines(text: string, words: OcrWord[]): LayoutLine[] {
+  const positionedWords = words.filter((word) => word.bbox);
+  let wordIndex = 0;
+
+  return text.split(/\r?\n/).map((rawLine) => {
+    const tokenCount = rawLine.trim() ? rawLine.trim().split(/\s+/).length : 0;
+    const consumed = positionedWords.slice(wordIndex, wordIndex + tokenCount);
+    wordIndex += tokenCount;
+
+    if (consumed.length === 0) {
+      return { text: rawLine, words: [], confidence: 0.55 };
+    }
+
+    const xValues = consumed.flatMap((word) =>
+      word.bbox ? [word.bbox.x, word.bbox.x + word.bbox.width] : [],
+    );
+    const yValues = consumed.flatMap((word) =>
+      word.bbox ? [word.bbox.y, word.bbox.y + word.bbox.height] : [],
+    );
+    if (xValues.length === 0) {
+      return { text: rawLine, words: consumed, confidence: 0.55 };
+    }
+
+    return {
+      text: rawLine,
+      words: consumed,
+      confidence: average(consumed.map((word) => word.confidence ?? 0.55)),
+      bbox: {
+        x: Math.min(...xValues),
+        y: Math.min(...yValues),
+        width: Math.max(...xValues) - Math.min(...xValues),
+        height: Math.max(...yValues) - Math.min(...yValues),
+      },
+    };
+  });
+}
+
 // Groups OCR words into visual lines by y-coordinate proximity (not text
 // order), computing a real bounding box per line from its constituent
 // words. This is what makes CandidateLine.bbox non-null in production --

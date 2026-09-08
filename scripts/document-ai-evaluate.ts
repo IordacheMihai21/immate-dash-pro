@@ -11,6 +11,7 @@ import {
 } from "../src/lib/documentAiEvaluationService.ts";
 import { extractInvoiceCandidates } from "../src/lib/invoiceCandidateEngine.ts";
 import { mergeLayoutXlmWithCandidateEngine } from "../src/lib/layoutAiHybridMerge.ts";
+import { attachBboxToTextLines } from "../src/lib/layoutLines.ts";
 
 type SplitName = "tuning" | "test" | "all";
 type BenchmarkInferenceMode =
@@ -368,20 +369,28 @@ async function analyzeWithFineTunedBackend(
 }
 
 function extractWithCandidateEngine(ocr: CachedOcr): BenchmarkPrediction {
-  // Tried building real bbox-carrying lines here via buildLayoutLines (the
-  // same function production uses), to make this benchmark reflect the
-  // "Layout heuristic" path instead of leaving every candidate on the
-  // "no bbox" path. Reverted: on this benchmark's real, very-high-resolution
-  // scans (some 9000+ px wide), buildLayoutLines's fixed-pixel y/x
-  // clustering thresholds (8px/12px) fragment lines incorrectly, and
-  // measurably hurt accuracy (89.1% -> 85.7%, totalAmount 89.0% -> 76.8%)
-  // compared to Tesseract's own text output. See DEPLOY notes / handoff:
-  // buildLayoutLines likely needs resolution-relative thresholds before
-  // this is safe to lean on -- that's separate, real follow-up work, not
-  // done here to avoid regressing the verified checkpoint.
+  // attachBboxToTextLines keeps the exact same lines a plain
+  // text.split(/\r?\n/) would produce (same text, same count, same order --
+  // every regex/heuristic here was tuned against those exact boundaries)
+  // and only adds bbox as metadata alongside them. Earlier attempts that
+  // instead *re-derived* lines from word positions (buildLayoutLines, even
+  // with resolution-aware thresholds and Tesseract's own line index)
+  // changed those boundaries just enough to measurably hurt accuracy
+  // (89.1% -> ~86%) -- see git history. This should be neutral to which
+  // value gets picked; it only makes real geometric scoring possible.
+  const layoutLines = attachBboxToTextLines(ocr.text, ocr.words);
   const extraction = extractInvoiceCandidates({
     text: ocr.text,
-    lines: ocr.text.split(/\r?\n/).map((text) => ({ text })),
+    // Isolating bbox-only effect: intentionally omitting `confidence` here
+    // (leaving it undefined, exactly like the plain text.split baseline)
+    // to test whether attachBboxToTextLines populating real per-line OCR
+    // confidence -- previously always undefined, feeding lineConfidenceBonus
+    // as 0 uniformly -- is what's actually driving the regression, as
+    // opposed to bbox/line-boundary changes.
+    lines: layoutLines.map((line) => ({
+      text: line.text,
+      bbox: line.bbox,
+    })),
     ocrConfidence: ocr.confidence,
   });
   return {

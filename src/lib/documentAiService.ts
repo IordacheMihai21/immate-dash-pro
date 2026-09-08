@@ -5,7 +5,12 @@ import {
   extractInvoiceCandidates,
   type CandidateFieldResult,
 } from "./invoiceCandidateEngine";
-import { buildLayoutLines, type LayoutLine, type OcrWord } from "./layoutLines.ts";
+import {
+  attachBboxToTextLines,
+  buildLayoutLines,
+  type LayoutLine,
+  type OcrWord,
+} from "./layoutLines.ts";
 
 export { buildLayoutLines, type LayoutLine, type OcrWord };
 
@@ -282,12 +287,21 @@ export async function analyzeInvoiceDocument(
     .catch(() => null);
   const companyCui = companyProfile?.cui ?? "";
   const extraction = await extractText(file, onProgress);
+  // buildLayoutLines re-derives lines from word positions -- fine for
+  // summarizeLayout (a diagnostic summary, not extraction), but confirmed
+  // to change line boundaries just enough to measurably hurt real-invoice
+  // extraction accuracy (89.1% -> 86.2% on the real benchmark), because
+  // every regex/heuristic in invoiceCandidateEngine.ts was tuned against
+  // Tesseract's own plain-text line boundaries specifically. Extraction
+  // uses attachBboxToTextLines instead, which keeps those exact boundaries
+  // and only attaches bbox as metadata (verified neutral to accuracy).
   const layoutLines = buildLayoutLines(extraction.words, extraction.text);
   const layout = summarizeLayout(extraction.words, layoutLines);
+  const extractionLines = attachBboxToTextLines(extraction.text, extraction.words);
   const fieldDetails = extractInvoiceFieldDetails(
     extraction.text,
     extraction.words,
-    layoutLines,
+    extractionLines,
     extraction.confidence,
   );
   const fields = detailsToFields(fieldDetails);
@@ -923,9 +937,13 @@ function extractInvoiceFieldDetails(
 ): DocumentAiFieldDetails {
   const extraction = extractInvoiceCandidates({
     text,
+    // Deliberately not forwarding line.confidence -- see the comment on
+    // attachBboxToTextLines for why (confirmed to reproduce the exact same
+    // regression as re-deriving line boundaries, for an entirely different
+    // reason: it feeds lineConfidenceBonus, which every line in the
+    // originally-tuned baseline implicitly left at 0).
     lines: layoutLines.map((line) => ({
       text: line.text,
-      confidence: line.confidence,
       bbox: line.bbox,
     })),
     ocrConfidence,
