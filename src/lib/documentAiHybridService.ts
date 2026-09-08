@@ -39,10 +39,16 @@ export async function finalizeDocumentAiWithHybrid(
   const sanitizedCandidate = applyVisibleConfidence(
     sanitizeAnalysis(candidateAnalysis, "candidate_engine_baseline"),
   );
+  const hasCandidateSignal = hasUsableExtraction(sanitizedCandidate);
 
   try {
     const health = await checkLayoutAiHealth();
     if (health.fine_tuned_model_used !== true || health.model_inference_available !== true) {
+      if (!hasCandidateSignal) {
+        throw new Error(
+          "OCR-ul din browser nu a extras text, iar backend-ul LayoutXLM fine-tuned nu este disponibil.",
+        );
+      }
       return sanitizedCandidate;
     }
 
@@ -78,9 +84,24 @@ export async function finalizeDocumentAiWithHybrid(
     return applyVisibleConfidence(
       applyHybridResult(sanitizedCandidate, hybrid.fields, hybrid.confidences),
     );
-  } catch {
+  } catch (error) {
+    if (!hasCandidateSignal) {
+      throw new Error(
+        error instanceof Error
+          ? error.message
+          : "OCR-ul nu a extras text, iar validarea LayoutXLM nu a putut fi executata.",
+        { cause: error },
+      );
+    }
     return sanitizedCandidate;
   }
+}
+
+function hasUsableExtraction(analysis: DocumentAiAnalysis) {
+  return (
+    analysis.extractedText.trim().length > 0 ||
+    Object.values(analysis.fields).some((value) => stringify(value).trim().length > 0)
+  );
 }
 
 function sanitizeAnalysis(

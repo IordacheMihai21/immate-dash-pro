@@ -171,10 +171,18 @@ def main() -> int:
                 else:
                     aligned.append(int(record["labels"][word_id]))
                 previous_word = word_id
-            image = self.load_image(record, Image)
-            pixels = image_processor(images=image, return_tensors="pt")["pixel_values"][
-                0
-            ]
+            pixel_values_path = record.get("pixel_values_path")
+
+            if pixel_values_path:
+                pixels = torch.from_numpy(
+                    np.load(str(pixel_values_path))
+                ).float()
+            else:
+                image = self.load_image(record, Image)
+                pixels = image_processor(
+                    images=image,
+                    return_tensors="pt"
+                )["pixel_values"][0]
             result = {key: value[0] for key, value in encoding.items()}
             result["labels"] = torch.tensor(aligned, dtype=torch.long)
             result["image"] = pixels

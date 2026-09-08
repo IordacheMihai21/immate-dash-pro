@@ -1,16 +1,20 @@
 from __future__ import annotations
 
+import csv
 import hashlib
 import json
 import logging
 import os
 import re
+import shutil
+import subprocess
+import tempfile
 import threading
 import time
 from collections import deque
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
-from io import BytesIO
+from io import BytesIO, StringIO
 from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Union
 
 import requests
@@ -233,6 +237,7 @@ MAX_DOCUMENT_AI_UPLOAD_BYTES = env_int("DOCUMENT_AI_MAX_UPLOAD_BYTES", 20 * 1024
 MAX_OCR_TEXT_CHARS = env_int("DOCUMENT_AI_MAX_OCR_TEXT_CHARS", 200_000)
 MAX_OCR_WORDS_JSON_CHARS = env_int("DOCUMENT_AI_MAX_OCR_WORDS_JSON_CHARS", 1_500_000)
 MAX_FIELDS_JSON_CHARS = env_int("DOCUMENT_AI_MAX_FIELDS_JSON_CHARS", 100_000)
+DOCUMENT_AI_LOCAL_OCR_TIMEOUT_SECONDS = env_int("DOCUMENT_AI_LOCAL_OCR_TIMEOUT_SECONDS", 45)
 SENTRY_DSN = os.environ.get("DOCUMENT_AI_SENTRY_DSN") or os.environ.get("SENTRY_DSN")
 SENTRY_TRACES_SAMPLE_RATE = env_float("DOCUMENT_AI_SENTRY_TRACES_SAMPLE_RATE", 0.1)
 _RATE_LIMIT_BUCKETS: Dict[str, deque[float]] = {}
@@ -437,6 +442,21 @@ async def analyze_layout(
 
     text = normalize_text(ocr_text or "")
     parsed_ocr_words = parse_ocr_words(ocr_words, notes)
+
+    if not text and image is not None:
+        local_ocr = await run_in_threadpool(run_local_image_ocr, image)
+        if local_ocr["text"]:
+            text = normalize_text(local_ocr["text"])
+            parsed_ocr_words = local_ocr["words"]
+            notes.append(
+                "OCR local Tesseract a fost executat in backend deoarece frontend-ul nu a trimis text OCR."
+            )
+            notes.append(
+                f"OCR backend: limba {local_ocr['language']}, {len(parsed_ocr_words)} cuvinte, incredere {local_ocr['confidence']:.0%}."
+            )
+        elif local_ocr["note"]:
+            notes.append(local_ocr["note"])
+
     extraction_lines = build_extraction_lines(text, parsed_ocr_words)
     extracted_fields = empty_fields()
     if text:
@@ -465,7 +485,7 @@ async def analyze_layout(
         )
     elif file is not None:
         notes.append(
-            "Fisierul a fost primit, dar endpointul nu ruleaza OCR local. Trimite ocr_text din fluxul Document AI pentru analiza fallback."
+            "Fisierul a fost primit, dar nu s-a putut extrage OCR local din imagine."
         )
 
     words, normalized_boxes = prepare_layout_inputs(parsed_ocr_words, text, image)
@@ -629,6 +649,167 @@ async def read_uploaded_image(file: Optional[UploadFile]) -> Tuple[Any, str]:
             None,
             f"Fisier primit: {file.filename or 'document'}. Continutul nu a putut fi inspectat ca imagine.",
         )
+
+
+def run_local_image_ocr(image: Any) -> Dict[str, Any]:
+    if image is None or Image is None:
+        return {"text": "", "words": [], "confidence": 0.0, "language": "", "note": ""}
+
+    if shutil.which("tesseract") is None:
+        return {
+            "text": "",
+            "words": [],
+            "confidence": 0.0,
+            "language": "",
+            "note": "Tesseract CLI nu este disponibil pentru OCR local in backend.",
+        }
+
+    errors: List[str] = []
+    with tempfile.TemporaryDirectory(prefix="immapp-document-ai-ocr-") as workdir:
+        image_path = os.path.join(workdir, "input.png")
+        image.save(image_path, format="PNG")
+
+        best = {"text": "", "words": [], "confidence": 0.0, "language": "", "score": 0.0}
+        for language in ("ron+eng", "eng"):
+            try:
+                completed = subprocess.run(
+                    [
+                        "tesseract",
+                        "input.png",
+                        "stdout",
+                        "-l",
+                        language,
+                        "--psm",
+                        "3",
+                        "tsv",
+                    ],
+                    cwd=workdir,
+                    capture_output=True,
+                    text=True,
+                    timeout=DOCUMENT_AI_LOCAL_OCR_TIMEOUT_SECONDS,
+                    check=False,
+                )
+            except subprocess.TimeoutExpired:
+                errors.append(f"{language}: timeout OCR")
+                continue
+            except Exception as exc:
+                errors.append(f"{language}: {exc}")
+                continue
+
+            if completed.returncode != 0:
+                details = (completed.stderr or "").strip().splitlines()
+                errors.append(f"{language}: {details[-1] if details else 'eroare OCR'}")
+                continue
+
+            text, words, confidence = parse_tesseract_tsv(completed.stdout)
+            score = score_local_ocr(text, words, confidence)
+            if score > float(best["score"]):
+                best = {
+                    "text": text,
+                    "words": words,
+                    "confidence": confidence,
+                    "language": language,
+                    "score": score,
+                }
+
+        if best["text"]:
+            return {
+                "text": best["text"],
+                "words": best["words"],
+                "confidence": best["confidence"],
+                "language": best["language"],
+                "note": "",
+            }
+
+    return {
+        "text": "",
+        "words": [],
+        "confidence": 0.0,
+        "language": "",
+        "note": "OCR local Tesseract nu a extras text utilizabil."
+        + (f" Detalii: {'; '.join(errors[:2])}." if errors else ""),
+    }
+
+
+def parse_tesseract_tsv(tsv: str) -> Tuple[str, List[Dict[str, Any]], float]:
+    words: List[Dict[str, Any]] = []
+    line_groups: Dict[Tuple[int, int, int, int], List[Dict[str, Any]]] = {}
+
+    reader = csv.DictReader(StringIO(tsv), delimiter="\t")
+    for row in reader:
+        if row.get("level") != "5":
+            continue
+        text = clean_value(row.get("text"))
+        if not text:
+            continue
+        confidence = _safe_float(row.get("conf")) / 100
+        word = {
+            "text": text,
+            "confidence": max(0.0, min(confidence, 1.0)),
+            "bbox": {
+                "x": _safe_float(row.get("left")),
+                "y": _safe_float(row.get("top")),
+                "width": _safe_float(row.get("width")),
+                "height": _safe_float(row.get("height")),
+            },
+        }
+        words.append(word)
+        key = (
+            int(_safe_float(row.get("page_num"))),
+            int(_safe_float(row.get("block_num"))),
+            int(_safe_float(row.get("par_num"))),
+            int(_safe_float(row.get("line_num"))),
+        )
+        line_groups.setdefault(key, []).append(word)
+
+    lines = [
+        " ".join(
+            item["text"]
+            for item in sorted(
+                group,
+                key=lambda item: (
+                    _safe_float(item["bbox"].get("x")),
+                    _safe_float(item["bbox"].get("y")),
+                ),
+            )
+        )
+        for _, group in sorted(
+            line_groups.items(),
+            key=lambda item: (
+                min(_safe_float(word["bbox"].get("y")) for word in item[1]),
+                min(_safe_float(word["bbox"].get("x")) for word in item[1]),
+            ),
+        )
+    ]
+    confidences = [
+        _safe_float(word.get("confidence")) for word in words if _safe_float(word.get("confidence")) > 0
+    ]
+    confidence = sum(confidences) / len(confidences) if confidences else 0.0
+    return "\n".join(lines), words[:1000], confidence
+
+
+def score_local_ocr(text: str, words: List[Dict[str, Any]], confidence: float) -> float:
+    normalized = text.lower()
+    keyword_count = sum(
+        1
+        for keyword in (
+            "factura",
+            "invoice",
+            "total",
+            "tva",
+            "vat",
+            "cui",
+            "cif",
+            "data",
+            "date",
+        )
+        if keyword in normalized
+    )
+    return (
+        max(0.0, min(confidence, 1.0)) * 0.45
+        + min(len(words) / 250, 1.0) * 0.35
+        + min(keyword_count / 8, 1.0) * 0.2
+    )
 
 
 def validate_text_payload(name: str, value: Optional[str], max_chars: int) -> None:
