@@ -459,6 +459,7 @@ function extractTotalAmountCandidates(context: CandidateContext) {
         addAdjacentTotalCandidates(candidates, context, index, labelStrength);
       }
       addStackedArithmeticTotalCandidates(candidates, context, index, labelStrength);
+      addGrossFromPlainNetTotalCandidates(candidates, context, line, index, tokens, labelStrength);
     }
 
     addArithmeticTotalCandidates(candidates, context, line, index, tokens, labelStrength);
@@ -548,6 +549,18 @@ function addStackedArithmeticTotalCandidates(
   if (pair.tax === 0) return;
 
   const observed = stack.some((item) => Math.abs(Math.abs(item.token.value) - pair.total) <= 0.01);
+  if (hasNearbyBalanceBreakdownContext(context, labelLineIndex)) return;
+  if (
+    !observed &&
+    stack.some(
+      (item) =>
+        [pair.net, pair.tax].some(
+          (value) => Math.abs(Math.abs(item.token.value) - value) <= 0.01,
+        ) && isExplicitGrandTotalValueLine(context, item.lineIndex),
+    )
+  ) {
+    return;
+  }
   const canUseSynthesizedStack =
     hasNearbyStrongTotalLabel(context, labelLineIndex) &&
     stack.length >= 2 &&
@@ -589,6 +602,46 @@ function addStackedArithmeticTotalCandidates(
     method: context.lines[labelLineIndex]?.bbox ? "Layout heuristic" : "Regex",
     reasons: ["Total reconstruit din stivă OCR net + TVA"],
   });
+}
+
+function isExplicitGrandTotalValueLine(context: CandidateContext, lineIndex: number) {
+  const line = context.lines[lineIndex];
+  if (!line) return false;
+  const normalizedLine = normalizeText(line.text);
+  const tokens = extractMonetaryTokenDetails(line.text).filter((token) =>
+    isUsableTotalAmountToken(token, line.text),
+  );
+
+  if (tokens.length !== 1) return false;
+
+  const ownLabelStrength = totalLabelStrength(normalizedLine);
+  if (
+    (ownLabelStrength === "strong" || ownLabelStrength === "current") &&
+    !TOTAL_TAX_OR_NET_CONTEXT_PATTERN.test(normalizedLine) &&
+    !TOTAL_BALANCE_CONTEXT_PATTERN.test(normalizedLine)
+  ) {
+    return true;
+  }
+
+  if (!isCompactAmountLine(normalizedLine) && !tokens[0].hasCurrency) {
+    return false;
+  }
+
+  for (let offset = 1; offset <= 2; offset += 1) {
+    const previousLine = context.lines[lineIndex - offset];
+    if (!previousLine) continue;
+    const normalizedPreviousLine = normalizeText(previousLine.text);
+    const previousLabelStrength = totalLabelStrength(normalizedPreviousLine);
+    if (
+      (previousLabelStrength === "strong" || previousLabelStrength === "current") &&
+      !TOTAL_TAX_OR_NET_CONTEXT_PATTERN.test(normalizedPreviousLine) &&
+      !TOTAL_BALANCE_CONTEXT_PATTERN.test(normalizedPreviousLine)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function addTotalTokenCandidates(
@@ -642,6 +695,7 @@ function addTotalTokenCandidates(
       const nearbyLargerAmount = hasNearbyLargerTotalAmount(context, anchorLineIndex, token.value);
       if (nearbyLargerAmount) score -= 0.28;
       else score += 0.03;
+      score -= adjacentTotalContextPenalty(context, anchorLineIndex, lineIndex);
 
       // Real geometric distance as a supplementary signal, when available.
       // Line-index distance (above) is a text-order proxy that can mislead
@@ -709,6 +763,41 @@ function addTotalTokenCandidates(
           : "Valoare monetară lângă eticheta de total",
       ],
     });
+  });
+}
+
+function addGrossFromPlainNetTotalCandidates(
+  candidates: FieldCandidate[],
+  context: CandidateContext,
+  line: CandidateLine,
+  lineIndex: number,
+  tokens: MonetaryToken[],
+  labelStrength: "strong" | "current" | "weak",
+) {
+  if (labelStrength !== "weak") return;
+  if (tokens.length !== 1) return;
+  const token = tokens[0];
+  if (!isUsableTotalAmountToken(token, line.text)) return;
+  if (TOTAL_TAX_OR_NET_CONTEXT_PATTERN.test(normalizeText(line.text))) return;
+
+  const vatRate = findSingleDocumentVatRate(context);
+  if (vatRate === null || vatRate <= 0 || vatRate > 30) return;
+
+  const payableLabel = findFollowingPayableTotalLabelWithoutAmount(context, lineIndex);
+  if (!payableLabel) return;
+
+  const gross = roundAmount(token.value * (1 + vatRate / 100));
+  if (!Number.isFinite(gross) || Math.abs(gross) <= Math.abs(token.value)) return;
+
+  addCandidate(candidates, {
+    field: "totalAmount",
+    value: gross,
+    normalizedValue: gross,
+    sourceText: `${line.text} | ${payableLabel.text}`,
+    lineIndex,
+    score: 1.04 + lowerRegionBonus(lineIndex, context.lines.length, 0.04),
+    method: line.bbox ? "Layout heuristic" : "Regex",
+    reasons: ["Total de plată inferat din total net + cota TVA"],
   });
 }
 
@@ -947,7 +1036,8 @@ const TOTAL_CURRENT_INVOICE_PATTERN =
   /\b(?:total\s+factur\w*\s+curen\w*|factur\w*\s+curen\w*\s+(?:cu\s+)?tva|cod\s+de\s+bare\s+pentru\s+factur\w*\s+curen\w*|pentru\s+factur\w*\s+curen\w*)\b/i;
 const TOTAL_WEAK_LABEL_PATTERN = /\btotal\b/i;
 const TOTAL_BALANCE_CONTEXT_PATTERN =
-  /\b(?:sold\s+total|soldul?\s+(?:in\s+)?valoare|sold\s+precedent|sold\s+anterior|sold\s+client|facturi\s+neachitate|plati\s+in\s+avans|rest\s+plata|old\s+balance|previous\s+balance|total\s+de\s+plat[aă]\s+la\s+data\s+de)\b/i;
+  /\b(?:sold\s+total|soldul?\s+(?:in\s+)?valoare|sold\s+precedent|sold\s+anterior|sold\s+client|facturi\s+(?:neachitate|restante)|neachitate|restante|plati\s+in\s+avans|rest\s+plata|old\s+balance|previous\s+balance|total\s+de\s+plat[aă]\s+la\s+data\s+de)\b/i;
+const TOTAL_PAYMENT_CODE_CONTEXT_PATTERN = /\b(?:cod\s+de\s+bare|scanati|scanat)\b/i;
 const TOTAL_NON_MONETARY_CONTEXT_PATTERN =
   /\b(?:puncte|points|curs(?:ul)?\b|exchange\s+rate|rata\s+\d|unicredit\s*\+|termen\s+de\s+plata|modalitate(?:a)?\s+de\s+plata|plata\s+se\s+va\s+efectua|data\s+scadenta|scadenta|cod\s+client|cod\s+de\s+bare\s+pentru\s+sold|capital\s+social|operator\s+de\s+date|cui|cif|cod\s+fiscal|cod\s+tva|iban|cont(?:ul)?\s*bancar|banca|telefon|tel\.?|fax|buletinul|cartea\s+de\s+identitate|b\.?\s*i\.?\s*\/?\s*c\.?\s*i\.?|seria|serie\s+motor|serie|motor|vin|inmatriculare|referinta|recapitulatie|eliberat|spclep|art\.?|alin\.?|legea|codul\s+fiscal|contract\s+nr|nr\.?\s+contract)\b/i;
 const TOTAL_TAX_OR_NET_CONTEXT_PATTERN =
@@ -1709,6 +1799,14 @@ function isUsableTotalAmountToken(token: MonetaryToken, sourceText: string) {
   if (/\b(?:art\.?|alin\.?|legea|codul\s+fiscal|nr\.?\s+contract|cod\s+client)\b/i.test(around)) {
     return false;
   }
+  if (
+    !token.hasDecimal &&
+    !token.hasCurrency &&
+    Math.abs(token.value) >= 100_000 &&
+    !totalLabelStrength(normalizeText(sourceText))
+  ) {
+    return false;
+  }
   if (!token.hasDecimal && !token.hasCurrency && Math.abs(token.value) < 2) return false;
   return true;
 }
@@ -1780,6 +1878,45 @@ function hasNearbyStrongTotalLabel(context: CandidateContext, index: number) {
   return false;
 }
 
+function hasNearbyBalanceBreakdownContext(context: CandidateContext, index: number) {
+  const start = Math.max(0, index - 12);
+  const end = Math.min(context.lines.length - 1, index + 12);
+  for (let cursor = start; cursor <= end; cursor += 1) {
+    const line = normalizeText(context.lines[cursor]?.text ?? "");
+    if (TOTAL_BALANCE_CONTEXT_PATTERN.test(line)) return true;
+  }
+  return false;
+}
+
+function adjacentTotalContextPenalty(
+  context: CandidateContext,
+  anchorLineIndex: number,
+  valueLineIndex: number,
+) {
+  const start = Math.min(anchorLineIndex, valueLineIndex);
+  const end = Math.max(anchorLineIndex, valueLineIndex);
+  let penalty = 0;
+
+  for (let cursor = start; cursor <= end; cursor += 1) {
+    const line = normalizeText(context.lines[cursor]?.text ?? "");
+    if (cursor !== anchorLineIndex && TOTAL_BALANCE_CONTEXT_PATTERN.test(line)) {
+      penalty = Math.max(penalty, 0.48);
+    }
+    if (TOTAL_PAYMENT_CODE_CONTEXT_PATTERN.test(line)) {
+      penalty = Math.max(penalty, 0.36);
+    }
+  }
+
+  for (let cursor = Math.max(0, valueLineIndex - 4); cursor <= valueLineIndex + 1; cursor += 1) {
+    const line = normalizeText(context.lines[cursor]?.text ?? "");
+    if (TOTAL_BALANCE_CONTEXT_PATTERN.test(line)) {
+      penalty = Math.max(penalty, 0.48);
+    }
+  }
+
+  return penalty;
+}
+
 function hasNearbyLargerTotalAmount(
   context: CandidateContext,
   anchorIndex: number,
@@ -1835,6 +1972,47 @@ function hasNearbyTaxTableContext(context: CandidateContext, index: number) {
     }
   }
   return false;
+}
+
+function findSingleDocumentVatRate(context: CandidateContext) {
+  const rates = new Set<number>();
+  for (const line of context.lines) {
+    const match = normalizeText(line.text).match(
+      /\bcota\s+tva\s*[:=-]?\s*(\d{1,2})(?:[,.]\d+)?\s*%/i,
+    );
+    if (!match?.[1]) continue;
+    const rate = Number(match[1]);
+    if (Number.isFinite(rate)) rates.add(rate);
+  }
+
+  const positiveRates = Array.from(rates).filter((rate) => rate > 0);
+  return positiveRates.length === 1 ? positiveRates[0] : null;
+}
+
+function findFollowingPayableTotalLabelWithoutAmount(context: CandidateContext, lineIndex: number) {
+  for (let offset = 1; offset <= 4 && lineIndex + offset < context.lines.length; offset += 1) {
+    const line = context.lines[lineIndex + offset];
+    if (!line) continue;
+    const normalizedLine = normalizeText(line.text);
+    if (!normalizedLine) continue;
+
+    const labelStrength = totalLabelStrength(normalizedLine);
+    const hasAmount = extractMonetaryTokenDetails(line.text).some((token) =>
+      isUsableTotalAmountToken(token, line.text),
+    );
+
+    if ((labelStrength === "strong" || labelStrength === "current") && hasAmount) {
+      return null;
+    }
+    if (
+      (labelStrength === "strong" || labelStrength === "current") &&
+      /\bplat[aă]\b/i.test(normalizedLine)
+    ) {
+      return { text: line.text, lineIndex: lineIndex + offset };
+    }
+  }
+
+  return null;
 }
 
 function roundAmount(value: number) {

@@ -259,6 +259,111 @@ describe("extractInvoiceCandidates - totalAmount selection among multiple candid
     expect(result.fields.totalAmount.value).toBe(24067.99);
   });
 
+  it("does not add VAT to an amount that is already printed on a TOTAL DE PLATA line", () => {
+    const lines = [{ text: "Total TVA 13,588.47" }, { text: "TOTAL DE PLATA 86,690.78" }];
+    const result = extractInvoiceCandidates({
+      text: lines.map((l) => l.text).join("\n"),
+      lines,
+    });
+
+    expect(result.fields.totalAmount.value).toBe(86690.78);
+  });
+
+  it("does not add VAT to a single value immediately below an explicit total label", () => {
+    const lines = [
+      { text: "Valoare fara TVA" },
+      { text: "33277.97" },
+      { text: "Valoare TVA" },
+      { text: "6322.81" },
+      { text: "Total de plata (col. 5 + col. 6):" },
+      { text: "RON 39600.78" },
+    ];
+    const result = extractInvoiceCandidates({
+      text: lines.map((l) => l.text).join("\n"),
+      lines,
+    });
+
+    expect(result.fields.totalAmount.value).toBe(39600.78);
+  });
+
+  it("prefers the current invoice total over a balance snapshot table", () => {
+    const lines = [
+      { text: "Factura curenta" },
+      { text: "Facturi neachitate" },
+      { text: "Total de plata la data de 24.06.2021" },
+      { text: "38,82" },
+      { text: "435,47" },
+      { text: "474,29" },
+      { text: "Total factura curenta cu TVA [Lei]" },
+      { text: "38,82" },
+    ];
+    const result = extractInvoiceCandidates({
+      text: lines.map((l) => l.text).join("\n"),
+      lines,
+    });
+
+    expect(result.fields.totalAmount.value).toBe(38.82);
+  });
+
+  it("prefers the current invoice total over overdue balance values nearby", () => {
+    const lines = [
+      { text: "Total de plata factura curenta: 1.035,36 Lei" },
+      { text: "Facturi restante" },
+      { text: "677,43" },
+      { text: "Sold client la data emiterii facturii 05.07.2018" },
+      { text: "1.712,79 Lei" },
+    ];
+    const result = extractInvoiceCandidates({
+      text: lines.map((l) => l.text).join("\n"),
+      lines,
+    });
+
+    expect(result.fields.totalAmount.value).toBe(1035.36);
+  });
+
+  it("ignores large bare barcode fragments when a labeled monetary total exists", () => {
+    const lines = [
+      { text: "Total de plata factura curenta: 1.035,36 Lei" },
+      { text: "009956664150000001035360507 1852137816641" },
+      { text: "995666415" },
+    ];
+    const result = extractInvoiceCandidates({
+      text: lines.map((l) => l.text).join("\n"),
+      lines,
+    });
+
+    expect(result.fields.totalAmount.value).toBe(1035.36);
+  });
+
+  it("infers a missing payable total from a plain net total and a single VAT rate", () => {
+    const lines = [
+      { text: "Cota TVA: 19%" },
+      { text: "Total 1350.00" },
+      { text: "" },
+      { text: "Total plata" },
+    ];
+    const result = extractInvoiceCandidates({
+      text: lines.map((l) => l.text).join("\n"),
+      lines,
+    });
+
+    expect(result.fields.totalAmount.value).toBe(1606.5);
+  });
+
+  it("does not infer VAT when the payable total already has its own amount", () => {
+    const lines = [
+      { text: "Cota TVA: 19%" },
+      { text: "Total 2813.45 534.55" },
+      { text: "Total plata 3348.00" },
+    ];
+    const result = extractInvoiceCandidates({
+      text: lines.map((l) => l.text).join("\n"),
+      lines,
+    });
+
+    expect(result.fields.totalAmount.value).toBe(3348);
+  });
+
   it("resolves a subtotal/VAT/total trio to the correct total via cross-field consistency", () => {
     const lines = [
       { text: "Subtotal: 1000.00" },
