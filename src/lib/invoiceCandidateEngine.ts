@@ -637,6 +637,22 @@ function addTotalTokenCandidates(
       const nearbyLargerAmount = hasNearbyLargerTotalAmount(context, anchorLineIndex, token.value);
       if (nearbyLargerAmount) score -= 0.28;
       else score += 0.03;
+
+      // Real geometric distance as a supplementary signal, when available.
+      // Line-index distance (above) is a text-order proxy that can mislead
+      // in dense table regions (many rows packed close together) or sparse
+      // ones (few rows spanning a lot of vertical space) -- actual pixel
+      // distance corrects for that. Small, bounded weight (+/-0.05) so
+      // this only matters for otherwise-close calls between the existing,
+      // already-tuned signals, never overrides them outright.
+      const anchorBbox = context.lines[anchorLineIndex]?.bbox;
+      const candidateBbox = line.bbox;
+      if (anchorBbox && candidateBbox) {
+        const yDelta = Math.abs(candidateBbox.y - anchorBbox.y);
+        const referenceHeight = Math.max(anchorBbox.height, candidateBbox.height, 1);
+        const rows = yDelta / referenceHeight;
+        score += Math.max(-0.05, 0.05 - Math.min(rows, 10) * 0.01);
+      }
     }
 
     if (TOTAL_CURRENT_INVOICE_PATTERN.test(normalizedLine)) score += 0.12;
