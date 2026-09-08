@@ -51,6 +51,64 @@ describe("mergeLayoutXlmWithCandidateEngine - tax identifier merge", () => {
     expect(result.fields.supplierCui).toBe("");
     expect(result.sources.supplierCui).toBe("missing");
   });
+
+  it("never lets supplier and customer collapse to the same tax ID (regression: bilingual RO/EN invoice)", () => {
+    // Real bug: both extractors independently mis-assigned the customer's
+    // real CUI (RO14468355) as the supplier's too, producing
+    // supplierCui === customerCui === RO14468355 and silently erasing the
+    // real supplier CUI (RO13548146) rather than reporting it missing.
+    const result = mergeLayoutXlmWithCandidateEngine({
+      candidateFields: { supplierCui: "RO14468355", customerCui: "RO14468355" },
+      candidateConfidences: { supplierCui: 0.68, customerCui: 0.85 },
+      layoutFields: { supplierCui: "RO14468355", customerCui: "RO14468355" },
+      layoutConfidences: { supplierCui: 0.7, customerCui: 0.88 },
+      layoutMethods: { supplierCui: "fine-tuned layoutxlm", customerCui: "fine-tuned layoutxlm" },
+    });
+
+    expect(result.fields.supplierCui).not.toBe(result.fields.customerCui);
+    // Higher-confidence side kept; the weaker duplicate is cleared to
+    // missing rather than guessed -- neither value can be trusted enough
+    // to assert which one is "the real supplier" from this evidence alone.
+    expect(result.fields.customerCui).toBe("RO14468355");
+    expect(result.fields.supplierCui).toBe("");
+    expect(result.sources.supplierCui).toBe("missing");
+  });
+});
+
+describe("mergeLayoutXlmWithCandidateEngine - amount and currency pairing", () => {
+  it("keeps totalAmount and currency paired from the same winning source (regression: dual-currency bilingual invoice)", () => {
+    // Real bug: a document printed both "19,735.10 USD" and "77,973.39
+    // RON" (common on RO invoices billed in a foreign currency, which must
+    // also show the RON equivalent). The candidate engine read the USD
+    // figure, LayoutXLM read the RON figure; totalAmount and currency were
+    // each picked independently by their own per-field confidence, landing
+    // on LayoutXLM's RON total paired with the candidate engine's "USD" --
+    // a combination neither extractor actually reported together.
+    const result = mergeLayoutXlmWithCandidateEngine({
+      candidateFields: { totalAmount: "19735.10", currency: "USD" },
+      candidateConfidences: { totalAmount: 0.4, currency: 0.8 },
+      layoutFields: { totalAmount: "77973.39", currency: "RON" },
+      layoutConfidences: { totalAmount: 0.9, currency: 0.6 },
+      layoutMethods: { totalAmount: "fine-tuned layoutxlm", currency: "fine-tuned layoutxlm" },
+    });
+
+    expect(result.fields.totalAmount).toBe("77973.39");
+    expect(result.fields.currency).toBe("RON");
+  });
+
+  it("leaves currency alone when it already agrees with the winning source", () => {
+    const result = mergeLayoutXlmWithCandidateEngine({
+      candidateFields: { totalAmount: "1780.02", currency: "RON" },
+      candidateConfidences: { totalAmount: 0.75, currency: 0.8 },
+      layoutFields: { totalAmount: "6", currency: "" },
+      layoutConfidences: { totalAmount: 0.6 },
+      layoutMethods: { totalAmount: "fine-tuned layoutxlm" },
+    });
+
+    expect(result.fields.totalAmount).toBe("1780.02");
+    expect(result.fields.currency).toBe("RON");
+    expect(result.sources.currency).toBe("candidate_engine");
+  });
 });
 
 describe("mergeLayoutXlmWithCandidateEngine - invoice number merge", () => {

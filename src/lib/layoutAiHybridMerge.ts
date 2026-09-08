@@ -75,6 +75,32 @@ export function mergeLayoutXlmWithCandidateEngine({
     confidences[field] = choice.confidence;
   }
 
+  // Amount and currency must travel together. The loop above resolves each
+  // field independently by its own per-field confidence, which can pair the
+  // winning totalAmount from one extractor with the winning currency from
+  // the OTHER -- confirmed on a real bilingual, multi-currency invoice
+  // (19,735.10 USD *and* 77,973.39 RON both printed) where the merge picked
+  // the RON figure as totalAmount but "USD" as currency, a combination
+  // neither extractor actually proposed together. Re-pin currency to
+  // whichever source's totalAmount actually won, using that SAME source's
+  // own currency reading -- each extractor is internally self-consistent
+  // about its own amount+currency pairing even when the two extractors
+  // disagree with each other. Never invents a currency the winning source
+  // didn't itself report.
+  if (fields.totalAmount) {
+    const winningCurrency =
+      sources.totalAmount === "candidate_engine"
+        ? normalizeCurrency(stringify(candidateFields.currency))
+        : sources.totalAmount === "layoutxlm"
+          ? normalizeCurrency(stringify(layoutFields.currency))
+          : "";
+    if (winningCurrency && winningCurrency !== fields.currency) {
+      fields.currency = winningCurrency;
+      sources.currency = sources.totalAmount;
+      confidences.currency = Math.max(confidences.currency ?? 0, confidences.totalAmount ?? 0.72);
+    }
+  }
+
   reconcileTaxIdPair({
     fields,
     sources,
@@ -96,6 +122,31 @@ export function mergeLayoutXlmWithCandidateEngine({
     layoutConfidences,
     layoutMethods,
   });
+
+  // Final invariant, independent of which stage caused it: supplier and
+  // customer tax IDs must never collapse to the same identifier. This can
+  // happen even before reconcileTaxIdPair's own guard runs -- e.g. the
+  // plain per-field resolution above agreeing on the same (wrong) value
+  // for both roles, because both extractors independently mis-assigned the
+  // customer's real CUI as the supplier's too (confirmed on a real
+  // bilingual RO/EN invoice). We have no reliable way to tell which side is
+  // actually right, so an honest "missing" beats presenting one company's
+  // CUI as both parties' identity -- keep whichever side has the stronger
+  // evidence and clear the other back to missing.
+  if (
+    fields.supplierCui &&
+    fields.customerCui &&
+    normalizeTaxIdentifier(fields.supplierCui).replace(/^RO(?=\d)/, "") ===
+      normalizeTaxIdentifier(fields.customerCui).replace(/^RO(?=\d)/, "")
+  ) {
+    const weaker: "supplierCui" | "customerCui" =
+      (confidences.supplierCui ?? 0) <= (confidences.customerCui ?? 0)
+        ? "supplierCui"
+        : "customerCui";
+    fields[weaker] = "";
+    sources[weaker] = "missing";
+    confidences[weaker] = 0;
+  }
 
   return { fields, sources, confidences };
 }
@@ -284,17 +335,35 @@ function reconcileTaxIdPair({
 
   const currentSupplier = normalizeTaxIdentifier(fields.supplierCui);
   const currentCustomer = normalizeTaxIdentifier(fields.customerCui);
+  const currentSupplierKey = currentSupplier.replace(/^RO(?=\d)/, "");
+  const currentCustomerKey = currentCustomer.replace(/^RO(?=\d)/, "");
 
   const supplierValue = bestSupplier ? (canonical.get(bestSupplier) ?? "") : "";
   const customerValue = bestCustomer ? (canonical.get(bestCustomer) ?? "") : "";
+
+  // Never let this step assign the SAME underlying fiscal number to both
+  // roles. resolveRolePair already guarantees bestSupplier !== bestCustomer
+  // within its own resolution, but that doesn't stop it from proposing a
+  // value here that collides with the OTHER field's value from the earlier
+  // per-field pass -- confirmed on a real bilingual invoice where every
+  // piece of evidence (both extractors, both roles) reduced to the same one
+  // key (the customer's real CUI), and this function then happily copied
+  // it onto supplierCui too, silently erasing the correct customerCui's
+  // distinctness. An honest "still missing" beats a confidently wrong
+  // duplicate.
+  const supplierWouldDuplicateCustomer = Boolean(
+    bestSupplier && currentCustomerKey && bestSupplier === currentCustomerKey,
+  );
+  const customerWouldDuplicateSupplier = Boolean(
+    bestCustomer && currentSupplierKey && bestCustomer === currentSupplierKey,
+  );
 
   // Require meaningful joint evidence before overriding an already-populated
   // value; missing values can be filled more readily.
   if (
     supplierValue &&
-    (!currentSupplier ||
-      currentSupplier.replace(/^RO(?=\d)/, "") === bestSupplier ||
-      bestScore >= 0.9)
+    !supplierWouldDuplicateCustomer &&
+    (!currentSupplier || currentSupplierKey === bestSupplier || bestScore >= 0.9)
   ) {
     fields.supplierCui = supplierValue;
 
@@ -311,9 +380,8 @@ function reconcileTaxIdPair({
 
   if (
     customerValue &&
-    (!currentCustomer ||
-      currentCustomer.replace(/^RO(?=\d)/, "") === bestCustomer ||
-      bestScore >= 0.9)
+    !customerWouldDuplicateSupplier &&
+    (!currentCustomer || currentCustomerKey === bestCustomer || bestScore >= 0.9)
   ) {
     fields.customerCui = customerValue;
 
