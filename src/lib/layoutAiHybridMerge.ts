@@ -56,10 +56,7 @@ export function mergeLayoutXlmWithCandidateEngine({
     const candidate = stringify(candidateFields[field]);
     const layout = stringify(layoutFields[field]);
     const candidateConfidence = clampConfidence(candidateConfidences[field], candidate ? 0.72 : 0);
-    const hasFineTunedSignal = /fine-tuned\s+layoutxlm/i.test(layoutMethods[field] ?? "");
-    const layoutConfidence = hasFineTunedSignal
-      ? clampConfidence(layoutConfidences[field], layout ? 0.6 : 0)
-      : 0;
+    const layoutConfidence = gatedLayoutConfidence(field, layout, layoutConfidences, layoutMethods);
     const choice = chooseFieldValue(
       field,
       candidate,
@@ -80,6 +77,7 @@ export function mergeLayoutXlmWithCandidateEngine({
     candidateConfidences,
     layoutFields,
     layoutConfidences,
+    layoutMethods,
   });
 
   reconcilePartyNamePair({
@@ -90,9 +88,30 @@ export function mergeLayoutXlmWithCandidateEngine({
     candidateConfidences,
     layoutFields,
     layoutConfidences,
+    layoutMethods,
   });
 
   return { fields, sources, confidences };
+}
+
+// The backend reports several methods under the "layoutxlm" umbrella --
+// only ones that actually name the fine-tuned model are trustworthy
+// evidence; others (e.g. "LayoutXLM-assisted", a backend-internal regex
+// fallback dressed up with a similar-sounding label) are not the model's
+// own prediction and get zero confidence, same as "no layout value at
+// all". Shared by the main per-field merge AND reconcileTaxIdPair/
+// reconcilePartyNamePair -- confirmed as a real bug where the joint
+// resolvers read raw layoutConfidences directly, without this gate,
+// letting a value the primary merge had already correctly rejected (for
+// lacking this exact signal) sneak back in as trusted evidence.
+function gatedLayoutConfidence(
+  field: DocumentAiFieldKey,
+  layoutValue: string,
+  layoutConfidences: Partial<Record<DocumentAiFieldKey, number>>,
+  layoutMethods: Partial<Record<DocumentAiFieldKey, string>>,
+) {
+  const hasFineTunedSignal = /fine-tuned\s+layoutxlm/i.test(layoutMethods[field] ?? "");
+  return hasFineTunedSignal ? clampConfidence(layoutConfidences[field], layoutValue ? 0.6 : 0) : 0;
 }
 
 type RoleKey = "supplier" | "customer";
@@ -157,6 +176,7 @@ function reconcileTaxIdPair({
   candidateConfidences,
   layoutFields,
   layoutConfidences,
+  layoutMethods,
 }: {
   fields: Record<DocumentAiFieldKey, string>;
   sources: Record<DocumentAiFieldKey, HybridFieldSource>;
@@ -165,6 +185,7 @@ function reconcileTaxIdPair({
   candidateConfidences: Partial<Record<DocumentAiFieldKey, number>>;
   layoutFields: Partial<Record<DocumentAiFieldKey, unknown>>;
   layoutConfidences: Partial<Record<DocumentAiFieldKey, number>>;
+  layoutMethods: Partial<Record<DocumentAiFieldKey, string>>;
 }) {
   type Evidence = RoleEvidence & { value: string };
 
@@ -178,13 +199,22 @@ function reconcileTaxIdPair({
   ) => {
     const value = normalizeTaxIdentifier(stringify(raw));
     if (!value) return;
+    // Confidence of exactly 0 means untrusted (e.g. gatedLayoutConfidence
+    // rejected it) -- exclude it from the evidence pool entirely, rather
+    // than pushing it at 0 and letting roleScore's Math.max(0.35, ...)
+    // floor give it real weight anyway. Confirmed as a real bug: without
+    // this, a value the primary per-field merge had already correctly
+    // rejected for lacking a genuine fine-tuned-model signal could still
+    // win the joint role assignment here.
+    const clampedConfidence = clampConfidence(confidence, 0);
+    if (clampedConfidence <= 0) return;
 
     evidence.push({
       value,
       key: value.replace(/^RO(?=\d)/, ""),
       role,
       source,
-      confidence: clampConfidence(confidence, 0),
+      confidence: clampedConfidence,
     });
   };
 
@@ -200,8 +230,28 @@ function reconcileTaxIdPair({
     "candidate_engine",
     candidateConfidences.customerCui,
   );
-  pushEvidence(layoutFields.supplierCui, "supplier", "layoutxlm", layoutConfidences.supplierCui);
-  pushEvidence(layoutFields.customerCui, "customer", "layoutxlm", layoutConfidences.customerCui);
+  pushEvidence(
+    layoutFields.supplierCui,
+    "supplier",
+    "layoutxlm",
+    gatedLayoutConfidence(
+      "supplierCui",
+      stringify(layoutFields.supplierCui),
+      layoutConfidences,
+      layoutMethods,
+    ),
+  );
+  pushEvidence(
+    layoutFields.customerCui,
+    "customer",
+    "layoutxlm",
+    gatedLayoutConfidence(
+      "customerCui",
+      stringify(layoutFields.customerCui),
+      layoutConfidences,
+      layoutMethods,
+    ),
+  );
 
   if (!evidence.length) return;
 
@@ -294,6 +344,7 @@ function reconcilePartyNamePair({
   candidateConfidences,
   layoutFields,
   layoutConfidences,
+  layoutMethods,
 }: {
   fields: Record<DocumentAiFieldKey, string>;
   sources: Record<DocumentAiFieldKey, HybridFieldSource>;
@@ -302,6 +353,7 @@ function reconcilePartyNamePair({
   candidateConfidences: Partial<Record<DocumentAiFieldKey, number>>;
   layoutFields: Partial<Record<DocumentAiFieldKey, unknown>>;
   layoutConfidences: Partial<Record<DocumentAiFieldKey, number>>;
+  layoutMethods: Partial<Record<DocumentAiFieldKey, string>>;
 }) {
   type Evidence = RoleEvidence & { value: string };
 
@@ -317,13 +369,18 @@ function reconcilePartyNamePair({
     if (!isCleanParty(stringValue)) return;
     const key = normalizeText(stringValue);
     if (!key) return;
+    // See the matching comment in reconcileTaxIdPair: exclude, don't just
+    // zero, so roleScore's confidence floor can't give untrusted evidence
+    // real weight anyway.
+    const clampedConfidence = clampConfidence(confidence, 0);
+    if (clampedConfidence <= 0) return;
 
     evidence.push({
       value: stringValue,
       key,
       role,
       source,
-      confidence: clampConfidence(confidence, 0),
+      confidence: clampedConfidence,
     });
   };
 
@@ -339,8 +396,28 @@ function reconcilePartyNamePair({
     "candidate_engine",
     candidateConfidences.customerName,
   );
-  pushEvidence(layoutFields.supplierName, "supplier", "layoutxlm", layoutConfidences.supplierName);
-  pushEvidence(layoutFields.customerName, "customer", "layoutxlm", layoutConfidences.customerName);
+  pushEvidence(
+    layoutFields.supplierName,
+    "supplier",
+    "layoutxlm",
+    gatedLayoutConfidence(
+      "supplierName",
+      stringify(layoutFields.supplierName),
+      layoutConfidences,
+      layoutMethods,
+    ),
+  );
+  pushEvidence(
+    layoutFields.customerName,
+    "customer",
+    "layoutxlm",
+    gatedLayoutConfidence(
+      "customerName",
+      stringify(layoutFields.customerName),
+      layoutConfidences,
+      layoutMethods,
+    ),
+  );
 
   // Only meaningful once the same name (exact key) has been independently
   // observed at least twice -- otherwise there is nothing to jointly
