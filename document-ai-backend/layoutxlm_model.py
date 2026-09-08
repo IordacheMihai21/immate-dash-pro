@@ -18,13 +18,32 @@ class LayoutXlmModelManager:
         default_classifier = os.path.join(
             os.path.dirname(__file__), "models", "layoutxlm-invoice-token-classifier"
         )
-        self.fine_tuned_model_path = os.path.abspath(
-            os.getenv("LAYOUTXLM_FINE_TUNED_MODEL_PATH", default_classifier)
-        )
-        self.fine_tuned_model_available = all(
-            os.path.isfile(os.path.join(self.fine_tuned_model_path, filename))
-            for filename in ("config.json", "model.safetensors")
-        )
+        raw_fine_tuned_path = os.getenv("LAYOUTXLM_FINE_TUNED_MODEL_PATH", default_classifier)
+        # The fine-tuned checkpoint is gitignored (1.4GB, never committed or
+        # baked into the Docker image on purpose -- see .dockerignore). A
+        # configured value that isn't a real local directory is treated as a
+        # Hugging Face Hub repo id instead (e.g.
+        # "your-username/immapp-layoutxlm-invoice-classifier"), so a
+        # deployed backend pulls the real weights from the Hub rather than
+        # silently falling back to the untrained base model. Set HF_TOKEN
+        # too if that repo is private -- huggingface_hub reads it
+        # automatically, no code change needed for auth.
+        self.fine_tuned_is_hub_repo = not os.path.isdir(
+            os.path.abspath(raw_fine_tuned_path)
+        ) and _looks_like_hub_repo_id(raw_fine_tuned_path)
+        if self.fine_tuned_is_hub_repo:
+            self.fine_tuned_model_path = raw_fine_tuned_path
+            # Optimistic, matching the existing local-path semantics below:
+            # this only means "a source is configured", not "it loaded
+            # successfully" -- that's fine_tuned_model_used, reported
+            # separately after a real load attempt.
+            self.fine_tuned_model_available = True
+        else:
+            self.fine_tuned_model_path = os.path.abspath(raw_fine_tuned_path)
+            self.fine_tuned_model_available = all(
+                os.path.isfile(os.path.join(self.fine_tuned_model_path, filename))
+                for filename in ("config.json", "model.safetensors")
+            )
         dataset_root = os.path.join(os.path.dirname(__file__), "datasets", "fatura")
         self.layoutxlm_training_ready = all(
             os.path.isfile(path)
@@ -440,6 +459,20 @@ def _env_flag(name: str, default: bool) -> bool:
     if value is None:
         return default
     return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+_HUB_REPO_ID_PATTERN = re.compile(r"^[\w.\-]+/[\w.\-]+$")
+
+
+def _looks_like_hub_repo_id(value: str) -> bool:
+    """True for a plausible "org/repo" Hugging Face Hub id, e.g.
+    "your-username/immapp-layoutxlm-invoice-classifier". Deliberately
+    narrow (single slash, no leading/trailing slash, no path traversal)
+    so a typo'd or empty local path never gets mistaken for a Hub id and
+    silently sent to snapshot_download instead of failing loudly.
+    """
+    candidate = value.strip()
+    return bool(candidate) and bool(_HUB_REPO_ID_PATTERN.match(candidate))
 
 
 def _is_cache_miss(error: Exception) -> bool:
