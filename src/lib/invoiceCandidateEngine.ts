@@ -1443,8 +1443,12 @@ function extractTaxIdentifierCandidates(
   const customerContextPattern =
     /\b(?:customer|client|buyer|bill[\s_-]*to|cumparator|cumpărător|beneficiar|date\s+client|datele\s+clientului|destinatar)\b/i;
 
+  // "trezorerie" (State Treasury): confirmed on a real document
+  // ("TREZORERIE (CUI 22124891)") where the Treasury's own CUI -- used for
+  // bank/payment-account routing, not the seller's identity -- won as
+  // supplierCui over the real one printed elsewhere on the page.
   const hardNoisePattern =
-    /\b(?:iban|swift|bic|cont(?:ul)?|telefon|phone|fax|cod\s+bare|barcode|contract|comanda|order)\b/i;
+    /\b(?:iban|swift|bic|cont(?:ul)?|telefon|phone|fax|cod\s+bare|barcode|contract|comanda|order|trezorerie)\b/i;
 
   const addTaxCandidate = (
     rawValue: string,
