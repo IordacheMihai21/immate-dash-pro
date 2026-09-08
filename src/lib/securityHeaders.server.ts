@@ -53,7 +53,14 @@ function buildContentSecurityPolicy(): string {
   const directives = [
     "default-src 'self'",
     // See the file-level note: not hash/nonce-restricted yet.
-    "script-src 'self' 'unsafe-inline'",
+    // 'wasm-unsafe-eval' is the narrow CSP keyword for compiling/
+    // instantiating WebAssembly -- unlike 'unsafe-eval' it does NOT permit
+    // arbitrary eval()/Function() string execution. Tesseract.js's WASM
+    // OCR core fails to compile without it (confirmed live: a CompileError
+    // thrown deep inside the worker's Emscripten glue, which never
+    // propagates back to the main thread's recognize() promise -- so
+    // instead of a clean rejection, OCR just hangs forever mid-progress).
+    "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'",
     // Tailwind/Radix-based components rely on inline style attributes;
     // avoiding 'unsafe-inline' here would need a much larger styling
     // refactor.
