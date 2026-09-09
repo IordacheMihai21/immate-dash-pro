@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "Serie: PLR Numar: 19491463",
+  "invoiceDate": "2020-05-20",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Cod de Inregistrare in scopuri TVA: RO12064199",
+  "customerName": null,
+  "customerTaxId": "Cod unic de inregistrare/CNP: 16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 2527.19,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact_19491463_POR LS_0520 inrg-1_jpg.rf.NTx6Wl1AdR8xGidIpnSg.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "supplierTaxId: doesn't look like a plausible tax ID ('Cod de Inregistrare in scopuri TVA: RO12064199')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod unic de inregistrare/CNP: 16311704')"
+  ]
+}

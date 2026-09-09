@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "IDEAB nr : 94351423",
+  "invoiceDate": "2020-04-10",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Cod unic de inregistrare: 16741957",
+  "customerName": null,
+  "customerTaxId": "Cod TVA RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 610.02,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Factura_94351423-1_jpg.rf.oUdhGZC8BCLIfFBqbZoR.jpg",
+  "originalSize": [
+    2339,
+    1700
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "totalAmount: 2 non-contiguous spans found, took the longest",
+    "supplierTaxId: doesn't look like a plausible tax ID ('Cod unic de inregistrare: 16741957')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod TVA RO16311704')"
+  ]
+}

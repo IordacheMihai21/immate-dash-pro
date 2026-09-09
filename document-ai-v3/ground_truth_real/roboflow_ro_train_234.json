@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "DeHOF tr facts 0000005",
+  "invoiceDate": "oi cats so: 25.07.2017",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "ca Ro ausa43",
+  "customerName": null,
+  "customerTaxId": "care R1224",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 1844.5,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/profesional-print-factura-business-negru_m_png.rf.QaYG8LObyOyzr1yHOI71.png",
+  "originalSize": [
+    957,
+    677
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('oi cats so: 25.07.2017')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('ca Ro ausa43')",
+    "customerTaxId: doesn't look like a plausible tax ID ('care R1224')"
+  ]
+}

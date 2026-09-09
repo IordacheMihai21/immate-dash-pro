@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "Nrfactura CD/18294103/IS",
+  "invoiceDate": "\"Data 3182018.",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.LF.: RO 16019310",
+  "customerName": null,
+  "customerTaxId": "C.LF.: RO1803520",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 259.66,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/CONEX-1_jpg.rf.74SiroIpmUCRwv6KQ0XI.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('\"Data 3182018.')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.LF.: RO 16019310')",
+    "customerTaxId: doesn't look like a plausible tax ID ('C.LF.: RO1803520')"
+  ]
+}

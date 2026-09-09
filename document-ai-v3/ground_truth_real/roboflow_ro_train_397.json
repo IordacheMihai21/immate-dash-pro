@@ -1,0 +1,24 @@
+{
+  "invoiceNumber": "PTCFNS 79312",
+  "invoiceDate": "emitere: 01.02.2022",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO 33676778",
+  "customerName": null,
+  "customerTaxId": "RO 3288731",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 158.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/T_PTC-1_jpg.rf.02m9BICB2jaTPFtu7vhm.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('emitere: 01.02.2022')",
+    "totalAmount: 2 non-contiguous spans found, took the longest"
+  ]
+}

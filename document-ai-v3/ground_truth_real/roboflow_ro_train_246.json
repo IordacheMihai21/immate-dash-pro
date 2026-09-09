@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "SPRC_ NR.: 936535964",
+  "invoiceDate": "09/10/2019",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.ULL. : RO 11071295",
+  "customerName": null,
+  "customerTaxId": "C.U.I: 16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 5210.33,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Factura_936535964_Sodexo_1019-1_jpg.rf.imtd1BWrt1wYZWmamOwP.jpg",
+  "originalSize": [
+    2300,
+    1700
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('09/10/2019')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.ULL. : RO 11071295')",
+    "customerTaxId: doesn't look like a plausible tax ID ('C.U.I: 16311704')"
+  ]
+}

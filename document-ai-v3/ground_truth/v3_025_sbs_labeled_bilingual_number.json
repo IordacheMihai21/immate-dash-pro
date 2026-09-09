@@ -1,0 +1,39 @@
+{
+  "invoiceNumber": "1290",
+  "invoiceSeries": null,
+  "invoiceDate": "30.05.2025",
+  "dueDate": "13.06.2025",
+  "supplierName": "Meridian Travel Agency SRL",
+  "customerName": "Nightingale Events SRL",
+  "supplierTaxId": "RO59607184",
+  "customerTaxId": "RO60718295",
+  "subtotal": 11200.0,
+  "vatAmount": 2128.0,
+  "totalAmount": 13328.0,
+  "currency": "RON",
+  "supplierRegionBBox": {
+    "x": 80,
+    "y": 178,
+    "width": 783,
+    "height": 103
+  },
+  "customerRegionBBox": {
+    "x": 1037,
+    "y": 178,
+    "width": 783,
+    "height": 103
+  },
+  "tableRegionBBox": {
+    "x": 80,
+    "y": 311,
+    "width": 1740,
+    "height": 79
+  },
+  "traits": [
+    "side_by_side",
+    "labeled",
+    "bilingual",
+    "totals_only_table",
+    "series_number_only"
+  ]
+}

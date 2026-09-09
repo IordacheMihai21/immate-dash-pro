@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "TLLC Numarul: 21710",
+  "invoiceDate": "Data(ziua,luna,anul): 29-04.2021",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO12351919",
+  "customerName": null,
+  "customerTaxId": null,
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 235.54,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Tiriac_9 May 2021 17-32_inrg-11_jpg.rf.JQLljhTdO45b9QU2AWRr.jpg",
+  "originalSize": [
+    2259,
+    1659
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('Data(ziua,luna,anul): 29-04.2021')",
+    "supplierTaxId: 2 non-contiguous spans found, took the longest"
+  ]
+}

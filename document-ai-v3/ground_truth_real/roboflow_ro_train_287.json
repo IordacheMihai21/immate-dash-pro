@@ -1,0 +1,23 @@
+{
+  "invoiceNumber": null,
+  "invoiceDate": null,
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.1.F. RO28222104",
+  "customerName": null,
+  "customerTaxId": "RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 160.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact cazare Edy_0820_2buc_2Anexe-2_jpg.rf.WhDsq5MQAmkQN8R9IAzq.jpg",
+  "originalSize": [
+    2248,
+    1659
+  ],
+  "warnings": [
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.1.F. RO28222104')"
+  ]
+}

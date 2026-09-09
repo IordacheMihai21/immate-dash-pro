@@ -1,0 +1,39 @@
+{
+  "invoiceNumber": "118",
+  "invoiceSeries": "ITH",
+  "invoiceDate": "27.03.2025",
+  "dueDate": "10.04.2025",
+  "supplierName": "Ithaca Legal Partners SRL",
+  "customerName": "Jovian Ventures SRL",
+  "supplierTaxId": "RO15263750",
+  "customerTaxId": "RO26374861",
+  "subtotal": 7600.0,
+  "vatAmount": 1444.0,
+  "totalAmount": 9044.0,
+  "currency": "RON",
+  "supplierRegionBBox": {
+    "x": 80,
+    "y": 178,
+    "width": 1740,
+    "height": 103
+  },
+  "customerRegionBBox": {
+    "x": 80,
+    "y": 301,
+    "width": 1740,
+    "height": 103
+  },
+  "tableRegionBBox": {
+    "x": 80,
+    "y": 424,
+    "width": 1740,
+    "height": 79
+  },
+  "traits": [
+    "stacked",
+    "labeled",
+    "bilingual",
+    "with_summary_table",
+    "footer_legal"
+  ]
+}

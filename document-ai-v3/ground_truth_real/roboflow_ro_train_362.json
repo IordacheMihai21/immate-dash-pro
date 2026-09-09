@@ -1,0 +1,23 @@
+{
+  "invoiceNumber": "AT18-022272",
+  "invoiceDate": "fact.|Data",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO12966353",
+  "customerName": null,
+  "customerTaxId": "RO1803520",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 165.37,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/BARDI-1_jpg.rf.maoE7jtY7rJjC4V5D9v7.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('fact.|Data')"
+  ]
+}

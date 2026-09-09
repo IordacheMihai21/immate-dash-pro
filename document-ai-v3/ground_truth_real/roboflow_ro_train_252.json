@@ -1,0 +1,21 @@
+{
+  "invoiceNumber": "Serie PAT Numar 4243",
+  "invoiceDate": "2020-06-30",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO29555395",
+  "customerName": null,
+  "customerTaxId": "RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 465.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Profi Auto_0620_inreg-1_jpg.rf.kAr5Kx0aBrOGBZndFClu.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": []
+}

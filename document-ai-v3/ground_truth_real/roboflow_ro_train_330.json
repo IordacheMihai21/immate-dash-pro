@@ -1,0 +1,27 @@
+{
+  "invoiceNumber": "sen rest Nf. FACTURI ooze",
+  "invoiceDate": "DATAHunaans: 29-09-2011 102843",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Cir: Ro tase",
+  "customerName": null,
+  "customerTaxId": "CLF: Rotsattsie",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": null,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/program-facturare-online-model-o-factura-cu-chitanta-si-imagine-de-fundal-personalizata-5-pe-A4_jpg.rf.Yo5d0PpSA2nqHSSmXVt6.jpg",
+  "originalSize": [
+    1169,
+    826
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('DATAHunaans: 29-09-2011 102843')",
+    "totalAmount: could not parse '‘iam' as a number",
+    "supplierTaxId: doesn't look like a plausible tax ID ('Cir: Ro tase')",
+    "customerTaxId: doesn't look like a plausible tax ID ('CLF: Rotsattsie')",
+    "all three amount fields (subtotal/vatAmount/totalAmount) are null"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "Nr.factura 5733",
+  "invoiceDate": "Data(ziua, luna, anul) 30.05.2020",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Cod fiscal: RO24174411",
+  "customerName": null,
+  "customerTaxId": "Cod fiscal RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 390.32,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Stefano Serv_mls 5733_0520 inrg-1_jpg.rf.U3Y4F6qBL3G36ueDTTN7.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('Data(ziua, luna, anul) 30.05.2020')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('Cod fiscal: RO24174411')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod fiscal RO16311704')"
+  ]
+}

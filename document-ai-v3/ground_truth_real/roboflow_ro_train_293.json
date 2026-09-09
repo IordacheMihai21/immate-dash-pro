@@ -1,0 +1,21 @@
+{
+  "invoiceNumber": null,
+  "invoiceDate": null,
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": null,
+  "customerName": null,
+  "customerTaxId": null,
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 16464.81,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/APAN I-000000258 - 29-08-2019_inreg-3_jpg.rf.RArDsV5PPDbRK56Xp2tj.jpg",
+  "originalSize": [
+    1700,
+    2200
+  ],
+  "warnings": []
+}

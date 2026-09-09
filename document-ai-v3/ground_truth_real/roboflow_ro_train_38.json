@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": ". Seria IDEA nr. 90054788",
+  "invoiceDate": "facturii: 05.04.2019",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Cod TVA: RO13341280",
+  "customerName": null,
+  "customerTaxId": "Cod TVA: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 3337.27,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Idea_77457 inreg-1_jpg.rf.Fxki71Vkh0Ct3K4mzz0n.jpg",
+  "originalSize": [
+    2339,
+    1654
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('facturii: 05.04.2019')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('Cod TVA: RO13341280')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod TVA: RO16311704')"
+  ]
+}

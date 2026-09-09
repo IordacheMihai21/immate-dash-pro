@@ -35,6 +35,14 @@ RUN python -m pip install --upgrade pip setuptools wheel \
 
 COPY . .
 
+# The fine-tuned checkpoint is gitignored/dockerignored on purpose (1.4GB,
+# never committed) -- baked in here at BUILD time instead of fetched at
+# container startup, so a scale-to-zero host (Cloud Run) doesn't re-download
+# it from the Hub on every cold start. Public repo: no token needed here.
+# Swap the ARG default for your own repo id once it's uploaded.
+ARG LAYOUTXLM_FINE_TUNED_REPO=REPLACE_ME/immapp-layoutxlm-invoice-classifier
+RUN python -c "from huggingface_hub import snapshot_download; snapshot_download('${LAYOUTXLM_FINE_TUNED_REPO}', local_dir='models/layoutxlm-invoice-token-classifier')"
+
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=20s --start-period=120s --retries=3 \

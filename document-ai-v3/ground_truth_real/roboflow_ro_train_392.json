@@ -1,0 +1,23 @@
+{
+  "invoiceNumber": null,
+  "invoiceDate": null,
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Se",
+  "customerName": null,
+  "customerTaxId": null,
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 376.1,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/factura-model_-nou__jpg.rf.qQdPYOgvf60nh0dS9f9M.jpg",
+  "originalSize": [
+    869,
+    605
+  ],
+  "warnings": [
+    "supplierTaxId: doesn't look like a plausible tax ID ('Se')"
+  ]
+}

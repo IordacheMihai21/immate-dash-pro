@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "PT 37138",
+  "invoiceDate": "Date: 30-04-2019",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.LE(C.U.L): RO3801712",
+  "customerName": null,
+  "customerTaxId": "C.N.P/C.U.I: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 649.01,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact fz_Paloma_30-04-19 inreg-1_jpg.rf.v7h10weYqFAu9LNvqWDs.jpg",
+  "originalSize": [
+    2284,
+    1659
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('Date: 30-04-2019')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.LE(C.U.L): RO3801712')",
+    "customerTaxId: doesn't look like a plausible tax ID ('C.N.P/C.U.I: RO16311704')"
+  ]
+}

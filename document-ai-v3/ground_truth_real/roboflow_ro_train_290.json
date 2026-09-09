@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "Serie/ Nr. DUM.TM 4617.",
+  "invoiceDate": "30/05/2020",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C..F.: RO11385336",
+  "customerName": null,
+  "customerTaxId": "cir: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 2060.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact RMB_Dumivest_Omv_inrg-4_jpg.rf.MdYOK6a1tTrqi373aJow.jpg",
+  "originalSize": [
+    2339,
+    1650
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('30/05/2020')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('C..F.: RO11385336')",
+    "customerTaxId: doesn't look like a plausible tax ID ('cir: RO16311704')"
+  ]
+}

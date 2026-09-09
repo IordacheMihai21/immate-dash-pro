@@ -1,0 +1,23 @@
+{
+  "invoiceNumber": "Serie MB Nr 2052685",
+  "invoiceDate": "2020-05-27",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO6724860",
+  "customerName": null,
+  "customerTaxId": "C.LF. RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 4906.98,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact RMB_Dumivest_Omv_inrg-3_jpg.rf.toWvw2BFgobVXpGWuoDg.jpg",
+  "originalSize": [
+    2262,
+    1659
+  ],
+  "warnings": [
+    "customerTaxId: doesn't look like a plausible tax ID ('C.LF. RO16311704')"
+  ]
+}

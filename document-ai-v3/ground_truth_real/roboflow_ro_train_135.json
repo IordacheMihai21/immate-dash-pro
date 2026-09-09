@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "senia test ni, FACTUREL 00026",
+  "invoiceDate": "iluns-ank 29-09-2012",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CLF: RO Iz3AS6",
+  "customerName": null,
+  "customerTaxId": "C.F: Roxsznisaa",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": null,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/program-facturare-online-model-o-factura-cu-chitanta-si-imagine-de-fundal-pe-A4_jpg.rf.tESYjtssfQvGKakwlUiy.jpg",
+  "originalSize": [
+    1169,
+    826
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('iluns-ank 29-09-2012')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('CLF: RO Iz3AS6')",
+    "customerTaxId: doesn't look like a plausible tax ID ('C.F: Roxsznisaa')",
+    "all three amount fields (subtotal/vatAmount/totalAmount) are null"
+  ]
+}

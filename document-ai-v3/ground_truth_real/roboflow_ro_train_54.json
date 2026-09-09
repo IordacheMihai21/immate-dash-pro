@@ -1,0 +1,24 @@
+{
+  "invoiceNumber": "F02-179/2020",
+  "invoiceDate": "2020-01-18",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Atribut Fiscal: RO C.LF.: 6623784",
+  "customerName": null,
+  "customerTaxId": "Cod Fiscal: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 621.4,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/F02-179 Hotel_0120 inrg-1_jpg.rf.5lAUOjCK7e2Vljl30BZC.jpg",
+  "originalSize": [
+    2339,
+    1654
+  ],
+  "warnings": [
+    "supplierTaxId: doesn't look like a plausible tax ID ('Atribut Fiscal: RO C.LF.: 6623784')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod Fiscal: RO16311704')"
+  ]
+}

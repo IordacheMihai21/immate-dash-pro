@@ -1,0 +1,28 @@
+{
+  "invoiceNumber": "Seria Numar",
+  "invoiceDate": "Data",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "\"Sagres",
+  "customerName": null,
+  "customerTaxId": "RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 1475.6,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact_Autobavaria_0820 inrg_BF-2_jpg.rf.LAGc0HXfLXdBa20n8tN0.jpg",
+  "originalSize": [
+    2303,
+    1659
+  ],
+  "warnings": [
+    "invoiceNumber: 3 non-contiguous spans found, took the longest",
+    "invoiceNumber: leading-label stripping would have emptied the span, kept raw tokens instead",
+    "invoiceDate: 3 non-contiguous spans found, took the longest",
+    "invoiceDate: leading-label stripping would have emptied the span, kept raw tokens instead",
+    "invoiceDate: date format ambiguous, left as raw joined text ('Data')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('\"Sagres')"
+  ]
+}

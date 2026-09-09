@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "0198",
+  "invoiceDate": "(zi/luna/an): 31/07/2019",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CIF:RO16311704",
+  "customerName": null,
+  "customerTaxId": "103492941",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 285.34,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/FacturaTM2-MLS0198 Gettransf-1_jpg.rf.GOL9RXJvCvhwK0nOM8os.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "invoiceNumber: 3 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('(zi/luna/an): 31/07/2019')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('CIF:RO16311704')",
+    "customerTaxId: doesn't look like a plausible tax ID ('103492941')"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "invoiceNumber": "SPRC936535964GP/09.10.2019",
+  "invoiceDate": null,
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": null,
+  "customerName": null,
+  "customerTaxId": null,
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 5161.2,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Factura_936535964_Sodexo_1019-2_jpg.rf.Tdv5KEh51sHAgnSAb9ap.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": []
+}

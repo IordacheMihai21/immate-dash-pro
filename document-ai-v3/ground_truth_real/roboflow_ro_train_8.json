@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "eee nr. 0235",
+  "invoiceDate": "at",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CIF:RO16311704",
+  "customerName": null,
+  "customerTaxId": "RO35601135",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 1906.98,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/facturaTM2-MLS0235_inrg-1_jpg.rf.EybDVPwzLIoqS6uhA62A.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('at')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('CIF:RO16311704')"
+  ]
+}

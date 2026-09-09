@@ -1,0 +1,38 @@
+{
+  "invoiceNumber": "440",
+  "invoiceSeries": "URS",
+  "invoiceDate": "02.11.2024",
+  "dueDate": null,
+  "supplierName": "Ursa Curatenie Profesionala SRL",
+  "customerName": "Vertex Office Park SRL",
+  "supplierTaxId": "RO71829305",
+  "customerTaxId": "RO82930416",
+  "subtotal": 1650.0,
+  "vatAmount": 313.5,
+  "totalAmount": 1963.5,
+  "currency": "RON",
+  "supplierRegionBBox": {
+    "x": 80,
+    "y": 178,
+    "width": 1740,
+    "height": 78
+  },
+  "customerRegionBBox": {
+    "x": 80,
+    "y": 276,
+    "width": 1740,
+    "height": 78
+  },
+  "tableRegionBBox": {
+    "x": 80,
+    "y": 374,
+    "width": 1740,
+    "height": 79
+  },
+  "traits": [
+    "stacked",
+    "unlabeled",
+    "totals_only_table",
+    "series_split"
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "invoiceNumber": "670",
+  "invoiceSeries": "KLN",
+  "invoiceDate": "15.04.2025",
+  "dueDate": null,
+  "supplierName": "Kilner Packaging SRL",
+  "customerName": "Lorelei Foods SRL",
+  "supplierTaxId": "RO37485962",
+  "customerTaxId": "RO48596073",
+  "subtotal": 3950.0,
+  "vatAmount": 750.5,
+  "totalAmount": 4700.5,
+  "currency": "RON",
+  "supplierRegionBBox": {
+    "x": 80,
+    "y": 178,
+    "width": 1740,
+    "height": 78
+  },
+  "customerRegionBBox": {
+    "x": 80,
+    "y": 276,
+    "width": 1740,
+    "height": 78
+  },
+  "tableRegionBBox": {
+    "x": 80,
+    "y": 374,
+    "width": 1740,
+    "height": 79
+  },
+  "traits": [
+    "stacked",
+    "unlabeled",
+    "totals_only_table",
+    "noisy_scan",
+    "series_split"
+  ]
+}

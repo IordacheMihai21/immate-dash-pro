@@ -1,0 +1,21 @@
+{
+  "invoiceNumber": "Serie SA Numar 019",
+  "invoiceDate": "2018-05-13",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO30653044",
+  "customerName": null,
+  "customerTaxId": "RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 2500.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/fact 19 Smart inreg-1_jpg.rf.9PzuYvv0ujl9LeC19ELa.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": []
+}

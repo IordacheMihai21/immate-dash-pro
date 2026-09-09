@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "20300",
+  "invoiceDate": "st",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CIF:RO16311704",
+  "customerName": null,
+  "customerTaxId": "RO4269282",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 141.04,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/facturaTM1-MLS20300_inreg-1_jpg.rf.mbXnTIErtT2B4K1Igi90.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "invoiceNumber: 3 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('st')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('CIF:RO16311704')"
+  ]
+}

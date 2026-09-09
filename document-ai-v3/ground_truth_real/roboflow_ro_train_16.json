@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "CMT Nr-.: 8626",
+  "invoiceDate": "2021-05-25",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "ce wer jf sez",
+  "customerName": null,
+  "customerTaxId": "C od fiscal: 1631 1704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 220.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact Fizio Center_CMI Preda_0521_inrg-1_jpg.rf.DzFNG200zSHBn7YcbPkh.jpg",
+  "originalSize": [
+    1659,
+    1717
+  ],
+  "warnings": [
+    "customerTaxId: 2 non-contiguous spans found, took the longest",
+    "supplierTaxId: doesn't look like a plausible tax ID ('ce wer jf sez')",
+    "customerTaxId: doesn't look like a plausible tax ID ('C od fiscal: 1631 1704')"
+  ]
+}

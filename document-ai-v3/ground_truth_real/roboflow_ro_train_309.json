@@ -1,0 +1,21 @@
+{
+  "invoiceNumber": "Serie DVB Numar 220278",
+  "invoiceDate": "2022-02-04",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO28582057",
+  "customerName": null,
+  "customerTaxId": "RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 1990.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/S_DVB-1_jpg.rf.SAckJDDiWXILpcsx9A4i.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": []
+}

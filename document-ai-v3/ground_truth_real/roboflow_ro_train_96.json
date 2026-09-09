@@ -1,0 +1,21 @@
+{
+  "invoiceNumber": "RR 20950004",
+  "invoiceDate": "2018-08-29",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO7904419",
+  "customerName": null,
+  "customerTaxId": "RO1803520",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 138.8,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/AUGSBURG-1_jpg.rf.wrdAPtoYhQdsOtjWTTul.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": []
+}

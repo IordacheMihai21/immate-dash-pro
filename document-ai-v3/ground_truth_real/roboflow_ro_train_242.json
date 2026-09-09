@@ -1,0 +1,27 @@
+{
+  "invoiceNumber": "srie | -CL/140",
+  "invoiceDate": "(ziua,luna,anul) : 30/10/2020",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.LF.: RO11178217",
+  "customerName": null,
+  "customerTaxId": "(Cod fiscal : RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 245.01,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Aerop_factura_14045_inreg-1_jpg.rf.PP5ATRCl0LDziTnuD9Da.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "invoiceNumber: 3 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('(ziua,luna,anul) : 30/10/2020')",
+    "customerTaxId: 2 non-contiguous spans found, took the longest",
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.LF.: RO11178217')",
+    "customerTaxId: doesn't look like a plausible tax ID ('(Cod fiscal : RO16311704')"
+  ]
+}

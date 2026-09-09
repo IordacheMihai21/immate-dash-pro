@@ -1,0 +1,39 @@
+{
+  "invoiceNumber": "912",
+  "invoiceSeries": null,
+  "invoiceDate": "18.02.2025",
+  "dueDate": "04.03.2025",
+  "supplierName": "Elenor Cosmetics SRL",
+  "customerName": "Faretta Beauty Stores SRL",
+  "supplierTaxId": "RO71829306",
+  "customerTaxId": "RO82930417",
+  "subtotal": 5300.0,
+  "vatAmount": 1007.0,
+  "totalAmount": 6307.0,
+  "currency": "RON",
+  "supplierRegionBBox": {
+    "x": 80,
+    "y": 178,
+    "width": 783,
+    "height": 103
+  },
+  "customerRegionBBox": {
+    "x": 1037,
+    "y": 178,
+    "width": 783,
+    "height": 103
+  },
+  "tableRegionBBox": {
+    "x": 80,
+    "y": 311,
+    "width": 1740,
+    "height": 79
+  },
+  "traits": [
+    "side_by_side",
+    "labeled",
+    "with_summary_table",
+    "footer_legal",
+    "series_number_only"
+  ]
+}

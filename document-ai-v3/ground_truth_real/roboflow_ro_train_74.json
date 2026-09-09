@@ -1,0 +1,27 @@
+{
+  "invoiceNumber": "Serie / nr. TSR-CL/13107",
+  "invoiceDate": "ata (ziua,luna,anul) ; 06/01/2020",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Pa a",
+  "customerName": null,
+  "customerTaxId": "Cod fiscal : RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 782.43,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/facturi lipsa Aerop_0120 inrg_3buc-2_jpg.rf.xO5rvpnRL6FfOgV1IAOT.jpg",
+  "originalSize": [
+    2200,
+    1700
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('ata (ziua,luna,anul) ; 06/01/2020')",
+    "customerTaxId: 2 non-contiguous spans found, took the longest",
+    "supplierTaxId: doesn't look like a plausible tax ID ('Pa a')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod fiscal : RO16311704')"
+  ]
+}

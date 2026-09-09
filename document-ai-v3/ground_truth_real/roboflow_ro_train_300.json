@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "MBSL.2020152781",
+  "invoiceDate": "facturii: 05.11.2020",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Cod fiscal(CUD: RO24041 105",
+  "customerName": null,
+  "customerTaxId": "Cod Fiscal(CUD): RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 7474.33,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact_Mercedes_1120 inrg-1_jpg.rf.RkUDpXNxa1WlXyJCJBpz.jpg",
+  "originalSize": [
+    2200,
+    1700
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('facturii: 05.11.2020')",
+    "totalAmount: 2 non-contiguous spans found, took the longest",
+    "supplierTaxId: doesn't look like a plausible tax ID ('Cod fiscal(CUD: RO24041 105')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod Fiscal(CUD): RO16311704')"
+  ]
+}

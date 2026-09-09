@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "RCIBE nr. 27833419",
+  "invoiceDate": "(ziua, luna, anul): 30.06.2019",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.U.L.: 17907641",
+  "customerName": null,
+  "customerTaxId": "iscal:",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 409.83,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/RCI Ins_0619 inreg-1_jpg.rf.EEwJQR2N8zUomtMORnqu.jpg",
+  "originalSize": [
+    2337,
+    1659
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('(ziua, luna, anul): 30.06.2019')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.U.L.: 17907641')",
+    "customerTaxId: doesn't look like a plausible tax ID ('iscal:')"
+  ]
+}

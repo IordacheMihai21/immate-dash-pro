@@ -1,0 +1,21 @@
+{
+  "invoiceNumber": null,
+  "invoiceDate": "2020-08-29",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": null,
+  "customerName": null,
+  "customerTaxId": null,
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 160.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact cazare Edy_0820_2buc_2Anexe-3_jpg.rf.JuQyo1Q3QghMnV1ufRzP.jpg",
+  "originalSize": [
+    2209,
+    1659
+  ],
+  "warnings": []
+}

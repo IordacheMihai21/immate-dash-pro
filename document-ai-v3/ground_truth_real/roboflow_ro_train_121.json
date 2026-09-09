@@ -1,0 +1,27 @@
+{
+  "invoiceNumber": "aes Numarul 4444",
+  "invoiceDate": "Data(ziua, | 1): 17.09.2021",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.IL.F: RO12351919",
+  "customerName": null,
+  "customerTaxId": "cir Rozz",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 48896.63,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact Tir Ls_48-896,63 lei_0921_inrg-1_jpg.rf.xlzuzd7lEwuMv17Yx9Ef.jpg",
+  "originalSize": [
+    2200,
+    1700
+  ],
+  "warnings": [
+    "invoiceNumber: 3 non-contiguous spans found, took the longest",
+    "invoiceDate: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('Data(ziua, | 1): 17.09.2021')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.IL.F: RO12351919')",
+    "customerTaxId: doesn't look like a plausible tax ID ('cir Rozz')"
+  ]
+}

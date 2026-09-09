@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "Serie! nr. TSR-CLI13948",
+  "invoiceDate": "(ziua,luna,anul) : 30/09/2020",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CLF: RO11178217",
+  "customerName": null,
+  "customerTaxId": "Cod fiscal : RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 1942.56,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Aerop_factura_13948 inrg-1_jpg.rf.9qEkFo0a6kF3skHxAnzb.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "invoiceNumber: 3 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('(ziua,luna,anul) : 30/09/2020')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('CLF: RO11178217')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod fiscal : RO16311704')"
+  ]
+}

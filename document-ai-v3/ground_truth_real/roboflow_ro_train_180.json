@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "Fi nr. 0019363",
+  "invoiceDate": "(ziuajlunaanul): 24/02/2020",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": null,
+  "customerName": null,
+  "customerTaxId": "C.U.L: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 250.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/CCIAT_0220 fact_19363 inrg-1_jpg.rf.ulmKa1zHTVq3gbT74Ied.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('(ziuajlunaanul): 24/02/2020')",
+    "customerTaxId: doesn't look like a plausible tax ID ('C.U.L: RO16311704')"
+  ]
+}

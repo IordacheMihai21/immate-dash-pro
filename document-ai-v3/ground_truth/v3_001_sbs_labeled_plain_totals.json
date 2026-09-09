@@ -1,0 +1,37 @@
+{
+  "invoiceNumber": "1042",
+  "invoiceSeries": "ALF",
+  "invoiceDate": "12.03.2023",
+  "dueDate": "26.03.2023",
+  "supplierName": "Alfa Consult SRL",
+  "customerName": "Nord Trading SRL",
+  "supplierTaxId": "RO18293746",
+  "customerTaxId": "RO29384756",
+  "subtotal": 3200.0,
+  "vatAmount": 608.0,
+  "totalAmount": 3808.0,
+  "currency": "RON",
+  "supplierRegionBBox": {
+    "x": 80,
+    "y": 178,
+    "width": 783,
+    "height": 103
+  },
+  "customerRegionBBox": {
+    "x": 1037,
+    "y": 178,
+    "width": 783,
+    "height": 103
+  },
+  "tableRegionBBox": {
+    "x": 80,
+    "y": 311,
+    "width": 1740,
+    "height": 79
+  },
+  "traits": [
+    "side_by_side",
+    "labeled",
+    "totals_only_table"
+  ]
+}

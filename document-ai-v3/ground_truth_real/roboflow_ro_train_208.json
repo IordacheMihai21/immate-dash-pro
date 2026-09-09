@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "Setia PLSS nr. 49465",
+  "invoiceDate": "Data(ziua, luna, anul) 01.11.2019",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": null,
+  "customerName": null,
+  "customerTaxId": "C.F. RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 2046.42,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Premium Ls_1119 inrg-1_jpg.rf.gAQqAr1TXMdmR4o4zi1l.jpg",
+  "originalSize": [
+    2339,
+    1654
+  ],
+  "warnings": [
+    "invoiceNumber: 3 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('Data(ziua, luna, anul) 01.11.2019')",
+    "customerTaxId: doesn't look like a plausible tax ID ('C.F. RO16311704')"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "RODS16 Nr factura: 221600033924",
+  "invoiceDate": "(Z, L, A) 03-09-2021",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.LF.: RO 14399840",
+  "customerName": null,
+  "customerTaxId": "CLF. RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 5269.98,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact Dante_0921_inrg-1_jpg.rf.iEGvGf8hOmpkwxtcfd4j.jpg",
+  "originalSize": [
+    2339,
+    1654
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('(Z, L, A) 03-09-2021')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.LF.: RO 14399840')",
+    "customerTaxId: doesn't look like a plausible tax ID ('CLF. RO16311704')"
+  ]
+}

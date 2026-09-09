@@ -1,0 +1,27 @@
+{
+  "invoiceNumber": "MS EON 10920021040",
+  "invoiceDate": "emitere",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO22043010;",
+  "customerName": null,
+  "customerTaxId": "CUI/CIF: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 452.24,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact_fz_0220_ARR-3_jpg.rf.Eu2hmszKzcGnPMNK7zVT.jpg",
+  "originalSize": [
+    2339,
+    1634
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('emitere')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('RO22043010;')",
+    "customerTaxId: doesn't look like a plausible tax ID ('CUI/CIF: RO16311704')"
+  ]
+}

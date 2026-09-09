@@ -1,0 +1,24 @@
+{
+  "invoiceNumber": "CTY nr. 19926",
+  "invoiceDate": "(zi/luna/an): 03/02/2020",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CIF:RO16577618",
+  "customerName": null,
+  "customerTaxId": "RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 13497.85,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact fz City car_19923-19926_4buc-1_jpg.rf.gurOvQr7zuOlY1mcUo2J.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('(zi/luna/an): 03/02/2020')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('CIF:RO16577618')"
+  ]
+}

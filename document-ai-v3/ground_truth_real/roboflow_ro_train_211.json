@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "Nr.facturii: Al-000000057",
+  "invoiceDate": "30/06/2019",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "lise 023200000",
+  "customerName": null,
+  "customerTaxId": "cure: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 24195.1,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Factura APAN Mai-Iunie inreg-1_jpg.rf.aA2FUGRJNN8BeHbi1jzk.jpg",
+  "originalSize": [
+    2200,
+    1700
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('30/06/2019')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('lise 023200000')",
+    "customerTaxId: doesn't look like a plausible tax ID ('cure: RO16311704')"
+  ]
+}

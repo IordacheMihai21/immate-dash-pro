@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "Serie MPCNr. 171908",
+  "invoiceDate": "Soya",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.I.F.: RO15565496",
+  "customerName": null,
+  "customerTaxId": "C.I.F.: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 231.35,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Netopia_1219_inrg-1_jpg.rf.qShWHqjP9abA1ld9F3VH.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('Soya')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.I.F.: RO15565496')",
+    "customerTaxId: doesn't look like a plausible tax ID ('C.I.F.: RO16311704')"
+  ]
+}

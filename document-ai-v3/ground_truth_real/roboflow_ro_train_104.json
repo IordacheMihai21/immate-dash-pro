@@ -1,0 +1,31 @@
+{
+  "invoiceNumber": "TM4-MLS nr. 0009",
+  "invoiceDate": "Data",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CIF:RO16311704",
+  "customerName": null,
+  "customerTaxId": "-",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": null,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact_Varroc_0120 inrg-2_jpg.rf.W0eVPOTKIIR3P8S1V86R.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: leading-label stripping would have emptied the span, kept raw tokens instead",
+    "invoiceDate: date format ambiguous, left as raw joined text ('Data')",
+    "totalAmount: 2 non-contiguous spans found, took the longest",
+    "totalAmount: could not parse '“' as a number",
+    "supplierTaxId: doesn't look like a plausible tax ID ('CIF:RO16311704')",
+    "customerTaxId: doesn't look like a plausible tax ID ('-')",
+    "all three amount fields (subtotal/vatAmount/totalAmount) are null"
+  ]
+}

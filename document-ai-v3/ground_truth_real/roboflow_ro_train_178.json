@@ -1,0 +1,27 @@
+{
+  "invoiceNumber": "TLOR Numarul 42470",
+  "invoiceDate": "ata(ziua, luna, anul): “",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.I.F: RO12351919",
+  "customerName": null,
+  "customerTaxId": "cir horn",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 194.59,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact Tiriac inreg-1_jpg.rf.NyFCzQ1TIuBT5oE0aUK0.jpg",
+  "originalSize": [
+    2200,
+    1700
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: 3 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('ata(ziua, luna, anul): “')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.I.F: RO12351919')",
+    "customerTaxId: doesn't look like a plausible tax ID ('cir horn')"
+  ]
+}

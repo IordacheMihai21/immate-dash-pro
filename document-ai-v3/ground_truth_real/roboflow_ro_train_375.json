@@ -1,0 +1,24 @@
+{
+  "invoiceNumber": "TLK231",
+  "invoiceDate": "2019-03-29",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.I.F: RO33873184",
+  "customerName": null,
+  "customerTaxId": "C.I.F: RO 16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 95000.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Smartkom_0319_inreg-1_jpg.rf.lRvIFYIkqDFEA0TRqy3J.jpg",
+  "originalSize": [
+    2339,
+    1654
+  ],
+  "warnings": [
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.I.F: RO33873184')",
+    "customerTaxId: doesn't look like a plausible tax ID ('C.I.F: RO 16311704')"
+  ]
+}

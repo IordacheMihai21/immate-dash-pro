@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "si numarul facturii: —_crt-14809",
+  "invoiceDate": "(ziluna.an): 29.02.2020",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO 18630955",
+  "customerName": null,
+  "customerTaxId": "age",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": null,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact_fz_0220_ARR-2_jpg.rf.KCtsi2dPdG0Dq5fyZwzm.jpg",
+  "originalSize": [
+    2334,
+    1659
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('(ziluna.an): 29.02.2020')",
+    "totalAmount: could not parse '2122.9 .97' as a number",
+    "customerTaxId: doesn't look like a plausible tax ID ('age')",
+    "all three amount fields (subtotal/vatAmount/totalAmount) are null"
+  ]
+}

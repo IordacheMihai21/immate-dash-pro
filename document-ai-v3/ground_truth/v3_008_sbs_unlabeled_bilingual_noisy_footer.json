@@ -1,0 +1,40 @@
+{
+  "invoiceNumber": "331",
+  "invoiceSeries": null,
+  "invoiceDate": "09.04.2024",
+  "dueDate": "23.04.2024",
+  "supplierName": "Atlas Renovari SRL",
+  "customerName": "Coastal Property Management SRL",
+  "supplierTaxId": "RO18162534",
+  "customerTaxId": "RO27364859",
+  "subtotal": 22500.0,
+  "vatAmount": 4275.0,
+  "totalAmount": 26775.0,
+  "currency": "RON",
+  "supplierRegionBBox": {
+    "x": 80,
+    "y": 178,
+    "width": 783,
+    "height": 78
+  },
+  "customerRegionBBox": {
+    "x": 1037,
+    "y": 178,
+    "width": 783,
+    "height": 78
+  },
+  "tableRegionBBox": {
+    "x": 80,
+    "y": 286,
+    "width": 1740,
+    "height": 79
+  },
+  "traits": [
+    "side_by_side",
+    "unlabeled",
+    "bilingual",
+    "totals_only_table",
+    "noisy_scan",
+    "footer_legal"
+  ]
+}

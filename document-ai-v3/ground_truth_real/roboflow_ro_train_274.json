@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "TMROLLBM Nr.: 91088",
+  "invoiceDate": "2022-02-23",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Cod fiscal: RO13410908",
+  "customerName": null,
+  "customerTaxId": "Cod fiscal: RO3288731",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 290.8,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/T_ROLLING-1_jpg.rf.L96gryGjCW0GmRgp6FKB.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "invoiceNumber: 4 non-contiguous spans found, took the longest",
+    "supplierTaxId: doesn't look like a plausible tax ID ('Cod fiscal: RO13410908')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod fiscal: RO3288731')"
+  ]
+}

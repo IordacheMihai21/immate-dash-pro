@@ -1,0 +1,23 @@
+{
+  "invoiceNumber": "2",
+  "invoiceDate": "2019-07-31",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "41316273",
+  "customerName": null,
+  "customerTaxId": "RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 550.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Advepublish_f_41316273_2_31-07-2019_inreg-1_jpg.rf.uEdGmZRfugJFuAisCJP5.jpg",
+  "originalSize": [
+    2339,
+    1654
+  ],
+  "warnings": [
+    "supplierTaxId: doesn't look like a plausible tax ID ('41316273')"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "invoiceNumber": "[SeaaER——SSOSCSCSCSCSCSYSC«MES",
+  "invoiceDate": "(ziva, luna, anul) 18/02/2020",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.U.1.: RO6725652",
+  "customerName": null,
+  "customerTaxId": "Cod Fiscal.: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": null,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/2022694 Autoeuropa-1_jpg.rf.Qv6134OUvVnIcN4gNgRT.jpg",
+  "originalSize": [
+    2339,
+    1654
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('(ziva, luna, anul) 18/02/2020')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.U.1.: RO6725652')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod Fiscal.: RO16311704')",
+    "all three amount fields (subtotal/vatAmount/totalAmount) are null"
+  ]
+}

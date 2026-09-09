@@ -1,0 +1,38 @@
+{
+  "invoiceNumber": "887",
+  "invoiceSeries": "BRV",
+  "invoiceDate": "03.05.2023",
+  "dueDate": null,
+  "supplierName": "Bravo Serv SRL",
+  "customerName": "Casa Verde SRL",
+  "supplierTaxId": "RO40506070",
+  "customerTaxId": "RO50607080",
+  "subtotal": 1850.5,
+  "vatAmount": 351.6,
+  "totalAmount": 2202.1,
+  "currency": "RON",
+  "supplierRegionBBox": {
+    "x": 80,
+    "y": 152,
+    "width": 783,
+    "height": 78
+  },
+  "customerRegionBBox": {
+    "x": 1037,
+    "y": 152,
+    "width": 783,
+    "height": 78
+  },
+  "tableRegionBBox": {
+    "x": 80,
+    "y": 260,
+    "width": 1740,
+    "height": 79
+  },
+  "traits": [
+    "side_by_side",
+    "unlabeled",
+    "with_summary_table",
+    "footer_legal"
+  ]
+}

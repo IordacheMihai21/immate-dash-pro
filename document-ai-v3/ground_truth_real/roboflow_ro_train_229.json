@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": null,
+  "invoiceDate": "/ ora documentului",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": null,
+  "customerName": null,
+  "customerTaxId": "Cod Fiscal RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 358.78,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/RMB_2-2_jpg.rf.cIZ7TnJwP5czrX7EE66y.jpg",
+  "originalSize": [
+    2339,
+    1654
+  ],
+  "warnings": [
+    "invoiceDate: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('/ ora documentului')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod Fiscal RO16311704')"
+  ]
+}

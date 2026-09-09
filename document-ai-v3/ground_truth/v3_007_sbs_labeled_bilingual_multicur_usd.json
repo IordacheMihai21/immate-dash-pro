@@ -1,0 +1,40 @@
+{
+  "invoiceNumber": "4501",
+  "invoiceSeries": "WRC",
+  "invoiceDate": "17.02.2024",
+  "dueDate": "03.03.2024",
+  "supplierName": "Waystar Royco SRL",
+  "customerName": "Pierce Global Media LLC",
+  "supplierTaxId": "RO12345679",
+  "customerTaxId": "RO65432198",
+  "subtotal": 15000.0,
+  "vatAmount": 2850.0,
+  "totalAmount": 17850.0,
+  "currency": "USD",
+  "supplierRegionBBox": {
+    "x": 80,
+    "y": 204,
+    "width": 783,
+    "height": 103
+  },
+  "customerRegionBBox": {
+    "x": 1037,
+    "y": 204,
+    "width": 783,
+    "height": 103
+  },
+  "tableRegionBBox": {
+    "x": 80,
+    "y": 337,
+    "width": 1740,
+    "height": 79
+  },
+  "traits": [
+    "side_by_side",
+    "labeled",
+    "bilingual",
+    "with_summary_table",
+    "multi_currency",
+    "series_split"
+  ]
+}

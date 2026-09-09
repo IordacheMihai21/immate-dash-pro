@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "TKR nr. 190320273765",
+  "invoiceDate": "emiterii facturii: 01.12.2019",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO427320;",
+  "customerName": null,
+  "customerTaxId": "RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 499.48,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact Telekom 2_Anexe-1_jpg.rf.uclKGo5uM6bZzdk2QVqM.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('emiterii facturii: 01.12.2019')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('RO427320;')"
+  ]
+}

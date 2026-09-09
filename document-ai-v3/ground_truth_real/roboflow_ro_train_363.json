@@ -1,0 +1,27 @@
+{
+  "invoiceNumber": "0014",
+  "invoiceDate": "(zi/luna/an): 29/01/2021",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CIF:RO16311704",
+  "customerName": null,
+  "customerTaxId": "CIF:",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 192.73,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/DE LISTAT fact SERIA 4_2buc-1_jpg.rf.pCt9YkZp964iygjgXnv0.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "invoiceNumber: 3 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('(zi/luna/an): 29/01/2021')",
+    "customerTaxId: leading-label stripping would have emptied the span, kept raw tokens instead",
+    "supplierTaxId: doesn't look like a plausible tax ID ('CIF:RO16311704')",
+    "customerTaxId: doesn't look like a plausible tax ID ('CIF:')"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "AR00051859",
+  "invoiceDate": "inreg. 31.08.18",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CAFS RO12058790",
+  "customerName": null,
+  "customerTaxId": "C.L.F.: RO 1803520",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 4657.8,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/ELIT-1_jpg.rf.F8HeeErHEB2SyE1gI38T.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('inreg. 31.08.18')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('CAFS RO12058790')",
+    "customerTaxId: doesn't look like a plausible tax ID ('C.L.F.: RO 1803520')"
+  ]
+}

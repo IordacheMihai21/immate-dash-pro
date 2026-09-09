@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "Facturii: 170206645",
+  "invoiceDate": "Data(ziua, luna, anul) 10.12.2021",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.F. RO16702141",
+  "customerName": null,
+  "customerTaxId": "Cod. Fiscal (C.I.F.) RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 434.8,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/S_LEROY-1_jpg.rf.8kUcw9TmFtfqQm2x8TOS.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('Data(ziua, luna, anul) 10.12.2021')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.F. RO16702141')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod. Fiscal (C.I.F.) RO16311704')"
+  ]
+}

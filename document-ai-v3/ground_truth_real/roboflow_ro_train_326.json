@@ -1,0 +1,24 @@
+{
+  "invoiceNumber": "MBSL.2019 153533",
+  "invoiceDate": "2019-05-24",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Cod Fiscal (CUI): RO24041105",
+  "customerName": null,
+  "customerTaxId": "Cod Fiscal (CUI): RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 3151.66,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Merc Serv_24-05-19 inreg-1_jpg.rf.Y2BAm87fbv3XUwavFvUG.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "supplierTaxId: doesn't look like a plausible tax ID ('Cod Fiscal (CUI): RO24041105')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod Fiscal (CUI): RO16311704')"
+  ]
+}

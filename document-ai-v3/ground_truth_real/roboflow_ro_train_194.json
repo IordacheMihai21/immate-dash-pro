@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "facturii: 64160963",
+  "invoiceDate": "2019-07-24",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Cod de Inregistrare in scopuri TVA: RO18915227",
+  "customerName": null,
+  "customerTaxId": "Cod de inregistrare in scopuri de TVA: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 497.76,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Por_Mobility penalit_inreg-2_jpg.rf.OvEF93RzZPWwXRUwKvel.jpg",
+  "originalSize": [
+    2323,
+    1659
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "supplierTaxId: doesn't look like a plausible tax ID ('Cod de Inregistrare in scopuri TVA: RO18915227')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod de inregistrare in scopuri de TVA: RO16311704')"
+  ]
+}

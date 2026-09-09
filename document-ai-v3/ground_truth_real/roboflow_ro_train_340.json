@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "Sueded",
+  "invoiceDate": "bee Tet",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CLF: RO123456789",
+  "customerName": null,
+  "customerTaxId": "C.F. RO123456789",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 7.5,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/model_factura_a4_jpg.rf.9dCr5SKRvrZfLFosWutL.jpg",
+  "originalSize": [
+    1754,
+    1240
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('bee Tet')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('CLF: RO123456789')",
+    "customerTaxId: doesn't look like a plausible tax ID ('C.F. RO123456789')"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "TM3-MLS nr. 0883",
+  "invoiceDate": "Pata (zi/luna/an): 13/03/2019",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CIF:RO16311704",
+  "customerName": null,
+  "customerTaxId": "RO37109083",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 451200.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Renault_0319_inreg-01_jpg.rf.ywBQdDPK3umE2DePfUlX.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('Pata (zi/luna/an): 13/03/2019')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('CIF:RO16311704')"
+  ]
+}

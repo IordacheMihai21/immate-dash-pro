@@ -1,0 +1,40 @@
+{
+  "invoiceNumber": "778",
+  "invoiceSeries": null,
+  "invoiceDate": "19.08.2024",
+  "dueDate": "02.09.2024",
+  "supplierName": "Pilot Aviation Services SRL",
+  "customerName": "Regal Charter LLC",
+  "supplierTaxId": "RO15263748",
+  "customerTaxId": "RO26374859",
+  "subtotal": 3300.0,
+  "vatAmount": 627.0,
+  "totalAmount": 3927.0,
+  "currency": "RON",
+  "supplierRegionBBox": {
+    "x": 80,
+    "y": 178,
+    "width": 1740,
+    "height": 103
+  },
+  "customerRegionBBox": {
+    "x": 80,
+    "y": 301,
+    "width": 1740,
+    "height": 103
+  },
+  "tableRegionBBox": {
+    "x": 80,
+    "y": 424,
+    "width": 1740,
+    "height": 79
+  },
+  "traits": [
+    "stacked",
+    "labeled",
+    "bilingual",
+    "totals_only_table",
+    "noisy_scan",
+    "series_number_only"
+  ]
+}

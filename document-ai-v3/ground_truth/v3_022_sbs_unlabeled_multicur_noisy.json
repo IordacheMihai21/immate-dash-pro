@@ -1,0 +1,40 @@
+{
+  "invoiceNumber": "GSC-441",
+  "invoiceSeries": null,
+  "invoiceDate": "09.03.2025",
+  "dueDate": "23.03.2025",
+  "supplierName": "Grafic Studio Creativ SRL",
+  "customerName": "Havas Marketing Partners SRL",
+  "supplierTaxId": "RO93041528",
+  "customerTaxId": "RO04152639",
+  "subtotal": 2100.0,
+  "vatAmount": 399.0,
+  "totalAmount": 2499.0,
+  "currency": "EUR",
+  "supplierRegionBBox": {
+    "x": 80,
+    "y": 178,
+    "width": 783,
+    "height": 78
+  },
+  "customerRegionBBox": {
+    "x": 1037,
+    "y": 178,
+    "width": 783,
+    "height": 78
+  },
+  "tableRegionBBox": {
+    "x": 80,
+    "y": 286,
+    "width": 1740,
+    "height": 79
+  },
+  "traits": [
+    "side_by_side",
+    "unlabeled",
+    "totals_only_table",
+    "multi_currency",
+    "noisy_scan",
+    "series_alnum_id"
+  ]
+}

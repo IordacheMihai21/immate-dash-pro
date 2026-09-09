@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "TLLC Numarul: 16432",
+  "invoiceDate": ". 28.06.2019",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": null,
+  "customerName": null,
+  "customerTaxId": "RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 128280.72,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Tiriac Leas avans inreg-1_jpg.rf.z2xCIjwX30u5GJZ3BVf1.jpg",
+  "originalSize": [
+    2339,
+    1650
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('. 28.06.2019')"
+  ]
+}

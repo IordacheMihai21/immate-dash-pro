@@ -1,0 +1,39 @@
+{
+  "invoiceNumber": "922",
+  "invoiceSeries": "RIE",
+  "invoiceDate": "15.10.2024",
+  "dueDate": "29.10.2024",
+  "supplierName": "Robusta Import Export SRL",
+  "customerName": "Talon Naval Supplies SRL",
+  "supplierTaxId": "RO59607182",
+  "customerTaxId": "RO60718293",
+  "subtotal": 12750.0,
+  "vatAmount": 2422.5,
+  "totalAmount": 15172.5,
+  "currency": "RON",
+  "supplierRegionBBox": {
+    "x": 80,
+    "y": 178,
+    "width": 1740,
+    "height": 103
+  },
+  "customerRegionBBox": {
+    "x": 80,
+    "y": 301,
+    "width": 1740,
+    "height": 103
+  },
+  "tableRegionBBox": {
+    "x": 80,
+    "y": 424,
+    "width": 1740,
+    "height": 79
+  },
+  "traits": [
+    "stacked",
+    "labeled",
+    "with_summary_table",
+    "footer_legal",
+    "noisy_scan"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "invoiceNumber": "SerileMH Nr 2631951",
+  "invoiceDate": "2020-09-29",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO6724860",
+  "customerName": null,
+  "customerTaxId": "C.LF. RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 614.45,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact 2631951_RMB_29-09-20 2 buc_cu 4p Anexe-4_jpg.rf.po4CbF7KCe2kNMrylgb8.jpg",
+  "originalSize": [
+    2339,
+    1654
+  ],
+  "warnings": [
+    "customerTaxId: doesn't look like a plausible tax ID ('C.LF. RO16311704')"
+  ]
+}

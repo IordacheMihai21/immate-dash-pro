@@ -1,0 +1,40 @@
+{
+  "invoiceNumber": "QZ-2024-77",
+  "invoiceSeries": null,
+  "invoiceDate": "06.09.2024",
+  "dueDate": "20.09.2024",
+  "supplierName": "Quartz Architecture SRL",
+  "customerName": "Silverline Estates SRL",
+  "supplierTaxId": "RO37485960",
+  "customerTaxId": "RO48596071",
+  "subtotal": 3600.0,
+  "vatAmount": 684.0,
+  "totalAmount": 4284.0,
+  "currency": "EUR",
+  "supplierRegionBBox": {
+    "x": 80,
+    "y": 178,
+    "width": 1740,
+    "height": 78
+  },
+  "customerRegionBBox": {
+    "x": 80,
+    "y": 276,
+    "width": 1740,
+    "height": 78
+  },
+  "tableRegionBBox": {
+    "x": 80,
+    "y": 374,
+    "width": 1740,
+    "height": 79
+  },
+  "traits": [
+    "stacked",
+    "unlabeled",
+    "bilingual",
+    "with_summary_table",
+    "multi_currency",
+    "series_alnum_id"
+  ]
+}

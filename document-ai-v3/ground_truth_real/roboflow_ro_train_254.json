@@ -1,0 +1,24 @@
+{
+  "invoiceNumber": "F Ne: 096",
+  "invoiceDate": "2017-06-13",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Cir: RO17991374",
+  "customerName": null,
+  "customerTaxId": "Gin tROtseks078:",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 2023.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/1497616405_model-factura-completata-cu-TVA_jpg.rf.gxHmBAPRKv8Fb41Ixluo.jpg",
+  "originalSize": [
+    1000,
+    707
+  ],
+  "warnings": [
+    "supplierTaxId: doesn't look like a plausible tax ID ('Cir: RO17991374')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Gin tROtseks078:')"
+  ]
+}

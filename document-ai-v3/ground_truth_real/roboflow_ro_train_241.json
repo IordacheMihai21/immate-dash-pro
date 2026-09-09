@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "Serie /Nr. DUM.TM 115",
+  "invoiceDate": "20/02/2019",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.1.F.: RO11385336",
+  "customerName": null,
+  "customerTaxId": "cir. 16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 2.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Dumivest_3 pag fz_0219_inreg-2_jpg.rf.hPdUUp7cOQltnBYBGNZF.jpg",
+  "originalSize": [
+    2323,
+    1659
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('20/02/2019')",
+    "totalAmount: 2 non-contiguous spans found, took the longest",
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.1.F.: RO11385336')",
+    "customerTaxId: doesn't look like a plausible tax ID ('cir. 16311704')"
+  ]
+}

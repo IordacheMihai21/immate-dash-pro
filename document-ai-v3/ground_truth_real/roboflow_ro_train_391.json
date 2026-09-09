@@ -1,0 +1,21 @@
+{
+  "invoiceNumber": "Serie WPG Numar 0571",
+  "invoiceDate": "2020-09-18",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO32072897",
+  "customerName": null,
+  "customerTaxId": "RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 48595.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Factura MLS avans apartament 39 inrg-1_jpg.rf.oWe3zhvtRYyzwYYpX1Ma.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": []
+}

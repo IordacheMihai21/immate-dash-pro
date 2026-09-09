@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "Nr.factura RTTV76554",
+  "invoiceDate": "03-Feb-2022",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.LF.: RO32402154",
+  "customerName": null,
+  "customerTaxId": "C.LF.: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 360.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/S_RECREATION-1_jpg.rf.gFDegAZ22XbupK9goyjx.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('03-Feb-2022')",
+    "totalAmount: 3 non-contiguous spans found, took the longest",
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.LF.: RO32402154')",
+    "customerTaxId: doesn't look like a plausible tax ID ('C.LF.: RO16311704')"
+  ]
+}

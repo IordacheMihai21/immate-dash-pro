@@ -1,0 +1,29 @@
+{
+  "invoiceNumber": "Nr factura",
+  "invoiceDate": "Data facturii",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Cod TVA: RO 15256075",
+  "customerName": null,
+  "customerTaxId": "Code TVA: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 259.42,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact_1672403458 Albert Berner_lipsa-1_jpg.rf.paZM6hkATj6EiDf7wQaj.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceNumber: leading-label stripping would have emptied the span, kept raw tokens instead",
+    "invoiceDate: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: leading-label stripping would have emptied the span, kept raw tokens instead",
+    "invoiceDate: date format ambiguous, left as raw joined text ('Data facturii')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('Cod TVA: RO 15256075')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Code TVA: RO16311704')"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "facturii: 64143553",
+  "invoiceDate": "2019-02-25",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Cod de Inregistrare in scopuri TVA: RO18915227",
+  "customerName": null,
+  "customerTaxId": "Cod de inregistrare in scopuri de TVA: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 310.28,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Porsche Mobility_0219_inreg-1_jpg.rf.MzhhtFeAXwJySkgnAEge.jpg",
+  "originalSize": [
+    2339,
+    1642
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "supplierTaxId: doesn't look like a plausible tax ID ('Cod de Inregistrare in scopuri TVA: RO18915227')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod de inregistrare in scopuri de TVA: RO16311704')"
+  ]
+}

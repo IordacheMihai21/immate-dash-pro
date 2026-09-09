@@ -1,0 +1,24 @@
+{
+  "invoiceNumber": "carta TLCE Numarul: 11821",
+  "invoiceDate": "Data(ziua, luna,anul): 31.07-2020",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO12351919",
+  "customerName": null,
+  "customerTaxId": "RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": -155.3,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Tiriac Leas_0720_inrg 31-07-20-1_jpg.rf.H0m6si2Xy2yfmPlYHiNc.jpg",
+  "originalSize": [
+    2339,
+    1634
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('Data(ziua, luna,anul): 31.07-2020')"
+  ]
+}

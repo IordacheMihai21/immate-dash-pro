@@ -1,0 +1,24 @@
+{
+  "invoiceNumber": "B F FAN - Nr. 405526018003",
+  "invoiceDate": "2022-02-24",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO 13838336,",
+  "customerName": null,
+  "customerTaxId": "RO3288731,",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 24.4,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/T_FAN-1_jpg.rf.Xyt1SqVVNxBmDjjpQtgf.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "supplierTaxId: doesn't look like a plausible tax ID ('RO 13838336,')",
+    "customerTaxId: doesn't look like a plausible tax ID ('RO3288731,')"
+  ]
+}

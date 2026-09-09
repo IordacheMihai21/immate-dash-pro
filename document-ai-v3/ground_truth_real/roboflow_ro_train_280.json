@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "si numarul facturii: crt-14912",
+  "invoiceDate": "(zi.luna.an): 31.08.2020",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO 18630955",
+  "customerName": null,
+  "customerTaxId": "tonne",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 617.37,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact fz Cartolet_Aeroport_08-20 inrg-1_jpg.rf.LSwO3xaebABFIVyneH2P.jpg",
+  "originalSize": [
+    2339,
+    1650
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('(zi.luna.an): 31.08.2020')",
+    "customerTaxId: 2 non-contiguous spans found, took the longest",
+    "customerTaxId: doesn't look like a plausible tax ID ('tonne')"
+  ]
+}

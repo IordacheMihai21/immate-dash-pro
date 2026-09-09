@@ -1,0 +1,24 @@
+{
+  "invoiceNumber": "[iz Facts 26",
+  "invoiceDate": "(esta xn) 17062013",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO220059",
+  "customerName": null,
+  "customerTaxId": "RO22001",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 450.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/1644409531_jpg.rf.2rjmxdmwfKNpCWnomDn2.jpg",
+  "originalSize": [
+    1024,
+    768
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('(esta xn) 17062013')",
+    "totalAmount: 2 non-contiguous spans found, took the longest"
+  ]
+}

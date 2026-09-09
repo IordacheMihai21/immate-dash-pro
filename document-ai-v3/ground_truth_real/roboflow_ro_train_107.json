@@ -1,0 +1,24 @@
+{
+  "invoiceNumber": "TM 7424868",
+  "invoiceDate": "2018-06-30",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.1.F.: RO9112229",
+  "customerName": null,
+  "customerTaxId": "C.I.F: RO1803520",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 241.96,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/RETIM-1_jpg.rf.ykszEW8SPu8CpilW647P.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.1.F.: RO9112229')",
+    "customerTaxId: doesn't look like a plausible tax ID ('C.I.F: RO1803520')"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "invoiceNumber": "HBE Nr. 205689",
+  "invoiceDate": "2021-12-08",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Cod inregistrare fiscala: RO 24329885",
+  "customerName": null,
+  "customerTaxId": "Cod inregistrare fiscala’ RO 16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 551.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/S_HABITAT-1_jpg.rf.HZYj9FehaASifvhUdugO.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "supplierTaxId: doesn't look like a plausible tax ID ('Cod inregistrare fiscala: RO 24329885')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod inregistrare fiscala’ RO 16311704')"
+  ]
+}

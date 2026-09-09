@@ -1,0 +1,23 @@
+{
+  "invoiceNumber": "301 Seria: DEP",
+  "invoiceDate": "2022-02-16",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.1.F.: RO15048546",
+  "customerName": null,
+  "customerTaxId": "RO 3288731",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 450.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/T_ALPIN-1_jpg.rf.1alckgXhG3KvaDmFQPDr.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.1.F.: RO15048546')"
+  ]
+}

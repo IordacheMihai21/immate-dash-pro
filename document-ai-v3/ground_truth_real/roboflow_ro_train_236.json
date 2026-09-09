@@ -1,0 +1,27 @@
+{
+  "invoiceNumber": "DEMOF Nr: 0000095",
+  "invoiceDate": "Sin datade, 26.07.2017",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Jor: Roattaa1",
+  "customerName": null,
+  "customerTaxId": "curs pazsa",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": null,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/profesional-print-factura-chitanta-clasic_m_png.rf.TkzcHnZ2xyJGWi4Cvet7.png",
+  "originalSize": [
+    961,
+    676
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('Sin datade, 26.07.2017')",
+    "totalAmount: could not parse 'sesso' as a number",
+    "supplierTaxId: doesn't look like a plausible tax ID ('Jor: Roattaa1')",
+    "customerTaxId: doesn't look like a plausible tax ID ('curs pazsa')",
+    "all three amount fields (subtotal/vatAmount/totalAmount) are null"
+  ]
+}

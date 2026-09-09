@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "yg 20121",
+  "invoiceDate": "(zi/luna/an): 28/06/2019",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CIF:RO16311704",
+  "customerName": null,
+  "customerTaxId": "RO21103980",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 76038.64,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/facturaTM1-MLS20121 Prime Kapital_inreg-1_jpg.rf.KnAWIgMSSpdYPSVrCdtL.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "invoiceNumber: 3 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('(zi/luna/an): 28/06/2019')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('CIF:RO16311704')"
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "invoiceNumber": "HX-2024-0089",
+  "invoiceSeries": null,
+  "invoiceDate": "21.05.2024",
+  "dueDate": "04.06.2024",
+  "supplierName": "Hexa Software SRL",
+  "customerName": "Ivory Retail Group SRL",
+  "supplierTaxId": "RO36271849",
+  "customerTaxId": "RO47382950",
+  "subtotal": 5400.0,
+  "vatAmount": 1026.0,
+  "totalAmount": 6426.0,
+  "currency": "RON",
+  "supplierRegionBBox": {
+    "x": 80,
+    "y": 178,
+    "width": 783,
+    "height": 103
+  },
+  "customerRegionBBox": {
+    "x": 1037,
+    "y": 178,
+    "width": 783,
+    "height": 103
+  },
+  "tableRegionBBox": {
+    "x": 80,
+    "y": 311,
+    "width": 1740,
+    "height": 79
+  },
+  "traits": [
+    "side_by_side",
+    "labeled",
+    "with_summary_table",
+    "footer_legal",
+    "series_alnum_id"
+  ]
+}

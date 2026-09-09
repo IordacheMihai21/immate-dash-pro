@@ -1,0 +1,28 @@
+{
+  "invoiceNumber": "Numiar factura: 17878885",
+  "invoiceDate": "23/07/2019",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.LF.: RO 14600820",
+  "customerName": null,
+  "customerTaxId": "Sane",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": null,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Unileasing_asig_inreg-1_jpg.rf.rlzRujXCZj5IbCEHNaaM.jpg",
+  "originalSize": [
+    2300,
+    1659
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('23/07/2019')",
+    "customerTaxId: 2 non-contiguous spans found, took the longest",
+    "totalAmount: could not parse 'RON' as a number",
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.LF.: RO 14600820')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Sane')",
+    "all three amount fields (subtotal/vatAmount/totalAmount) are null"
+  ]
+}

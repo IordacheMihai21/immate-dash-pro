@@ -39,6 +39,8 @@ env/
 document-ai-backend/.venv/
 document-ai-backend/venv/
 document-ai-backend/env/
+document-ai-v3/.venv-surya/
+document-ai-v3/output/
 
 # Python cache
 __pycache__/

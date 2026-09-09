@@ -1,0 +1,24 @@
+{
+  "invoiceNumber": "MOH2797",
+  "invoiceDate": "emiterii: 28/02/2022",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "44443999",
+  "customerName": null,
+  "customerTaxId": "RO3288731",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 326.5,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/T_MOLDOVAN-1_jpg.rf.aMRKa6RF04NbAPhGb6rz.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('emiterii: 28/02/2022')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('44443999')"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "ROWH Nr factura: 209903617838",
+  "invoiceDate": "(Z, L, A) 17-09-2019",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CLF: RO 14399840",
+  "customerName": null,
+  "customerTaxId": "CLF. RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 349.99,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact cuptor microunde-1_jpg.rf.WK99YDkWiZXdQ76jqFrp.jpg",
+  "originalSize": [
+    2339,
+    1654
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('(Z, L, A) 17-09-2019')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('CLF: RO 14399840')",
+    "customerTaxId: doesn't look like a plausible tax ID ('CLF. RO16311704')"
+  ]
+}

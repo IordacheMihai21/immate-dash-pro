@@ -1,0 +1,23 @@
+{
+  "invoiceNumber": "WEX0659",
+  "invoiceDate": "emiterii: 31/10/2019",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO32599332",
+  "customerName": null,
+  "customerTaxId": "RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 13373.7,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/FacturaWEX0659_Express Travel_1019_inrg-1_jpg.rf.gITeLbVO0peyt5LtiJwJ.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('emiterii: 31/10/2019')"
+  ]
+}

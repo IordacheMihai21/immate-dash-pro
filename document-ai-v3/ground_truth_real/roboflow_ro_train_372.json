@@ -1,0 +1,27 @@
+{
+  "invoiceNumber": ". : -CL/13101",
+  "invoiceDate": "ata (ziua,luna,anul) : 06/01/2020",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CLF. RO11178217",
+  "customerName": null,
+  "customerTaxId": "‘od fiscal : RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 2542.74,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/facturi lipsa Aerop_0120 inrg_3buc-3_jpg.rf.Y5yk1yM4i5zVRBqBMBzV.jpg",
+  "originalSize": [
+    2200,
+    1700
+  ],
+  "warnings": [
+    "invoiceNumber: 3 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('ata (ziua,luna,anul) : 06/01/2020')",
+    "customerTaxId: 2 non-contiguous spans found, took the longest",
+    "supplierTaxId: doesn't look like a plausible tax ID ('CLF. RO11178217')",
+    "customerTaxId: doesn't look like a plausible tax ID ('‘od fiscal : RO16311704')"
+  ]
+}

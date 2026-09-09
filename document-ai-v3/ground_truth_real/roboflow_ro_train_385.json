@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "SerieMB Nr 2053232",
+  "invoiceDate": "2020-06-27",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO6724860",
+  "customerName": null,
+  "customerTaxId": "C.LF. RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": null,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/RMB_27-06-20_1_inreg-1_jpg.rf.lrftWxqIjR3kVctKwj2w.jpg",
+  "originalSize": [
+    2334,
+    1659
+  ],
+  "warnings": [
+    "totalAmount: 2 non-contiguous spans found, took the longest",
+    "totalAmount: could not parse 'Py' as a number",
+    "customerTaxId: doesn't look like a plausible tax ID ('C.LF. RO16311704')",
+    "all three amount fields (subtotal/vatAmount/totalAmount) are null"
+  ]
+}

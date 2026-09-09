@@ -1,0 +1,23 @@
+{
+  "invoiceNumber": "WEX0717",
+  "invoiceDate": "emiterii: 31/01/2020",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO32599332",
+  "customerName": null,
+  "customerTaxId": "RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 11517.4,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/FacturaWEX0717+inrg-1_jpg.rf.eOafs3SAavKrbJGmjlh6.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('emiterii: 31/01/2020')"
+  ]
+}

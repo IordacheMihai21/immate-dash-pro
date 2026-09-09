@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "NF nr. 2345",
+  "invoiceDate": "(cua, luna, anul) 15/12/2012",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CLE: RO11223344",
+  "customerName": null,
+  "customerTaxId": "CLE: RO45866",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 1971.44,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/model_factura_fiscala_cu_tva_jpg.rf.NmHGcKKehykJMtMLsp55.jpg",
+  "originalSize": [
+    725,
+    1011
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('(cua, luna, anul) 15/12/2012')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('CLE: RO11223344')",
+    "customerTaxId: doesn't look like a plausible tax ID ('CLE: RO45866')"
+  ]
+}

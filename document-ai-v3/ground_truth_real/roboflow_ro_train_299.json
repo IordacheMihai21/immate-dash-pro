@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "Serie/Numar: NTIS/113840",
+  "invoiceDate": "2019-02-19",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Cod fiscal: RO14530473",
+  "customerName": null,
+  "customerTaxId": ".",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 272.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Factura nr- 113840 din 19-02-2019 Nord Tour_inreg-1_jpg.rf.SjUOPQITwSzMc5rvXIGs.jpg",
+  "originalSize": [
+    2339,
+    1654
+  ],
+  "warnings": [
+    "customerTaxId: 2 non-contiguous spans found, took the longest",
+    "supplierTaxId: doesn't look like a plausible tax ID ('Cod fiscal: RO14530473')",
+    "customerTaxId: doesn't look like a plausible tax ID ('.')"
+  ]
+}

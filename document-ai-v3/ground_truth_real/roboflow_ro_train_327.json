@@ -1,0 +1,21 @@
+{
+  "invoiceNumber": null,
+  "invoiceDate": null,
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": null,
+  "customerName": null,
+  "customerTaxId": null,
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 24195.1,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Factura APAN Mai-Iunie inreg-4_jpg.rf.Y2U5PTnkeOB59Lrlizd2.jpg",
+  "originalSize": [
+    1700,
+    2200
+  ],
+  "warnings": []
+}

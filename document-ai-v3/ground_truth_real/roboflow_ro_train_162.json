@@ -1,0 +1,21 @@
+{
+  "invoiceNumber": "Serie VL Numar 050",
+  "invoiceDate": "2021-02-01",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO35688060",
+  "customerName": null,
+  "customerTaxId": "RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 999.6,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/f_35688060_VL_050_01-02-2021 inrg-1_jpg.rf.eQrlVf9Y2umIFMSH9dxw.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": []
+}

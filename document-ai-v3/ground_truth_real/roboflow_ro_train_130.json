@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "AMRnr. 26179",
+  "invoiceDate": "Data(ziua, luna, anul): 05/01/2021",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CIF; RO8534217",
+  "customerName": null,
+  "customerTaxId": "RO 16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 3884.15,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/AMR_Fact leas_1220_inrg 2buc-2_jpg.rf.uCRPzYMqh1oo6nutdHuL.jpg",
+  "originalSize": [
+    2338,
+    1653
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('Data(ziua, luna, anul): 05/01/2021')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('CIF; RO8534217')"
+  ]
+}

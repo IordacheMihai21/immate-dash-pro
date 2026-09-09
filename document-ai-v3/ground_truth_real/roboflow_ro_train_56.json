@@ -1,0 +1,27 @@
+{
+  "invoiceNumber": "F1 nr. 0018190",
+  "invoiceDate": "(zlua,lunaanul): 12/07/2019",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.U.I.: RO4248972",
+  "customerName": null,
+  "customerTaxId": "C.U.I.: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 500.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/CCIAT_0719_inreg-1_jpg.rf.2j1V1wYGtFw5iPiIfFWg.jpg",
+  "originalSize": [
+    2339,
+    1612
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('(zlua,lunaanul): 12/07/2019')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.U.I.: RO4248972')",
+    "customerTaxId: doesn't look like a plausible tax ID ('C.U.I.: RO16311704')"
+  ]
+}

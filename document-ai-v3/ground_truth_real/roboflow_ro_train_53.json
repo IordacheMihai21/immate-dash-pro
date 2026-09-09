@@ -1,0 +1,24 @@
+{
+  "invoiceNumber": "SAD nr. 0076",
+  "invoiceDate": "(zi/luna/an): 01/09/2020",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CIF:RO30653044",
+  "customerName": null,
+  "customerTaxId": "RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 19630.13,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact_SAD0076_Smart_01-09-20_inrg-1_jpg.rf.GSgz8y2VPhmnIuyu8ERI.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('(zi/luna/an): 01/09/2020')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('CIF:RO30653044')"
+  ]
+}

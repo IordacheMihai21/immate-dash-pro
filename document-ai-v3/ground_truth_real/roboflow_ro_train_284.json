@@ -1,0 +1,21 @@
+{
+  "invoiceNumber": null,
+  "invoiceDate": null,
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": null,
+  "customerName": null,
+  "customerTaxId": null,
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 480.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/program-facturare-online-model-o-factura-cu-chitanta-si-imagine-de-fundal-personalizata-6-pe-A4_jpg.rf.RxF0jpgJNthx0avJK9Hb.jpg",
+  "originalSize": [
+    1169,
+    826
+  ],
+  "warnings": []
+}

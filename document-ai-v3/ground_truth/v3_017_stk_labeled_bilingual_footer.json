@@ -1,0 +1,40 @@
+{
+  "invoiceNumber": "1601",
+  "invoiceSeries": null,
+  "invoiceDate": "27.11.2024",
+  "dueDate": "11.12.2024",
+  "supplierName": "Widex Electronics SRL",
+  "customerName": "Xenon Retail Chain SRL",
+  "supplierTaxId": "RO93041527",
+  "customerTaxId": "RO04152638",
+  "subtotal": 8900.0,
+  "vatAmount": 1691.0,
+  "totalAmount": 10591.0,
+  "currency": "RON",
+  "supplierRegionBBox": {
+    "x": 80,
+    "y": 178,
+    "width": 1740,
+    "height": 103
+  },
+  "customerRegionBBox": {
+    "x": 80,
+    "y": 301,
+    "width": 1740,
+    "height": 103
+  },
+  "tableRegionBBox": {
+    "x": 80,
+    "y": 424,
+    "width": 1740,
+    "height": 79
+  },
+  "traits": [
+    "stacked",
+    "labeled",
+    "bilingual",
+    "with_summary_table",
+    "footer_legal",
+    "series_number_only"
+  ]
+}

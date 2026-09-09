@@ -1,0 +1,24 @@
+{
+  "invoiceNumber": "RNRO3212904RE",
+  "invoiceDate": "2019-01-31",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CUI/CIF/Cod TVA: RO13943110",
+  "customerName": null,
+  "customerTaxId": "CUI/CIF/Cod TVA: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 2798.55,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Renault fact 0119_avans_inreg-1_jpg.rf.IS7aVRLAIbuDRxcsDF66.jpg",
+  "originalSize": [
+    2295,
+    1659
+  ],
+  "warnings": [
+    "supplierTaxId: doesn't look like a plausible tax ID ('CUI/CIF/Cod TVA: RO13943110')",
+    "customerTaxId: doesn't look like a plausible tax ID ('CUI/CIF/Cod TVA: RO16311704')"
+  ]
+}

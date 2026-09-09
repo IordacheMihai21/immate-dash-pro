@@ -1,0 +1,24 @@
+{
+  "invoiceNumber": "ROWHJ Nr factura: 219201395659",
+  "invoiceDate": "2021-02-16",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.LF.: RO 14399840",
+  "customerName": null,
+  "customerTaxId": "CLF. RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 544.97,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Emag_fact_0221_604f26541ac4f_inrg-1_jpg.rf.DnDfQmE05fqDpkuBTaKp.jpg",
+  "originalSize": [
+    2339,
+    1654
+  ],
+  "warnings": [
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.LF.: RO 14399840')",
+    "customerTaxId: doesn't look like a plausible tax ID ('CLF. RO16311704')"
+  ]
+}

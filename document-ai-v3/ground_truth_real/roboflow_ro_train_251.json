@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "TLDR Numarul: 42469",
+  "invoiceDate": "pata(ziua,luna,anul): 25-03-2019",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO12351919",
+  "customerName": null,
+  "customerTaxId": "RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 2975.3,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact Tir Leas_val rezid inreg-1_jpg.rf.jypEvD0tgB0X4jSZc1po.jpg",
+  "originalSize": [
+    2328,
+    1659
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('pata(ziua,luna,anul): 25-03-2019')"
+  ]
+}

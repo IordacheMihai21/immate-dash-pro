@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "si numarul 443774",
+  "invoiceDate": "Data(ziua.luna.anul):22/2/2022",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.I.P: RO 4663243",
+  "customerName": null,
+  "customerTaxId": "C.I.P: RO 3288731",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 90.91,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/T_TIM CICLOP-1_jpg.rf.LxTYV6brrFKY1lf1wjq8.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "invoiceNumber: 4 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('Data(ziua.luna.anul):22/2/2022')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.I.P: RO 4663243')",
+    "customerTaxId: doesn't look like a plausible tax ID ('C.I.P: RO 3288731')"
+  ]
+}

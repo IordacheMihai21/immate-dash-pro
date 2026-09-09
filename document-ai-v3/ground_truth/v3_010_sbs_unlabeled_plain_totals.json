@@ -1,0 +1,37 @@
+{
+  "invoiceNumber": "205",
+  "invoiceSeries": "JNC",
+  "invoiceDate": "30.06.2024",
+  "dueDate": null,
+  "supplierName": "Junco Trans SRL",
+  "customerName": "Kappa Distributie SRL",
+  "supplierTaxId": "RO58493021",
+  "customerTaxId": "RO69504132",
+  "subtotal": 980.0,
+  "vatAmount": 186.2,
+  "totalAmount": 1166.2,
+  "currency": "RON",
+  "supplierRegionBBox": {
+    "x": 80,
+    "y": 152,
+    "width": 783,
+    "height": 78
+  },
+  "customerRegionBBox": {
+    "x": 1037,
+    "y": 152,
+    "width": 783,
+    "height": 78
+  },
+  "tableRegionBBox": {
+    "x": 80,
+    "y": 260,
+    "width": 1740,
+    "height": 79
+  },
+  "traits": [
+    "side_by_side",
+    "unlabeled",
+    "totals_only_table"
+  ]
+}

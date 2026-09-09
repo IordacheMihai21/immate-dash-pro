@@ -1,0 +1,27 @@
+{
+  "invoiceNumber": "EV Numar: 479",
+  "invoiceDate": "23/02/2022",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Ee luce esos",
+  "customerName": null,
+  "customerTaxId": "C.LF/C.U.L: RO 3288731",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 0.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/T_OFFICE-1_jpg.rf.L0r74rfznAomSWCBywpv.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('23/02/2022')",
+    "customerTaxId: 2 non-contiguous spans found, took the longest",
+    "totalAmount: 2 non-contiguous spans found, took the longest",
+    "supplierTaxId: doesn't look like a plausible tax ID ('Ee luce esos')",
+    "customerTaxId: doesn't look like a plausible tax ID ('C.LF/C.U.L: RO 3288731')"
+  ]
+}

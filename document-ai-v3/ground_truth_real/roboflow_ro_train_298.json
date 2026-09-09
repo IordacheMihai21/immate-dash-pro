@@ -1,0 +1,29 @@
+{
+  "invoiceNumber": "TM4-MLS nr. 0010",
+  "invoiceDate": "Data",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CIF:RO16311704",
+  "customerName": null,
+  "customerTaxId": "-",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 50.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact_Varroc_0120 inrg-1_jpg.rf.LO5BuYtt1FI0JXP5P8vf.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: leading-label stripping would have emptied the span, kept raw tokens instead",
+    "invoiceDate: date format ambiguous, left as raw joined text ('Data')",
+    "totalAmount: 2 non-contiguous spans found, took the longest",
+    "supplierTaxId: doesn't look like a plausible tax ID ('CIF:RO16311704')",
+    "customerTaxId: doesn't look like a plausible tax ID ('-')"
+  ]
+}

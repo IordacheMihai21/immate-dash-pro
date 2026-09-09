@@ -1,0 +1,27 @@
+{
+  "invoiceNumber": "— 349)",
+  "invoiceDate": "eenenen",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CIF/CUI: mee ROI71 70732",
+  "customerName": null,
+  "customerTaxId": "CIF/CUE morse RO TOSI 70F",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 1801.98,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/S_HENDI-1_jpg.rf.9tn4zbIdyZonaVlIh9vy.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: 3 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('eenenen')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('CIF/CUI: mee ROI71 70732')",
+    "customerTaxId: doesn't look like a plausible tax ID ('CIF/CUE morse RO TOSI 70F')"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "invoiceNumber": "SerieFD Nr 2348399",
+  "invoiceDate": "2019-12-31",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CUI:RO6724860",
+  "customerName": null,
+  "customerTaxId": "C.F. RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 1868.66,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/RMB_2019-1_jpg.rf.9wTqYdxbnIikAAdCnsbN.jpg",
+  "originalSize": [
+    2339,
+    1654
+  ],
+  "warnings": [
+    "supplierTaxId: doesn't look like a plausible tax ID ('CUI:RO6724860')",
+    "customerTaxId: doesn't look like a plausible tax ID ('C.F. RO16311704')"
+  ]
+}

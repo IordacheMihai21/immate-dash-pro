@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "TM ALI",
+  "invoiceDate": "2021-11-10",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.U.1.: RO9480697",
+  "customerName": null,
+  "customerTaxId": "C.U.L: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 90.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/f 49156 ALIAL_1121_dublura-1_jpg.rf.YYQNbzUggo2XB5eLNFPP.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "totalAmount: 2 non-contiguous spans found, took the longest",
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.U.1.: RO9480697')",
+    "customerTaxId: doesn't look like a plausible tax ID ('C.U.L: RO16311704')"
+  ]
+}

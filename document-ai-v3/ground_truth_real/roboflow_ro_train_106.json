@@ -1,0 +1,27 @@
+{
+  "invoiceNumber": "Serie / nr. TSR-CLI13949",
+  "invoiceDate": "pata (ziua,luna,anul) : 30/09/2020",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.F. RO11178217",
+  "customerName": null,
+  "customerTaxId": "Ib fiseal © RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 244.89,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Aerop_factura_13949 inrg-1_jpg.rf.WIa5HmoyRHvZZ3huzIua.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "invoiceNumber: 3 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('pata (ziua,luna,anul) : 30/09/2020')",
+    "customerTaxId: 2 non-contiguous spans found, took the longest",
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.F. RO11178217')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Ib fiseal © RO16311704')"
+  ]
+}

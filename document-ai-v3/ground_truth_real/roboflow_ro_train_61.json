@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "canindiee nr. 500004394",
+  "invoiceDate": "o rele fy ero oon aa",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CIF:RO11588780",
+  "customerName": null,
+  "customerTaxId": "RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 9000.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/2_CARRS_50500004394_InvoiceToUploadInAlfresco factura data scadenta 20-08-2021_inrg-1_jpg.rf.7NlPSEQ0SdtlL3xabUkA.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('o rele fy ero oon aa')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('CIF:RO11588780')"
+  ]
+}

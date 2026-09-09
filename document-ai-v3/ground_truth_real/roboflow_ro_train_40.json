@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "AAA INR. FACTURA : 00028,",
+  "invoiceDate": "(zituna/an) 04-03-2014",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "JC.LF 21840841",
+  "customerName": null,
+  "customerTaxId": "IC.LF:RO 18211848.",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 797.84,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/alt-model-factura_png.rf.GCcaCRwoXYJN03VHK4G3.png",
+  "originalSize": [
+    897,
+    611
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('(zituna/an) 04-03-2014')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('JC.LF 21840841')",
+    "customerTaxId: doesn't look like a plausible tax ID ('IC.LF:RO 18211848.')"
+  ]
+}

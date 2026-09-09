@@ -1,0 +1,21 @@
+{
+  "invoiceNumber": null,
+  "invoiceDate": null,
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": null,
+  "customerName": null,
+  "customerTaxId": null,
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 108.08,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/model-o-factura-A4-mare__jpg.rf.7vGEqfds3aLdH6t7bqnk.jpg",
+  "originalSize": [
+    887,
+    623
+  ],
+  "warnings": []
+}

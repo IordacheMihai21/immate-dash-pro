@@ -1,0 +1,40 @@
+{
+  "invoiceNumber": "OPM-2025-14",
+  "invoiceSeries": null,
+  "invoiceDate": "21.06.2025",
+  "dueDate": "05.07.2025",
+  "supplierName": "Orion Precision Machining SRL",
+  "customerName": "Paragon Aerospace Corp SRL",
+  "supplierTaxId": "RO71829307",
+  "customerTaxId": "RO82930418",
+  "subtotal": 26400.0,
+  "vatAmount": 5016.0,
+  "totalAmount": 31416.0,
+  "currency": "USD",
+  "supplierRegionBBox": {
+    "x": 80,
+    "y": 178,
+    "width": 1740,
+    "height": 103
+  },
+  "customerRegionBBox": {
+    "x": 80,
+    "y": 301,
+    "width": 1740,
+    "height": 103
+  },
+  "tableRegionBBox": {
+    "x": 80,
+    "y": 424,
+    "width": 1740,
+    "height": 79
+  },
+  "traits": [
+    "stacked",
+    "labeled",
+    "with_summary_table",
+    "footer_legal",
+    "multi_currency",
+    "series_alnum_id"
+  ]
+}

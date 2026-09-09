@@ -1,0 +1,23 @@
+{
+  "invoiceNumber": "SerieMB Nr 2048578",
+  "invoiceDate": "2019-09-30",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO6724860",
+  "customerName": null,
+  "customerTaxId": "CALF. RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 2024.57,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/RMB_3-2_jpg.rf.bRbqPgQuuCBuBHGutaLB.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "customerTaxId: doesn't look like a plausible tax ID ('CALF. RO16311704')"
+  ]
+}

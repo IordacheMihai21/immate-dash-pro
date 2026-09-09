@@ -1,0 +1,27 @@
+{
+  "invoiceNumber": "Serie —_sNuméar",
+  "invoiceDate": "Dati emitere",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO22043010;",
+  "customerName": null,
+  "customerTaxId": "CUI/CIF: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 83.21,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/EON_0319_inreg-1_jpg.rf.3YmLiq7tH2QmuH0T0FPP.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('Dati emitere')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('RO22043010;')",
+    "customerTaxId: doesn't look like a plausible tax ID ('CUI/CIF: RO16311704')"
+  ]
+}

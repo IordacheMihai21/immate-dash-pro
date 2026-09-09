@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "Nr.facturii: Al-000000258",
+  "invoiceDate": "29/08/2019",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "cl",
+  "customerName": null,
+  "customerTaxId": "culic: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 16464.81,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/APAN I-000000258 - 29-08-2019_inreg-1_jpg.rf.TaogVAt0zoCSWmiPtIFr.jpg",
+  "originalSize": [
+    2200,
+    1700
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('29/08/2019')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('cl')",
+    "customerTaxId: doesn't look like a plausible tax ID ('culic: RO16311704')"
+  ]
+}

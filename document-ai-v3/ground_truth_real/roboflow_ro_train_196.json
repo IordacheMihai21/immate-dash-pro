@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "eria. facturii: TM SKO Nr. facturi: + 804185",
+  "invoiceDate": "Data(ziua,luna,anul) 11.07.2019",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.LF.: RO5967682",
+  "customerName": null,
+  "customerTaxId": "C.LF. RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 1255.41,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/B-94-WIB - Fact PROCAR inreg-1_jpg.rf.gTUULierxnNrH7mOTfqw.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('Data(ziua,luna,anul) 11.07.2019')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.LF.: RO5967682')",
+    "customerTaxId: doesn't look like a plausible tax ID ('C.LF. RO16311704')"
+  ]
+}

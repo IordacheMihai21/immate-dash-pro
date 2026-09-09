@@ -1,0 +1,24 @@
+{
+  "invoiceNumber": "BGFO1000045,",
+  "invoiceDate": "2008-03-12",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CALF: RO24728738",
+  "customerName": null,
+  "customerTaxId": "woken!",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 146798.2,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/006_jpg.rf.koV8FCytCJYemVLGZcqk.jpg",
+  "originalSize": [
+    988,
+    700
+  ],
+  "warnings": [
+    "supplierTaxId: doesn't look like a plausible tax ID ('CALF: RO24728738')",
+    "customerTaxId: doesn't look like a plausible tax ID ('woken!')"
+  ]
+}

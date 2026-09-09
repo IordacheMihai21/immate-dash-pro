@@ -1,0 +1,24 @@
+{
+  "invoiceNumber": "25",
+  "invoiceDate": "29/05/2020",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": null,
+  "customerName": null,
+  "customerTaxId": "(CLFIC.U.L: RO 8119423,",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 892.5,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Emitere_facturi_din_contracte_exemplu_factura_png.rf.TMleGyTLmqrtPY07SVXu.png",
+  "originalSize": [
+    523,
+    799
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('29/05/2020')",
+    "customerTaxId: doesn't look like a plausible tax ID ('(CLFIC.U.L: RO 8119423,')"
+  ]
+}

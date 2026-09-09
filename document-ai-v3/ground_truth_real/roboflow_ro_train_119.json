@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "Nr.facturii: LI-000000076",
+  "invoiceDate": "31/07/2019",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Cir RO23220000",
+  "customerName": null,
+  "customerTaxId": "cuvcl: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 14545.64,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/APAN_LI-000000076_inreg-1_jpg.rf.SmzfnYQlplSlBlOldoTx.jpg",
+  "originalSize": [
+    2200,
+    1700
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('31/07/2019')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('Cir RO23220000')",
+    "customerTaxId: doesn't look like a plausible tax ID ('cuvcl: RO16311704')"
+  ]
+}

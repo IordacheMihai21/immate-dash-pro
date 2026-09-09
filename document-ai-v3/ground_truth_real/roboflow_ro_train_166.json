@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "scan",
+  "invoiceDate": null,
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Saou",
+  "customerName": null,
+  "customerTaxId": "EP",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": null,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/model-factura-cu-fundal_png.rf.Naml1cP1EdWqwygaM6Cj.png",
+  "originalSize": [
+    901,
+    611
+  ],
+  "warnings": [
+    "supplierTaxId: doesn't look like a plausible tax ID ('Saou')",
+    "customerTaxId: doesn't look like a plausible tax ID ('EP')",
+    "all three amount fields (subtotal/vatAmount/totalAmount) are null"
+  ]
+}

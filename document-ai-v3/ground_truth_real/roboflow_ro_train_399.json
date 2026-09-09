@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "Serie si nr PAT 2826",
+  "invoiceDate": "in 31/07/2020",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Cod fiscal: RO3108083",
+  "customerName": null,
+  "customerTaxId": "Cod fiscal: RO 16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 115.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact fz_Patriot_0720_inrg-1_jpg.rf.0zCzPtzvTWH95sUyXHU0.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('in 31/07/2020')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('Cod fiscal: RO3108083')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod fiscal: RO 16311704')"
+  ]
+}

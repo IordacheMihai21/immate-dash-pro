@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "Serie DAB.10583.1 Nr. intern 211100226",
+  "invoiceDate": "(ziua, luna, anul) 12/11/2021",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CIF/CUI RO35993233",
+  "customerName": null,
+  "customerTaxId": "CIF/CUI RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 920.08,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact_DABIT-1_jpg.rf.I02vzZowycHdzf6wMOwA.jpg",
+  "originalSize": [
+    2334,
+    1653
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('(ziua, luna, anul) 12/11/2021')",
+    "totalAmount: 2 non-contiguous spans found, took the longest",
+    "supplierTaxId: doesn't look like a plausible tax ID ('CIF/CUI RO35993233')",
+    "customerTaxId: doesn't look like a plausible tax ID ('CIF/CUI RO16311704')"
+  ]
+}

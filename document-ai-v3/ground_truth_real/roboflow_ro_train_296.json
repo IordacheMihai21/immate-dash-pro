@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "facturii: OTP.2033042.19",
+  "invoiceDate": "(ziua, luna, anul): 31.12.2019",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.LF.: RO 21956480",
+  "customerName": null,
+  "customerTaxId": "C.F. RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 773.29,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/OTP Leas_1219_inrg-1_jpg.rf.QtTgJLiBzcpw982t0zWQ.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('(ziua, luna, anul): 31.12.2019')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.LF.: RO 21956480')",
+    "customerTaxId: doesn't look like a plausible tax ID ('C.F. RO16311704')"
+  ]
+}

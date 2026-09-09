@@ -1,0 +1,21 @@
+{
+  "invoiceNumber": "TKR nr. 190320273765",
+  "invoiceDate": null,
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": null,
+  "customerName": null,
+  "customerTaxId": null,
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 217.98,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact Telekom 2_Anexe-4_jpg.rf.zsM6yFzaL979BXoSe7oM.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": []
+}

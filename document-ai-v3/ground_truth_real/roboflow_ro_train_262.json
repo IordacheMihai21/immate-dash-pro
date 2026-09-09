@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "IDEA nr :89984117",
+  "invoiceDate": "facturii: 20.12.2018",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Cod TVA: RO13341280",
+  "customerName": null,
+  "customerTaxId": "Cod unic de inregistrare 16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 110797.05,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Factura_89984117_Idea Leas_20-12-2018_inreg-1_jpg.rf.RKdk5GLyW6oACcUUFIV9.jpg",
+  "originalSize": [
+    2339,
+    1700
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('facturii: 20.12.2018')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('Cod TVA: RO13341280')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod unic de inregistrare 16311704')"
+  ]
+}

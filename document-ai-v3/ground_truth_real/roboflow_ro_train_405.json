@@ -1,0 +1,24 @@
+{
+  "invoiceNumber": "Seren doe 1215026218",
+  "invoiceDate": "doa: 07.01.2019",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": null,
+  "customerName": null,
+  "customerTaxId": "RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 20000.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact Porsche_07-01-19_inreg ian 2019-1_jpg.rf.nORV2c0hjEN0fcxkAslF.jpg",
+  "originalSize": [
+    2337,
+    1653
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('doa: 07.01.2019')",
+    "customerTaxId: 2 non-contiguous spans found, took the longest"
+  ]
+}

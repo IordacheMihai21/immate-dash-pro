@@ -1,0 +1,24 @@
+{
+  "invoiceNumber": "Serie si Nr. Factura: EURO 70417",
+  "invoiceDate": "(ziua, luna, anul): 17.02.2022",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "ier alate",
+  "customerName": null,
+  "customerTaxId": null,
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 273.43,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/T_EURONAUTICA-1_jpg.rf.V3xTGbmBiJcyzQ7w4M1A.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('(ziua, luna, anul): 17.02.2022')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('ier alate')"
+  ]
+}

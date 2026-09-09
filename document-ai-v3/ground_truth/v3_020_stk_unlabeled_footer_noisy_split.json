@@ -1,0 +1,40 @@
+{
+  "invoiceNumber": "255",
+  "invoiceSeries": "CRN",
+  "invoiceDate": "03.02.2025",
+  "dueDate": null,
+  "supplierName": "Cronos Utilaje SRL",
+  "customerName": "Domus Constructii SRL",
+  "supplierTaxId": "RO59607183",
+  "customerTaxId": "RO60718294",
+  "subtotal": 6750.0,
+  "vatAmount": 1282.5,
+  "totalAmount": 8032.5,
+  "currency": "RON",
+  "supplierRegionBBox": {
+    "x": 80,
+    "y": 178,
+    "width": 1740,
+    "height": 78
+  },
+  "customerRegionBBox": {
+    "x": 80,
+    "y": 276,
+    "width": 1740,
+    "height": 78
+  },
+  "tableRegionBBox": {
+    "x": 80,
+    "y": 374,
+    "width": 1740,
+    "height": 79
+  },
+  "traits": [
+    "stacked",
+    "unlabeled",
+    "with_summary_table",
+    "footer_legal",
+    "noisy_scan",
+    "series_split"
+  ]
+}

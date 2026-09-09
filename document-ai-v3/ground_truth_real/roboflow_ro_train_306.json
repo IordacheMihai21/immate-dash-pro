@@ -1,0 +1,29 @@
+{
+  "invoiceNumber": "DECA739 Nr. 910765",
+  "invoiceDate": "(ziua, luna, anul): 10.02.2022",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.I.F.: RO23727785",
+  "customerName": null,
+  "customerTaxId": "Cod fiscal (C.1.F.): 3288734",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": null,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/T_ROUMASPORT-1_jpg.rf.N5LD8RNDOjzlFayFubsv.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('(ziua, luna, anul): 10.02.2022')",
+    "totalAmount: 2 non-contiguous spans found, took the longest",
+    "totalAmount: could not parse 're' as a number",
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.I.F.: RO23727785')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod fiscal (C.1.F.): 3288734')",
+    "all three amount fields (subtotal/vatAmount/totalAmount) are null"
+  ]
+}

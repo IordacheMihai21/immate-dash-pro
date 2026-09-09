@@ -1,0 +1,23 @@
+{
+  "invoiceNumber": "Serie OWM Nr. 000126531",
+  "invoiceDate": "2019-07-11",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO9010105",
+  "customerName": null,
+  "customerTaxId": "CIF/CNP: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 540.76,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact Orange inreg-1_jpg.rf.8A3nOCZ39reVUZ1fLCi1.jpg",
+  "originalSize": [
+    2200,
+    1700
+  ],
+  "warnings": [
+    "customerTaxId: doesn't look like a plausible tax ID ('CIF/CNP: RO16311704')"
+  ]
+}

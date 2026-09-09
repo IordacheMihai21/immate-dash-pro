@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "ee nr. 1142",
+  "invoiceDate": "er mpiny pet oe Sot aa",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CIF:RO16311704",
+  "customerName": null,
+  "customerTaxId": "RO6979847",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 699.92,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Cl_Fact_TM3-MLS1142_Heratour_2019 modif_inrg-1_jpg.rf.EWvn8vrtNskXgB4ueT3i.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('er mpiny pet oe Sot aa')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('CIF:RO16311704')"
+  ]
+}

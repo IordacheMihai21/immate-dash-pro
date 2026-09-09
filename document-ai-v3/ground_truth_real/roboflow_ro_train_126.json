@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "BCSINV 50905",
+  "invoiceDate": "31/10/2021",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "— RO39517925",
+  "customerName": null,
+  "customerTaxId": "fan",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": null,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Blackcab Factura_31-10-21_Anexa-1_jpg.rf.yL744zeZ0JUJeF7RI7Iy.jpg",
+  "originalSize": [
+    2200,
+    1700
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('31/10/2021')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('— RO39517925')",
+    "customerTaxId: doesn't look like a plausible tax ID ('fan')",
+    "all three amount fields (subtotal/vatAmount/totalAmount) are null"
+  ]
+}

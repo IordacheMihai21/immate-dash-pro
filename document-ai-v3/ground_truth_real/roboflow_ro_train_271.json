@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": null,
+  "invoiceDate": "facturarii 15.07.19",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Cod Fiscal: RO6825562",
+  "customerName": null,
+  "customerTaxId": "Cod Fiscal: RO 16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 9426.11,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/ETAI_27-07-19 inreg-1_jpg.rf.RtF2KghYr42NYbXCIsud.jpg",
+  "originalSize": [
+    2338,
+    1655
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('facturarii 15.07.19')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('Cod Fiscal: RO6825562')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod Fiscal: RO 16311704')"
+  ]
+}

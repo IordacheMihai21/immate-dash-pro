@@ -1,0 +1,27 @@
+{
+  "invoiceNumber": "1 9",
+  "invoiceDate": "ih8",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": null,
+  "customerName": null,
+  "customerTaxId": "2 Ha",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": null,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact RMB_Dumivest_Omv_inrg-8_jpg.rf.5QLGFTdUMs4mHJsmqHmm.jpg",
+  "originalSize": [
+    2314,
+    1659
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('ih8')",
+    "customerTaxId: 2 non-contiguous spans found, took the longest",
+    "customerTaxId: doesn't look like a plausible tax ID ('2 Ha')",
+    "all three amount fields (subtotal/vatAmount/totalAmount) are null"
+  ]
+}

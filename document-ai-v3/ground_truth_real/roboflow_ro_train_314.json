@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "RNRO3230133RE",
+  "invoiceDate": "2019-02-28",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CUI/CIF/Cod TVA: RO13943110",
+  "customerName": null,
+  "customerTaxId": "Se Benet Saaeas",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 0.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Renault_0319_inreg-05_jpg.rf.XyqqiP3WKY0lYa9hFZqj.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "customerTaxId: 2 non-contiguous spans found, took the longest",
+    "supplierTaxId: doesn't look like a plausible tax ID ('CUI/CIF/Cod TVA: RO13943110')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Se Benet Saaeas')"
+  ]
+}

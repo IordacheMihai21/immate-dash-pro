@@ -1,0 +1,40 @@
+{
+  "invoiceNumber": "AGR-9910",
+  "invoiceSeries": null,
+  "invoiceDate": "09.12.2024",
+  "dueDate": "23.12.2024",
+  "supplierName": "Yara Agro Chemicals SRL",
+  "customerName": "Zenith Farming Coop SRL",
+  "supplierTaxId": "RO15263749",
+  "customerTaxId": "RO26374860",
+  "subtotal": 17300.0,
+  "vatAmount": 3287.0,
+  "totalAmount": 20587.0,
+  "currency": "RON",
+  "supplierRegionBBox": {
+    "x": 80,
+    "y": 178,
+    "width": 1740,
+    "height": 78
+  },
+  "customerRegionBBox": {
+    "x": 80,
+    "y": 276,
+    "width": 1740,
+    "height": 78
+  },
+  "tableRegionBBox": {
+    "x": 80,
+    "y": 374,
+    "width": 1740,
+    "height": 79
+  },
+  "traits": [
+    "stacked",
+    "unlabeled",
+    "bilingual",
+    "totals_only_table",
+    "noisy_scan",
+    "series_alnum_id"
+  ]
+}

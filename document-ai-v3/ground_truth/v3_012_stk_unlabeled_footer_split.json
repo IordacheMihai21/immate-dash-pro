@@ -1,0 +1,39 @@
+{
+  "invoiceNumber": "1180",
+  "invoiceSeries": "NVC",
+  "invoiceDate": "04.08.2024",
+  "dueDate": null,
+  "supplierName": "Nova Consulting SRL",
+  "customerName": "Orizont Agro SRL",
+  "supplierTaxId": "RO93041526",
+  "customerTaxId": "RO04152637",
+  "subtotal": 2650.0,
+  "vatAmount": 503.5,
+  "totalAmount": 3153.5,
+  "currency": "RON",
+  "supplierRegionBBox": {
+    "x": 80,
+    "y": 178,
+    "width": 1740,
+    "height": 78
+  },
+  "customerRegionBBox": {
+    "x": 80,
+    "y": 276,
+    "width": 1740,
+    "height": 78
+  },
+  "tableRegionBBox": {
+    "x": 80,
+    "y": 374,
+    "width": 1740,
+    "height": 79
+  },
+  "traits": [
+    "stacked",
+    "unlabeled",
+    "with_summary_table",
+    "footer_legal",
+    "series_split"
+  ]
+}

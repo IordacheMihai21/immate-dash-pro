@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "ENG nr.10415627766",
+  "invoiceDate": null,
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO13093222,",
+  "customerName": null,
+  "customerTaxId": "CESS ROS288 aa",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": null,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/T_ENGIE-1_jpg.rf.MpImSORnzGcbOkeUCVRa.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "supplierTaxId: doesn't look like a plausible tax ID ('RO13093222,')",
+    "customerTaxId: doesn't look like a plausible tax ID ('CESS ROS288 aa')",
+    "all three amount fields (subtotal/vatAmount/totalAmount) are null"
+  ]
+}

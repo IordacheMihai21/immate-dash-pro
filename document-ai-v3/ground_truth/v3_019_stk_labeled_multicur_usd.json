@@ -1,0 +1,38 @@
+{
+  "invoiceNumber": "3005",
+  "invoiceSeries": "AXD",
+  "invoiceDate": "14.01.2025",
+  "dueDate": "28.01.2025",
+  "supplierName": "Axiom Data Systems SRL",
+  "customerName": "Beacon Analytics Inc SRL",
+  "supplierTaxId": "RO37485961",
+  "customerTaxId": "RO48596072",
+  "subtotal": 4200.0,
+  "vatAmount": 798.0,
+  "totalAmount": 4998.0,
+  "currency": "USD",
+  "supplierRegionBBox": {
+    "x": 80,
+    "y": 178,
+    "width": 1740,
+    "height": 103
+  },
+  "customerRegionBBox": {
+    "x": 80,
+    "y": 301,
+    "width": 1740,
+    "height": 103
+  },
+  "tableRegionBBox": {
+    "x": 80,
+    "y": 424,
+    "width": 1740,
+    "height": 79
+  },
+  "traits": [
+    "stacked",
+    "labeled",
+    "totals_only_table",
+    "multi_currency"
+  ]
+}

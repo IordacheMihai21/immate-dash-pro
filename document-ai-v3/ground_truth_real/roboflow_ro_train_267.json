@@ -1,0 +1,21 @@
+{
+  "invoiceNumber": "document: RO2718031326",
+  "invoiceDate": "2018-08-09",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO1803520",
+  "customerName": null,
+  "customerTaxId": "RO24195562",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 704.34,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/INTER CAR-1_jpg.rf.huf1nvvAA0wzoNev1rd7.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": []
+}

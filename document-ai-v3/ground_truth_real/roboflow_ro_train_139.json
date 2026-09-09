@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "Serie: PLR Numar: 19158945",
+  "invoiceDate": "2019-03-20",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Cod Inregistrare in scopuri TVA: RO12064199",
+  "customerName": null,
+  "customerTaxId": "Cod de inregistrare in scopuri de TVA: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 1706.57,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/19158945 inreg 31-07-19 Porsche Ls-1_jpg.rf.tnd93gQ9i9aCBYAss2j6.jpg",
+  "originalSize": [
+    2337,
+    1653
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "supplierTaxId: doesn't look like a plausible tax ID ('Cod Inregistrare in scopuri TVA: RO12064199')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod de inregistrare in scopuri de TVA: RO16311704')"
+  ]
+}

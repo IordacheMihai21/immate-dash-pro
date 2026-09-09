@@ -1,0 +1,27 @@
+{
+  "invoiceNumber": "Serie/ nr. TSR-PEMT37IL",
+  "invoiceDate": "(ziua,luna,anul) : 30/07/2021",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.LF.: RO11178217",
+  "customerName": null,
+  "customerTaxId": "pod isca HRO TESTE ROS",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 254.79,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Aeroport_factura_1737_0721 si Anexa-1_jpg.rf.gwnzHGxxVppYrzN98RcF.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('(ziua,luna,anul) : 30/07/2021')",
+    "customerTaxId: 2 non-contiguous spans found, took the longest",
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.LF.: RO11178217')",
+    "customerTaxId: doesn't look like a plausible tax ID ('pod isca HRO TESTE ROS')"
+  ]
+}

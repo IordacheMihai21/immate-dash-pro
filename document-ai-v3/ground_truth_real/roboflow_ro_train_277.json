@@ -1,0 +1,23 @@
+{
+  "invoiceNumber": null,
+  "invoiceDate": "emiterii facturii: 01.12.2019",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": null,
+  "customerName": null,
+  "customerTaxId": null,
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 183.18,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact Telekom 2_Anexe-2_jpg.rf.L7o7CVOCkk8x6nI5oJTC.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('emiterii facturii: 01.12.2019')"
+  ]
+}

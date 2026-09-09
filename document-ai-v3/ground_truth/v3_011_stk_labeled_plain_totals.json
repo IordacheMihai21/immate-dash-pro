@@ -1,0 +1,37 @@
+{
+  "invoiceNumber": "640",
+  "invoiceSeries": "LUM",
+  "invoiceDate": "11.07.2024",
+  "dueDate": "25.07.2024",
+  "supplierName": "Lumina Media SRL",
+  "customerName": "Muntenia Farm SRL",
+  "supplierTaxId": "RO71829304",
+  "customerTaxId": "RO82930415",
+  "subtotal": 4100.0,
+  "vatAmount": 779.0,
+  "totalAmount": 4879.0,
+  "currency": "RON",
+  "supplierRegionBBox": {
+    "x": 80,
+    "y": 178,
+    "width": 1740,
+    "height": 103
+  },
+  "customerRegionBBox": {
+    "x": 80,
+    "y": 301,
+    "width": 1740,
+    "height": 103
+  },
+  "tableRegionBBox": {
+    "x": 80,
+    "y": 424,
+    "width": 1740,
+    "height": 79
+  },
+  "traits": [
+    "stacked",
+    "labeled",
+    "totals_only_table"
+  ]
+}

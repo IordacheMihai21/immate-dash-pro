@@ -1,0 +1,23 @@
+{
+  "invoiceNumber": "si numarul facturii: crt-14912",
+  "invoiceDate": "(zi.luna.an): 31.08.2020",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO 18630955",
+  "customerName": null,
+  "customerTaxId": null,
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 617.37,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fz_Carto Let_0820 inrg-1_jpg.rf.hH4vuLLxtQs4AVSEDFqM.jpg",
+  "originalSize": [
+    2339,
+    1654
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('(zi.luna.an): 31.08.2020')"
+  ]
+}

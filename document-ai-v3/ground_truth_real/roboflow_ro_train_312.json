@@ -1,0 +1,23 @@
+{
+  "invoiceNumber": "SerieMB Nr 2054623",
+  "invoiceDate": "2020-09-05",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO6724860",
+  "customerName": null,
+  "customerTaxId": "C.I.F. RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 2166.27,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact_RMB INRG-1_jpg.rf.Muj0UyX7tKI7PDYgbiSG.jpg",
+  "originalSize": [
+    2339,
+    1639
+  ],
+  "warnings": [
+    "customerTaxId: doesn't look like a plausible tax ID ('C.I.F. RO16311704')"
+  ]
+}

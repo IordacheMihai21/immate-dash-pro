@@ -1,0 +1,40 @@
+{
+  "invoiceNumber": "2201",
+  "invoiceSeries": "DLG",
+  "invoiceDate": "19.07.2023",
+  "dueDate": "02.08.2023",
+  "supplierName": "Delta Logistics SRL",
+  "customerName": "Global Freight Partners SRL",
+  "supplierTaxId": "RO60718293",
+  "customerTaxId": "RO70819304",
+  "subtotal": 6400.0,
+  "vatAmount": 1216.0,
+  "totalAmount": 7616.0,
+  "currency": "RON",
+  "supplierRegionBBox": {
+    "x": 80,
+    "y": 204,
+    "width": 783,
+    "height": 103
+  },
+  "customerRegionBBox": {
+    "x": 1037,
+    "y": 204,
+    "width": 783,
+    "height": 103
+  },
+  "tableRegionBBox": {
+    "x": 80,
+    "y": 337,
+    "width": 1740,
+    "height": 79
+  },
+  "traits": [
+    "side_by_side",
+    "labeled",
+    "bilingual",
+    "totals_only_table",
+    "footer_legal",
+    "series_split"
+  ]
+}

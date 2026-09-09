@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "Serie si nr.: AD054765708",
+  "invoiceDate": "14/05/2021",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Cod fiscal: RO2864518",
+  "customerName": null,
+  "customerTaxId": "Cod fiscal: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 2739.9,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Factura ALTEX_0521 inrg-2_jpg.rf.JALvlRSiDpqC7sazYlMV.jpg",
+  "originalSize": [
+    1166,
+    1654
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('14/05/2021')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('Cod fiscal: RO2864518')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod fiscal: RO16311704')"
+  ]
+}

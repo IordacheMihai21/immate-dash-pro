@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "Serie: PMOB = Numar: 64165776",
+  "invoiceDate": "2019-09-01",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Cod de Inregistrare in scopuri TVA: RO18915227",
+  "customerName": null,
+  "customerTaxId": "Cod de inregistrare in scopuri de TVA:RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 653.69,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/9104921_5-1_jpg.rf.gBEg85JVKH2d7SOnybyf.jpg",
+  "originalSize": [
+    2339,
+    1654
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "supplierTaxId: doesn't look like a plausible tax ID ('Cod de Inregistrare in scopuri TVA: RO18915227')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod de inregistrare in scopuri de TVA:RO16311704')"
+  ]
+}

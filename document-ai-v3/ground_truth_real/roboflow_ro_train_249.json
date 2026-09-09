@@ -1,0 +1,21 @@
+{
+  "invoiceNumber": "S489640",
+  "invoiceDate": "2019-02-13",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO17602787",
+  "customerName": null,
+  "customerTaxId": "RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 316.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Saga_13-02-19 inreg-1_jpg.rf.jEBM73bDiWNDOY1MxKyC.jpg",
+  "originalSize": [
+    2339,
+    1654
+  ],
+  "warnings": []
+}

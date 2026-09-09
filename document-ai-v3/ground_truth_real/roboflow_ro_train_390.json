@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "CSIGN 2145075486",
+  "invoiceDate": "2021-09-13",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Cod inreg. TVA RO18288250",
+  "customerName": null,
+  "customerTaxId": "Cod inreg. TVA: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": null,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/2145075486_Factura_Certsign_0921_inreg 1021-1_jpg.rf.smpbEIoE06iCuIUgg0qL.jpg",
+  "originalSize": [
+    2200,
+    1700
+  ],
+  "warnings": [
+    "supplierTaxId: doesn't look like a plausible tax ID ('Cod inreg. TVA RO18288250')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod inreg. TVA: RO16311704')",
+    "all three amount fields (subtotal/vatAmount/totalAmount) are null"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "77387028",
+  "invoiceDate": "emitere: 12/03/2019",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Cod Inregistrare in scopuri TVA: RO12064199",
+  "customerName": null,
+  "customerTaxId": "Cod de inregistrare in scopuri de TVA: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 93.42,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/77387028 inreg 12-03-19-1_jpg.rf.HwBmmKpSBZtWYi36tfQu.jpg",
+  "originalSize": [
+    2200,
+    1700
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('emitere: 12/03/2019')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('Cod Inregistrare in scopuri TVA: RO12064199')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod de inregistrare in scopuri de TVA: RO16311704')"
+  ]
+}

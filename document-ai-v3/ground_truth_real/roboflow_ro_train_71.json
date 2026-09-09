@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "3726542",
+  "invoiceDate": "Data(ziua,luna,anul) 19.02.2020",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.LF : 12059648",
+  "customerName": null,
+  "customerTaxId": "CLF : RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": null,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact_fz_0220_ARR-1_jpg.rf.Ua7fcW1JKJFl7gY8OlW8.jpg",
+  "originalSize": [
+    2312,
+    1659
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('Data(ziua,luna,anul) 19.02.2020')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.LF : 12059648')",
+    "customerTaxId: doesn't look like a plausible tax ID ('CLF : RO16311704')",
+    "all three amount fields (subtotal/vatAmount/totalAmount) are null"
+  ]
+}

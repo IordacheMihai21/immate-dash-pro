@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "Serie si numar factura: TKR220302727344",
+  "invoiceDate": "emiteriifacturii: 26.02.2022",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO427320;",
+  "customerName": null,
+  "customerTaxId": "RO3288731",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 46.74,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/T_TELEKOM-1_jpg.rf.thskKnY2sBuJANMN60jz.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('emiteriifacturii: 26.02.2022')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('RO427320;')"
+  ]
+}

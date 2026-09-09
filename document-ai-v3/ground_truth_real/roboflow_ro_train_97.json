@@ -1,0 +1,23 @@
+{
+  "invoiceNumber": "SerieMH Nr 2631952",
+  "invoiceDate": "2020-09-29",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO6724860",
+  "customerName": null,
+  "customerTaxId": "CLE. RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 614.45,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact 2631951_RMB_29-09-20 2 buc_cu 4p Anexe-1_jpg.rf.UiX1ITUhSuOJioBrse9l.jpg",
+  "originalSize": [
+    2339,
+    1654
+  ],
+  "warnings": [
+    "customerTaxId: doesn't look like a plausible tax ID ('CLE. RO16311704')"
+  ]
+}

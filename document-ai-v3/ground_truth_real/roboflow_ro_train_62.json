@@ -1,0 +1,28 @@
+{
+  "invoiceNumber": "MezoR =e Numan",
+  "invoiceDate": "emitere",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CUI:",
+  "customerName": null,
+  "customerTaxId": "CUI/CIF: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 102.3,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/EON GAZ_31-12-20 inrg-1_jpg.rf.UZeK6TrFFPz6kOiIUTdw.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "invoiceNumber: 3 non-contiguous spans found, took the longest",
+    "invoiceDate: 3 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('emitere')",
+    "supplierTaxId: leading-label stripping would have emptied the span, kept raw tokens instead",
+    "supplierTaxId: doesn't look like a plausible tax ID ('CUI:')",
+    "customerTaxId: doesn't look like a plausible tax ID ('CUI/CIF: RO16311704')"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "Serie / nr. TSR-CL/13883",
+  "invoiceDate": "(ziua,luna,anul) : 31/08/2020",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CLF: RO11178217",
+  "customerName": null,
+  "customerTaxId": "Cod fiscal : RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 243.95,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact fz Cartolet_Aeroport_08-20 inrg-3_jpg.rf.r3xiGuGCDU0h2eXKJHAd.jpg",
+  "originalSize": [
+    2339,
+    1645
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('(ziua,luna,anul) : 31/08/2020')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('CLF: RO11178217')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod fiscal : RO16311704')"
+  ]
+}

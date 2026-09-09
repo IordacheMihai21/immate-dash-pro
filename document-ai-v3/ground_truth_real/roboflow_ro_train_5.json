@@ -1,0 +1,28 @@
+{
+  "invoiceNumber": "AER",
+  "invoiceDate": "(ziua, luna, anu!) 18/06/2018",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.U.L: RO6725652",
+  "customerName": null,
+  "customerTaxId": "Cog Fiscal: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": null,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Autoeuropa_Facturi lipsa MLS_inreg-1_jpg.rf.E4VW2VeNXAAihYMAfiTS.jpg",
+  "originalSize": [
+    2338,
+    1653
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('(ziua, luna, anu!) 18/06/2018')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.U.L: RO6725652')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cog Fiscal: RO16311704')",
+    "all three amount fields (subtotal/vatAmount/totalAmount) are null"
+  ]
+}

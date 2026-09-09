@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "SPRC_ NR.: 931457076",
+  "invoiceDate": "08/05/2019",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "GAL Tart 28s",
+  "customerName": null,
+  "customerTaxId": "C.LTVA : RO 16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 8281.16,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Factura_931457076 inreg-1_jpg.rf.6tkrGKLnxyWuU6vTUTzt.jpg",
+  "originalSize": [
+    2300,
+    1700
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('08/05/2019')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('GAL Tart 28s')",
+    "customerTaxId: doesn't look like a plausible tax ID ('C.LTVA : RO 16311704')"
+  ]
+}

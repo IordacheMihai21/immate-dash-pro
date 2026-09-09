@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "4BH.01 NUMAR : 00003449",
+  "invoiceDate": "facturi: 04.02.2022",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Cod de identificare fiscala (C.LF.) : RO 27787860",
+  "customerName": null,
+  "customerTaxId": "C.LF. : RO3268731",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 833.0,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/T_CNCIR-1_jpg.rf.OfQB0DNW9GAQIdWKy6qu.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('facturi: 04.02.2022')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('Cod de identificare fiscala (C.LF.) : RO 27787860')",
+    "customerTaxId: doesn't look like a plausible tax ID ('C.LF. : RO3268731')"
+  ]
+}

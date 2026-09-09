@@ -1,0 +1,24 @@
+{
+  "invoiceNumber": "2010411",
+  "invoiceDate": null,
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "CU.\" ROG725652",
+  "customerName": null,
+  "customerTaxId": "Cod Fiscal: RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 1118.75,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Autoeuropa_Facturi lipsa MLS_inreg-3_jpg.rf.KeqYDN4GbbzGLvZ9Oc6V.jpg",
+  "originalSize": [
+    2338,
+    1653
+  ],
+  "warnings": [
+    "supplierTaxId: doesn't look like a plausible tax ID ('CU.\" ROG725652')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod Fiscal: RO16311704')"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "invoiceNumber": "SLG nr: 518217001791",
+  "invoiceDate": "Data",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "C.I.F: RO11805367",
+  "customerName": null,
+  "customerTaxId": "CoE. Fis RO1803520",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 156.03,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/SELGROS-1_jpg.rf.Qkw7x7nUc07zgPnFHLAa.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "invoiceNumber: 3 non-contiguous spans found, took the longest",
+    "invoiceDate: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: leading-label stripping would have emptied the span, kept raw tokens instead",
+    "invoiceDate: date format ambiguous, left as raw joined text ('Data')",
+    "supplierTaxId: doesn't look like a plausible tax ID ('C.I.F: RO11805367')",
+    "customerTaxId: doesn't look like a plausible tax ID ('CoE. Fis RO1803520')"
+  ]
+}

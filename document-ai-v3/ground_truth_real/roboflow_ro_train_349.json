@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "SERIE: ATU",
+  "invoiceDate": "2022-02-23",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "Cod fiscal: RO29104875",
+  "customerName": null,
+  "customerTaxId": "Cod fiscal: © RO3288731",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": null,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/T_ATUTECH-1_jpg.rf.Y30wz7LF8I3OjLngVgFY.jpg",
+  "originalSize": [
+    2338,
+    1654
+  ],
+  "warnings": [
+    "invoiceNumber: 3 non-contiguous spans found, took the longest",
+    "supplierTaxId: doesn't look like a plausible tax ID ('Cod fiscal: RO29104875')",
+    "customerTaxId: doesn't look like a plausible tax ID ('Cod fiscal: © RO3288731')",
+    "all three amount fields (subtotal/vatAmount/totalAmount) are null"
+  ]
+}

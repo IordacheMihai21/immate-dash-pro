@@ -1,0 +1,24 @@
+{
+  "invoiceNumber": "SLL nr. 3720",
+  "invoiceDate": "st",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "RO18338145",
+  "customerName": null,
+  "customerTaxId": "RO16311704",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 1426.84,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/Fact Star Limo_3720 06-05-19 inreg-1_jpg.rf.6eU7VMfzeX4gsKZIONQT.jpg",
+  "originalSize": [
+    1198,
+    1653
+  ],
+  "warnings": [
+    "invoiceNumber: 2 non-contiguous spans found, took the longest",
+    "invoiceDate: date format ambiguous, left as raw joined text ('st')"
+  ]
+}

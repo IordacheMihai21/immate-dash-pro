@@ -1,0 +1,27 @@
+{
+  "invoiceNumber": null,
+  "invoiceDate": "pata 16/09/2021 (zi/unayan)",
+  "dueDate": null,
+  "supplierName": null,
+  "supplierTaxId": "identificare RO16311704",
+  "customerName": null,
+  "customerTaxId": "identificare HU 30378641",
+  "subtotal": null,
+  "vatAmount": null,
+  "totalAmount": 56.29,
+  "currency": null,
+  "iban": null,
+  "invoiceSeries": null,
+  "imagePath": "/Users/mi/Desktop/immate-dash-pro/document-ai-backend/datasets/external/invoices_romanian/train/factura Piconet 33250_inrg-1_jpg.rf.pyKiAyZqED3coMBVZafp.jpg",
+  "originalSize": [
+    2339,
+    1653
+  ],
+  "warnings": [
+    "invoiceDate: date format ambiguous, left as raw joined text ('pata 16/09/2021 (zi/unayan)')",
+    "supplierTaxId: 3 non-contiguous spans found, took the longest",
+    "customerTaxId: 3 non-contiguous spans found, took the longest",
+    "supplierTaxId: doesn't look like a plausible tax ID ('identificare RO16311704')",
+    "customerTaxId: doesn't look like a plausible tax ID ('identificare HU 30378641')"
+  ]
+}
