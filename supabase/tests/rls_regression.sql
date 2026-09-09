@@ -14,8 +14,8 @@
 -- transaction that is always rolled back -- safe to run anytime, including
 -- against production, and requires no cleanup.
 --
--- How to run: paste into the Supabase SQL editor and execute, or ask Claude
--- to run it via the Supabase MCP execute_sql tool. A clean run prints
+-- How to run: paste into the Supabase SQL editor and execute, or run it
+-- through a Supabase SQL execution tool. A clean run prints
 -- "RLS REGRESSION CHECK: all N assertions passed." and rolls back. Any
 -- failure raises an exception naming exactly which guarantee broke.
 

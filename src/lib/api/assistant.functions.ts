@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import type Groq from "groq-sdk";
 import { getScopedSupabaseClient, getVerifiedUserId } from "@/lib/supabaseScoped.server";
-import { ASSISTANT_MODEL, getGroqClient } from "@/lib/groq.server";
+import { getAssistantModel, getGroqClient } from "@/lib/groq.server";
 import { classifyInvoiceForCompany } from "@/lib/cuiUtils";
 import { computeCustomerRiskProfiles, type InvoiceForRisk } from "@/lib/clientRiskService";
 
@@ -332,7 +332,7 @@ REGULI STRICTE:
 
     for (let round = 0; round < MAX_TOOL_ROUNDS; round += 1) {
       const response = await groq.chat.completions.create({
-        model: ASSISTANT_MODEL,
+        model: getAssistantModel(),
         messages,
         tools,
         tool_choice: "auto",

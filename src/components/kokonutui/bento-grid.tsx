@@ -13,13 +13,6 @@
 import { ArrowUpRight, CheckCircle2, Clock, Mic, Plus, Sparkles, Zap } from "lucide-react";
 import { motion, useMotionValue, useTransform, type Variants } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import Anthropic from "@/components/kokonutui/anthropic";
-import AnthropicDark from "@/components/kokonutui/anthropic-dark";
-import DeepSeek from "@/components/kokonutui/deepseek";
-import Google from "@/components/kokonutui/gemini";
-import MistralAI from "@/components/kokonutui/mistral";
-import OpenAI from "@/components/kokonutui/open-ai";
-import OpenAIDark from "@/components/kokonutui/open-ai-dark";
 import { cn } from "@/lib/utils";
 
 interface BentoItem {
@@ -77,7 +70,7 @@ const bentoItems: BentoItem[] = [
     href: "#",
     feature: "typing",
     typingText:
-      "const createAgent = async () => {\n  const agent = new AIAgent({\n    model: 'gpt-4-turbo',\n    tools: [codeAnalysis, dataProcessing],\n    memory: new ConversationalMemory()\n  });\n\n  // Train on domain knowledge\n  await agent.learn(domainData);\n\n  return agent;\n};",
+      "const createWorkflow = async () => {\n  const workflow = new AutomationWorkflow({\n    mode: 'rules-first',\n    tools: [codeAnalysis, dataProcessing],\n    memory: new SessionMemory()\n  });\n\n  // Load domain knowledge\n  await workflow.learn(domainData);\n\n  return workflow;\n};",
     size: "md",
     className: "col-span-2 row-span-1 col-start-1 col-end-3",
   },
@@ -211,44 +204,42 @@ const IconsFeature = () => (
   <div className="mt-4 grid grid-cols-3 gap-4">
     <motion.div className="group flex flex-col items-center gap-2 rounded-xl border border-neutral-200/50 bg-gradient-to-b from-neutral-100/80 to-neutral-100 p-3 transition-all duration-300 hover:border-neutral-300 dark:border-neutral-700/50 dark:from-neutral-800/80 dark:to-neutral-800 dark:hover:border-neutral-600">
       <div className="relative flex h-8 w-8 items-center justify-center">
-        <OpenAI className="h-7 w-7 transition-transform dark:hidden" />
-        <OpenAIDark className="hidden h-7 w-7 transition-transform dark:block" />
+        <Zap className="h-7 w-7 text-emerald-500 transition-transform dark:text-emerald-400" />
       </div>
       <span className="text-center font-medium text-neutral-600 text-xs group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200">
-        OpenAI
+        Compute
       </span>
     </motion.div>
     <motion.div className="group flex flex-col items-center gap-2 rounded-xl border border-neutral-200/50 bg-gradient-to-b from-neutral-100/80 to-neutral-100 p-3 transition-all duration-300 hover:border-neutral-300 dark:border-neutral-700/50 dark:from-neutral-800/80 dark:to-neutral-800 dark:hover:border-neutral-600">
       <div className="relative flex h-8 w-8 items-center justify-center">
-        <Anthropic className="h-7 w-7 transition-transform dark:hidden" />
-        <AnthropicDark className="hidden h-7 w-7 transition-transform dark:block" />
+        <Clock className="h-7 w-7 text-sky-500 transition-transform dark:text-sky-400" />
       </div>
       <span className="text-center font-medium text-neutral-600 text-xs group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200">
-        Anthropic
+        Queue
       </span>
     </motion.div>
     <motion.div className="group flex flex-col items-center gap-2 rounded-xl border border-neutral-200/50 bg-gradient-to-b from-neutral-100/80 to-neutral-100 p-3 transition-all duration-300 hover:border-neutral-300 dark:border-neutral-700/50 dark:from-neutral-800/80 dark:to-neutral-800 dark:hover:border-neutral-600">
       <div className="relative flex h-8 w-8 items-center justify-center">
-        <Google className="h-7 w-7 transition-transform" />
+        <CheckCircle2 className="h-7 w-7 text-lime-500 transition-transform dark:text-lime-400" />
       </div>
       <span className="text-center font-medium text-neutral-600 text-xs group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200">
-        Google
+        Checks
       </span>
     </motion.div>
     <motion.div className="group flex flex-col items-center gap-2 rounded-xl border border-neutral-200/50 bg-gradient-to-b from-neutral-100/80 to-neutral-100 p-3 transition-all duration-300 hover:border-neutral-300 dark:border-neutral-700/50 dark:from-neutral-800/80 dark:to-neutral-800 dark:hover:border-neutral-600">
       <div className="relative flex h-8 w-8 items-center justify-center">
-        <MistralAI className="h-7 w-7 transition-transform" />
+        <Sparkles className="h-7 w-7 text-violet-500 transition-transform dark:text-violet-400" />
       </div>
       <span className="text-center font-medium text-neutral-600 text-xs group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200">
-        Mistral
+        Signals
       </span>
     </motion.div>
     <motion.div className="group flex flex-col items-center gap-2 rounded-xl border border-neutral-200/50 bg-gradient-to-b from-neutral-100/80 to-neutral-100 p-3 transition-all duration-300 hover:border-neutral-300 dark:border-neutral-700/50 dark:from-neutral-800/80 dark:to-neutral-800 dark:hover:border-neutral-600">
       <div className="relative flex h-8 w-8 items-center justify-center">
-        <DeepSeek className="h-7 w-7 transition-transform" />
+        <Mic className="h-7 w-7 text-rose-500 transition-transform dark:text-rose-400" />
       </div>
       <span className="text-center font-medium text-neutral-600 text-xs group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200">
-        DeepSeek
+        Voice
       </span>
     </motion.div>
     <motion.div className="group flex flex-col items-center gap-2 rounded-xl border border-neutral-200/50 bg-gradient-to-b from-neutral-100/80 to-neutral-100 p-3 transition-all duration-300 hover:border-neutral-300 dark:border-neutral-700/50 dark:from-neutral-800/80 dark:to-neutral-800 dark:hover:border-neutral-600">
@@ -626,13 +617,11 @@ const BentoCard = ({ item }: { item: BentoItem }) => {
 
             {item.icons && !item.feature && (
               <div className="mt-auto flex flex-wrap items-center gap-4 border-neutral-200/70 border-t pt-4 dark:border-neutral-800/70">
-                <OpenAI className="h-5 w-5 opacity-70 transition-opacity hover:opacity-100 dark:hidden" />
-                <OpenAIDark className="hidden h-5 w-5 opacity-70 transition-opacity hover:opacity-100 dark:block" />
-                <AnthropicDark className="hidden h-5 w-5 opacity-70 transition-opacity hover:opacity-100 dark:block" />
-                <Anthropic className="h-5 w-5 opacity-70 transition-opacity hover:opacity-100 dark:hidden" />
-                <Google className="h-5 w-5 opacity-70 transition-opacity hover:opacity-100" />
-                <MistralAI className="h-5 w-5 opacity-70 transition-opacity hover:opacity-100" />
-                <DeepSeek className="h-5 w-5 opacity-70 transition-opacity hover:opacity-100" />
+                <Zap className="h-5 w-5 opacity-70 transition-opacity hover:opacity-100" />
+                <Clock className="h-5 w-5 opacity-70 transition-opacity hover:opacity-100" />
+                <CheckCircle2 className="h-5 w-5 opacity-70 transition-opacity hover:opacity-100" />
+                <Sparkles className="h-5 w-5 opacity-70 transition-opacity hover:opacity-100" />
+                <Mic className="h-5 w-5 opacity-70 transition-opacity hover:opacity-100" />
               </div>
             )}
           </div>
